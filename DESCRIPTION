@@ -10,6 +10,8 @@ Description: This package provides functions to find the Maximum Likelihood esti
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
+URL: https://github.com/SaraGarcesCespedes/estimtf
+BugReports: https://github.com/SaraGarcesCespedes/estimtf\issues
 RoxygenNote: 7.1.0
 Imports:
     tensorflow,
