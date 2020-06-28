@@ -3,16 +3,16 @@
 #'
 #' @description Function to estimate distributional parameters using TensorFlow
 #'
-#' @param x a vector with data
+#' @param x a vector with data FALTA FALTA
 #' @param xdist a character indicating the name of the distribution of interest. The default value is \code{'Normal'}
 #' @param fixparam a list of the fixed parameters of the distribution of interest. The list must contain the parameters values and names
 #' @param initparam a list with initial values of the parameters to be estimated. The list must contain the parameters values and names
 #' @param optimizer a character indicating the name of the TensorFlow optimizer to be used in the estimation process The default value is \code{'Adam'}
 #' @param hyperparameters a list with the hyperparameters values of the TensorFlow optimizer
 #' @param maxiter a positive integer indicating the maximum number of iterations for the optimization algorithm
-#' @param tolerance
-#' @param eager logical. If TRUE
-#' @param comparison logical. If TRUE the
+#' @param tolerance a small positive number indicating the FALTA FALTA
+#' @param eager logical. If TRUE, the estimation process is performed in the eager execution envirnment
+#' @param comparison logical. If TRUE, the paramaters of interest are estimated using R optimizers included in the Estimation Tools package
 #' @param lower a numeric vector with lower bounds, with the same lenght of argument `initparam`
 #' @param upper a numeric vector with upper bounds, with the same lenght of argument `initparam`
 #' @param method a character with the name of the optimization routine. \code{nlminb}, \code{optim}, \code{DEoptim} are available
@@ -156,9 +156,9 @@ dist_estimtf <- function(x, xdist = "Normal", fixparam = NULL, initparam = NULL,
 
         # With eager execution or disable eager execution
         if (eager == TRUE) {
-                res <- eager_estimtf(x, dist, fixparam, linkfun, initparam, opt, hyperparameters, maxiter, tolerance, np)
+                res <- eager_estimtf(x, dist, fixparam, initparam, opt, hyperparameters, maxiter, tolerance, np)
         } else {
-                res <- disableager_estimtf(x, dist, fixparam, linkfun, initparam, opt, hyperparameters, maxiter, tolerance, np)
+                res <- disableager_estimtf(x, dist, fixparam, initparam, opt, hyperparameters, maxiter, tolerance, np)
         }
 
         # Estimations with other R optimizers using Estimation Tools function

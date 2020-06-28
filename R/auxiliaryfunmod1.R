@@ -2,21 +2,20 @@
 #'
 #' @description Function to estimate distributional parameters disabling the TensorFlow eager execution mode
 #'
-#' @param x
-#' @param dist
-#' @param fixparam
-#' @param linkfun
-#' @param initparam
-#' @param opt
-#' @param hyperparameters
-#' @param maxiter
-#' @param tolerance
-#' @param np
+#' @param x a vector with data
+#' @param dist an expression indicating the density or mass function depending on xdist
+#' @param fixparam a list of the fixed parameters of the distribution of interest. The list must contain the parameters values and names
+#' @param initparam a list with initial values of the parameters to be estimated. The list must contain the parameters values and names
+#' @param opt an expression indicating the TensorFlow optimizer
+#' @param hyperparameters a list with the hyperparameters values of the TensorFlow optimizer
+#' @param maxiter a positive integer indicating the maximum number of iterations for the optimization algorithm
+#' @param tolerance a small positive number indicating the FALTA FALTA
+#' @param np a integer value indicating the number of parameters to be estimated
 #'
 #' @return
 #'
 #' @examples
-disableager_estimtf <- function(x, dist, fixparam, linkfun, initparam, opt, hyperparameters, maxiter, tolerance, np) {
+disableager_estimtf <- function(x, dist, fixparam, initparam, opt, hyperparameters, maxiter, tolerance, np) {
 
         # Disable eager execution
         tf$compat$v1$disable_eager_execution()
@@ -145,16 +144,15 @@ disableager_estimtf <- function(x, dist, fixparam, linkfun, initparam, opt, hype
 #'
 #' @description Function to estimate distributional parameters in TensorFlow eager execution mode
 #'
-#' @param x
-#' @param dist
-#' @param fixparam
-#' @param linkfun
-#' @param initparam
-#' @param opt
-#' @param hyperparameters
-#' @param maxiter
-#' @param tolerance
-#' @param np
+#' @param x a vector with data
+#' @param dist an expression indicating the density or mass function depending on xdist
+#' @param fixparam a list of the fixed parameters of the distribution of interest. The list must contain the parameters values and names
+#' @param initparam a list with initial values of the parameters to be estimated. The list must contain the parameters values and names
+#' @param opt an expression indicating the TensorFlow optimizer
+#' @param hyperparameters a list with the hyperparameters values of the TensorFlow optimizer
+#' @param maxiter a positive integer indicating the maximum number of iterations for the optimization algorithm
+#' @param tolerance a small positive number indicating the FALTA FALTA
+#' @param np a integer value indicating the number of parameters to be estimated
 #'
 #' @return
 #'
@@ -268,13 +266,13 @@ eager_estimtf <- function(x, dist, fixparam, linkfun, initparam, opt, hyperparam
 #'
 #' @description Function to compare TensorFlow parameter estimations with estimations from other R functions
 #'
-#' @param x
-#' @param xdist
-#' @param fixparam
-#' @param initparam
-#' @param lower
-#' @param upper
-#' @param method
+#' @param x a vector with data FALTA FALTA
+#' @param xdist a character indicating the name of the distribution of interest. The default value is \code{'Normal'}
+#' @param fixparam a list of the fixed parameters of the distribution of interest. The list must contain the parameters values and names
+#' @param initparam a list with initial values of the parameters to be estimated. The list must contain the parameters values and names
+#' @param lower a numeric vector with lower bounds, with the same lenght of argument `initparam`
+#' @param upper a numeric vector with upper bounds, with the same lenght of argument `initparam`
+#' @param method a character with the name of the optimization routine. \code{nlminb}, \code{optim}, \code{DEoptim} are available
 #'
 #' @return
 #'
