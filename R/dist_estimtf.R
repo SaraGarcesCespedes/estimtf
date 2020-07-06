@@ -1,7 +1,8 @@
-
 #' @title dist_estimtf function
 #'
-#' @description Function to estimate distributional parameters using TensorFlow
+#' @description Function to compute the Maximum Likelihood Estimators of distributional parameters using TensorFlow
+#'
+#' @author Sara Garcés Céspedes
 #'
 #' @param x a vector with data FALTA FALTA
 #' @param xdist a character indicating the name of the distribution of interest. The default value is \code{'Normal'}
@@ -32,6 +33,7 @@ dist_estimtf <- function(x, xdist = "Normal", fixparam = NULL, initparam = NULL,
         library(dplyr)
         library(stringr)
         library(ggplot2)
+
         # Errors in arguments
 
         # Error in vector of data x
@@ -77,27 +79,27 @@ dist_estimtf <- function(x, xdist = "Normal", fixparam = NULL, initparam = NULL,
                 } else if (length(match(names(fixparam), names(argumdist))) > 0) {
                         fixed <- match(names(fixparam), names(argumdist))
                         argumdist <- argumdist[-fixed]
+                        #np <- length(argumdist)
                 }
         }
 
 
         # Calculate number of parameters to be estimated. Remove from argumdist the arguments that are not related with parameters
-        if (dist == "Instantaneous Failures" | dist == "Poisson"){
-                np <- 1 # number of parameters to be estimated
-        } else if (dist == "FWE") {
-                np <- 2
+        if (dist == "Instantaneous Failures" | dist == "Poisson" | dist == "FWE"){
+                np <- length(argumdist) # number of parameters to be estimated
         } else {
                 arg <- sapply(1:length(argumdist),
                               FUN = function(x) names(argumdist)[x] != "validate_args" & names(argumdist)[x] != "allow_nan_stats" & names(argumdist)[x] != "name" & names(argumdist)[x] != "dtype")
                 np <- sum(arg)
+                argumdist <- argumdist[arg]
         }
 
 
         # Errors in list initparam
         if (!is.null(initparam)) {
                 if (length(match(names(initparam), names(argumdist))) == 0) {
-                        stop(paste0("Names of parameters included in the 'initparam' list do not match with the arguments of ",
-                                    dist, " function."))
+                        stop(paste0("Names of parameters included in the 'initparam' list do not match with the parameters of the ",
+                                    dist, " distribution"))
                 } else if (length(match(names(initparam), names(argumdist))) > np) {
                         stop(paste0("Only include in 'initparam' the names of parameters that are not fixed"))
                 }
@@ -156,9 +158,9 @@ dist_estimtf <- function(x, xdist = "Normal", fixparam = NULL, initparam = NULL,
 
         # With eager execution or disable eager execution
         if (eager == TRUE) {
-                res <- eager_estimtf(x, dist, fixparam, initparam, opt, hyperparameters, maxiter, tolerance, np)
+                res <- eagerdist(x, dist, fixparam, initparam, opt, hyperparameters, maxiter, tolerance, np)
         } else {
-                res <- disableager_estimtf(x, dist, fixparam, initparam, opt, hyperparameters, maxiter, tolerance, np)
+                res <- disableagerdist(x, dist, fixparam, initparam, opt, hyperparameters, maxiter, tolerance, np)
         }
 
         # Estimations with other R optimizers using Estimation Tools function
@@ -177,7 +179,7 @@ dist_estimtf <- function(x, xdist = "Normal", fixparam = NULL, initparam = NULL,
         }
 
         if (comparison == TRUE){
-                resET <- comparison_estimtf(x, xdist, fixparam, initparam, lower, upper, method)
+                resET <- comparisondist(x, xdist, fixparam, initparam, lower, upper, method)
         }
 
         return(list(tf = res$final, stderrtf = res$standarderror, esttools = summary(resET)))

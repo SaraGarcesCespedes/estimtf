@@ -1,6 +1,8 @@
-#' @title disableager_estimtf function
+#' @title disableagerdist function
 #'
 #' @description Function to estimate distributional parameters disabling the TensorFlow eager execution mode
+#'
+#' @author Sara Garcés Céspedes
 #'
 #' @param x a vector with data
 #' @param dist an expression indicating the density or mass function depending on xdist
@@ -15,7 +17,7 @@
 #' @return
 #'
 #' @examples
-disableager_estimtf <- function(x, dist, fixparam, initparam, opt, hyperparameters, maxiter, tolerance, np) {
+disableagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, maxiter, tolerance, np) {
 
         # Disable eager execution
         tf$compat$v1$disable_eager_execution()
@@ -140,9 +142,11 @@ disableager_estimtf <- function(x, dist, fixparam, initparam, opt, hyperparamete
 }
 
 
-#' @title eager_estimtf function
+#' @title eagerdist function
 #'
 #' @description Function to estimate distributional parameters in TensorFlow eager execution mode
+#'
+#' @author Sara Garcés Céspedes
 #'
 #' @param x a vector with data
 #' @param dist an expression indicating the density or mass function depending on xdist
@@ -157,7 +161,7 @@ disableager_estimtf <- function(x, dist, fixparam, initparam, opt, hyperparamete
 #' @return
 #'
 #' @examples
-eager_estimtf <- function(x, dist, fixparam, linkfun, initparam, opt, hyperparameters, maxiter, tolerance, np) {
+eagerdist <- function(x, dist, fixparam, linkfun, initparam, opt, hyperparameters, maxiter, tolerance, np) {
 
         # Create list to store the parameters to be estimated
         var_list <- vector(mode = "list", length = np)
@@ -262,9 +266,11 @@ eager_estimtf <- function(x, dist, fixparam, linkfun, initparam, opt, hyperparam
 }
 
 
-#' @title comparison_estimtf function
+#' @title comparisondist function
 #'
 #' @description Function to compare TensorFlow parameter estimations with estimations from other R functions
+#'
+#' @author Sara Garcés Céspedes
 #'
 #' @param x a vector with data FALTA FALTA
 #' @param xdist a character indicating the name of the distribution of interest. The default value is \code{'Normal'}
@@ -277,12 +283,13 @@ eager_estimtf <- function(x, dist, fixparam, linkfun, initparam, opt, hyperparam
 #' @return
 #'
 #' @examples
-comparison_estimtf <- function(x, xdist, fixparam, initparam, lower, upper, method) {
+comparisondist <- function(x, xdist, fixparam, initparam, lower, upper, method) {
         distributionsr <- list(Bernoulli = "dbinom", Beta = "dbeta", Exponential = "dexp", Gamma = "dgamma",
-                               Normal = "dnorm", Uniform = "dunif")
+                               Normal = "dnorm", Uniform = "dunif", Poisson = "dpois", FWE = "dFWE")
 
         parametersr <- list(loc = "mean", scale = "sd", concentration1 = "shape1", concentration2 = "shape2",
-                            concentration = "shape", low = "min", high = "max")
+                            concentration = "shape", low = "min", high = "max", lambda = "lambda", mu = "mu",
+                            sigma = "sigma")
 
 
         if (!is.null(fixparam)) for (i in 1:length(fixparam)) names(fixparam)[i] <- parametersr[[match(names(fixparam)[i], names(parametersr))]]
