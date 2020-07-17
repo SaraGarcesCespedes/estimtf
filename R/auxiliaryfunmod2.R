@@ -1,58 +1,80 @@
-#' @title disableagerdist function
+#' @title disableagerreg function
 #'
-#' @description Function to estimate distributional parameters disabling the TensorFlow eager execution mode
+#' @description Function to estimate regression parameters disabling the TensorFlow eager execution mode
 #'
 #' @author Sara Garcés Céspedes
-#'
-#' @param x a vector with data
-#' @param dist an expression indicating the density or mass function depending on xdist
-#' @param fixparam a list of the fixed parameters of the distribution of interest. The list must contain the parameters values and names
-#' @param initparam a list with initial values of the parameters to be estimated. The list must contain the parameters values and names
-#' @param opt an expression indicating the TensorFlow optimizer
-#' @param hyperparameters a list with the hyperparameters values of the TensorFlow optimizer
-#' @param maxiter a positive integer indicating the maximum number of iterations for the optimization algorithm
-#' @param tolerance a small positive number indicating the FALTA FALTA
-#' @param np a integer value indicating the number of parameters to be estimated
+#' @param x
+#' @param dist
+#' @param design_matrix
+#' @param fixparam
+#' @param initparam
+#' @param opt
+#' @param hyperparameters
+#' @param maxiter
+#' @param tolerance
+#' @param np
 #'
 #' @return
+#' @export
 #'
 #' @examples
-disableagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, maxiter, tolerance, np) {
+disableagerreg <- function(data, dist, design_matrix, fixparam, initparam, opt, hyperparameters, maxiter, tolerance, np) {
 
         # Disable eager execution
         tf$compat$v1$disable_eager_execution()
 
-        # Create placeholder
-        X <- tf$compat$v1$placeholder(dtype=tf$float32, name = "x_data")
 
         # Create list to store the parameters to be estimated
-        var_list <- vector(mode = "list", length = np)
-        names(var_list) <- names(initparam)
+        #var_list <- place_list <- vector(mode = "list", length = np)
+        #names(var_list) <- names(initparam)
+        #names(place_list) <- paste0("X", names(initparam))
 
-        # Create tf Variables
+        # Create placeholders
+        Y <- tf$compat$v1$placeholder(dtype = tf$float64, name = "y_data")
+        y_data <- design_matrix$y
+
+        #x_data <- design_matrix$data_reg[, -1]
+
+        nvar <- betas <- X <- param <- vector(mode = "list", length = np) #NO CREO QUE SEA NECESARIO CREAR LISTA BETAS
+        names(nvar) <- names(betas) <- names(X) <- names(param) <- names(initparam)
         for (i in 1:np) {
-                var_list[[i]] <- assign(names(initparam)[i], tf$Variable(initparam[[i]], dtype = tf$float32, name = names(initparam)[i]))
+                X[[i]] <- eval(parse(text = paste("design_matrix$", names(initparam)[i], sep = "")))
+                nvar[[i]] <- dim(X[[i]])[2]
+                betas[[i]] <- assign(paste0("betas", names(initparam)[i]), tf$Variable(tf$zeros(list(nvar[[i]], 1L), dtype = tf$float64), name = paste0("betas", names(initparam)[i])))
+                param[[i]] <- assign(names(initparam[i]), tf$matmul(X[[i]], betas[[i]]))
         }
 
+
+
+        #for (i in 1:np) {
+         #       X <- eval(parse(text = paste("design_matrix$", names(initparam)[i], sep = "")))
+          #      nvar <- dim(X)[2]
+           #     betas <- assign(paste0("betas", names(initparam)[i]), tf$Variable(tf$zeros(list(nvar, 1L), dtype = tf$float64), name = paste0("betas", names(initparam)[i])))
+            #    param <- assign(paste0(names(initparam)[i]), tf$matmul(X, betas))
+        #}
+
+
         # Create a list with all parameters, fixed and not fixed
-        vartotal <- append(fixparam, var_list)
+        vartotal <- append(fixparam, param)
 
         # Create vectors to store parameters, gradientes and loss values of each iteration
         loss <- new_list <- parameters <- gradients <- itergrads <- objvariables <- vector(mode = "list")
 
         # Create list with variables without names
-        for (i in 1:np) new_list[[i]] <- var_list[[i]]
+        for (i in 1:np) new_list[[i]] <- betas[[i]]
 
         # Define loss function depending on the distribution
         if (dist == "Poisson") {
-                loss_value <- tf$reduce_sum(-X * (tf$math$log(vartotal[["lambda"]])) + vartotal[["lambda"]])
+                loss_value <- tf$reduce_sum(-Y * (tf$math$log(vartotal[["lambda"]])) + vartotal[["lambda"]])
         } else if (dist == "FWE") {
-                loss_value <- -tf$reduce_sum(tf$math$log(vartotal[["mu"]] + vartotal[["sigma"]] / (X ^ 2))) - tf$reduce_sum(vartotal[["mu"]] * X - vartotal[["sigma"]] / X) + tf$reduce_sum(tf$math$exp(vartotal[["mu"]] * X - vartotal[["sigma"]] / X))
+                loss_value <- -tf$reduce_sum(tf$math$log(vartotal[["mu"]] + vartotal[["sigma"]] / (Y ^ 2))) - tf$reduce_sum(vartotal[["mu"]] * Y - vartotal[["sigma"]] / Y) + tf$reduce_sum(tf$math$exp(vartotal[["mu"]] * Y - vartotal[["sigma"]] / Y))
         } else if (dist == "Instantaneous Failures") {
-                loss_value <- -tf$reduce_sum(tf$math$log((((vartotal[["lambda"]] ^ 2) + X - 2 * vartotal[["lambda"]]) * tf$math$exp(-X / vartotal[["lambda"]])) / ((vartotal[["lambda"]] ^ 2) * (vartotal[["lambda"]] - 1))))
+                loss_value <- -tf$reduce_sum(tf$math$log((((vartotal[["lambda"]] ^ 2) + Y - 2 * vartotal[["lambda"]]) * tf$math$exp(-Y / vartotal[["lambda"]])) / ((vartotal[["lambda"]] ^ 2) * (vartotal[["lambda"]] - 1))))
         } else {
-                density <- do.call(what = dist, vartotal)
-                loss_value <- tf$negative(tf$reduce_sum(density$log_prob(value = X)))
+                #density <- do.call(what = dist, vartotal)
+                #loss_value <- tf$negative(tf$reduce_sum(density$log_prob(value = Y)))
+                n <- length(y_data)
+                loss_value <- (n / 2) * tf$math$log(vartotal[["scale"]]^2) + (1 / (2 * vartotal[["scale"]]^2)) * tf$reduce_sum((Y - vartotal[["loc"]])^2)
         }
 
         # Compute gradients
@@ -68,7 +90,7 @@ disableagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, 
         sess$run(init)
 
         # Create dictionary to feed data into graph
-        fd <- dict(X = x)
+        fd <- dict(Y = y_data)
 
         # Initialize step
         step <- 0
@@ -81,7 +103,7 @@ disableagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, 
                 sess$run(train, feed_dict = fd)
 
                 # Parameters and gradients as numeric vectors
-                for (i in 1:np) {
+                for (i in 1:length(new_list)) {
                         objvariables[[i]] <- as.numeric(sess$run(new_list[[i]]))
                         #objvariables[[i]] <- as.numeric(objvariables[[i]])
                         itergrads[[i]] <- as.numeric(sess$run(grads, feed_dict = fd)[[i]])
@@ -101,10 +123,10 @@ disableagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, 
                         } else if (step >= maxiter) {
                                 print(paste("Maximum number of iterations reached."))
                                 break
-                        } else if (isTRUE(sapply(1:np, FUN= function(x) abs(parameters[[step]][[x]]) < tolerance$parameters))) {
+                        } else if (isTRUE(sapply(1:length(new_list), FUN= function(x) abs(parameters[[step]][[x]]) < tolerance$parameters))) {
                                 print(paste("Parameters convergence,", step, "iterations needed."))
                                 break
-                        } else if (isTRUE(sapply(1:np, FUN= function(x) abs(gradients[[step]][[x]]) < tolerance$gradients))) {
+                        } else if (isTRUE(sapply(1:length(new_list), FUN= function(x) abs(gradients[[step]][[x]]) < tolerance$gradients))) {
                                 print(paste("Gradients convergence,", step, "iterations needed."))
                                 break
                         }
@@ -142,39 +164,79 @@ disableagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, 
 }
 
 
-#' @title eagerdist function
+#' @title eagerreg function
 #'
-#' @description Function to estimate distributional parameters in TensorFlow eager execution mode
+#' @description Function to estimate regression parameters in TensorFlow eager execution mode
 #'
 #' @author Sara Garcés Céspedes
-#'
-#' @param x a vector with data
-#' @param dist an expression indicating the density or mass function depending on xdist
-#' @param fixparam a list of the fixed parameters of the distribution of interest. The list must contain the parameters values and names
-#' @param initparam a list with initial values of the parameters to be estimated. The list must contain the parameters values and names
-#' @param opt an expression indicating the TensorFlow optimizer
-#' @param hyperparameters a list with the hyperparameters values of the TensorFlow optimizer
-#' @param maxiter a positive integer indicating the maximum number of iterations for the optimization algorithm
-#' @param tolerance a small positive number indicating the FALTA FALTA
-#' @param np a integer value indicating the number of parameters to be estimated
+#' @param x
+#' @param dist
+#' @param fixparam
+#' @param linkfun
+#' @param initparam
+#' @param opt
+#' @param hyperparameters
+#' @param maxiter
+#' @param tolerance
+#' @param np
 #'
 #' @return
+#' @export
 #'
 #' @examples
-eagerdist <- function(x, dist, fixparam, linkfun, initparam, opt, hyperparameters, maxiter, tolerance, np) {
+#'
+eagerreg <- function(data, dist, design_matrix, fixparam, initparam, opt, hyperparameters, maxiter, tolerance, np) {
 
         # Create list to store the parameters to be estimated
-        var_list <- vector(mode = "list", length = np)
-        names(var_list) <- names(initparam)
+        #var_list <- vector(mode = "list", length = np)
+        #names(var_list) <- names(initparam)
 
         # Create tf Variables
+        #for (i in 1:np) {
+         #       var_list[[i]] <- assign(names(initparam)[i], tf$Variable(initparam[[i]], dtype = tf$float32, name = names(initparam)[i]))
+        #}
+
+        y_data <- design_matrix$y
+
+        #x_data <- design_matrix$data_reg[, -1]
+
+        nvar <- betas <- X <- param <- intercept <- vector(mode = "list", length = np) #NO CREO QUE SEA NECESARIO CREAR LISTA BETAS
+        names(nvar) <- names(betas) <- names(X) <- names(param) <-  names(intercept) <-  names(initparam)
+        #for (i in 1:np) {
+         #       X[[i]] <- eval(parse(text = paste("design_matrix$", names(initparam)[i], sep = "")))
+          #      nvar[[i]] <- ncol(X[[i]])
+           #     betas[[i]] <- assign(paste0("betas", names(initparam)[i]), tf$Variable(tf$ones(list(nvar[[i]], 1L), dtype = tf$float64), name = paste0("betas", names(initparam)[i])))
+            #    param[[i]] <- assign(names(initparam[i]), tf$matmul(X[[i]], betas[[i]]))
+        #}
+
         for (i in 1:np) {
-                var_list[[i]] <- assign(names(initparam)[i], tf$Variable(initparam[[i]], dtype = tf$float32, name = names(initparam)[i]))
+                nvar[[i]] <- eval(parse(text = paste("ncol(design_matrix$", names(initparam)[i], ")-1", sep = "")))
+                X[[i]] <- eval(parse(text = paste("design_matrix$", names(initparam)[i], "[, -1]", sep = "")))
+                betas[[i]] <- assign(paste0("betas", names(initparam)[i]), tf$Variable(tf$ones(list(nvar[[i]], 1L), dtype = tf$float64), name = paste0("betas", names(initparam)[i]), trainable =TRUE))
+                intercept[[i]] <- assign(paste0("intercept", names(initparam)[i]), tf$Variable(1.0, dtype = tf$float64, name = paste0("intercept", names(initparam)[i]), trainable =TRUE))
+                #matmul no funciona si es una sola variable
+                #param[[i]] <- assign(names(initparam[i]), tf$matmul(tf$constant(X[[i]], dtype = tf$float64), betas[[i]]) + intercept[[i]])
+                param[[i]] <- assign(names(initparam[i]), tf$exp(tf$constant(X[[i]], dtype = tf$float64) * betas[[i]] + intercept[[i]]))
+
         }
 
-        # Create a list with all parameters, fixed and not fixed
-        vartotal <- append(fixparam, var_list)
+        X <- eval(parse(text = paste("design_matrix$", names(initparam)[1], "[, -1]", sep = "")))
 
+        beta <- tf$Variable(1.0, dtype = tf$float32)
+        intercept <- tf$Variable(1.0, dtype = tf$float32)
+        lambda <- tf$exp(x * beta + intercept)
+
+        vartotal <- append(fixparam, lambda)
+        names(vartotal) <- "lambda"
+
+        if (!is.null(fixparam)) {
+        for (j in length(fixparam)) {
+                fixparam[[j]] <- tf$constant(fixparam[[j]], dtype = tf$float64)
+        }
+        }
+        # Create a list with all parameters, fixed and not fixed
+        vartotal <- append(fixparam, param)
+        paramtotal <- append(betas, intercept)
         # Define optimizer
         seloptimizer <- do.call(what = opt, hyperparameters)
 
@@ -185,8 +247,8 @@ eagerdist <- function(x, dist, fixparam, linkfun, initparam, opt, hyperparameter
         loss <- new_list <- parameters <- gradients <- hesslist <- objvariables <- vector(mode = "list")
 
         # Create list with variables without names
-        for (i in 1:np) new_list[[i]] <- var_list[[i]]
-
+        #for (i in 1:np) new_list[[i]] <- betas[[i]]
+        for (i in 1:length(vartotal)) new_list[[i]] <- vartotal[[i]]
 
         while(TRUE){
                 # Update step
@@ -195,23 +257,26 @@ eagerdist <- function(x, dist, fixparam, linkfun, initparam, opt, hyperparameter
                 with(tf$GradientTape(persistent = TRUE) %as% tape, {
                         # Define loss function depending on the distribution
                         if (dist == "Poisson") {
-                                loss_value <- tf$reduce_sum(-x * (tf$math$log(vartotal[["lambda"]])) + vartotal[["lambda"]])
+                                #loss_value <- tf$reduce_sum(-y_data * (tf$math$log(vartotal[["lambda"]])) + vartotal[["lambda"]])
+                                loss_value <- tf$reduce_sum(-y_data * (tf$math$log(lambda)) + lambda)
                         } else if (dist == "FWE") {
-                                loss_value <- -tf$reduce_sum(tf$math$log(vartotal[["mu"]] + vartotal[["sigma"]] / (x ^ 2))) - tf$reduce_sum(vartotal[["mu"]] * x - vartotal[["sigma"]] / x) + tf$reduce_sum(tf$math$exp(vartotal[["mu"]] * x - vartotal[["sigma"]] / x))
+                                loss_value <- -tf$reduce_sum(tf$math$log(vartotal[["mu"]] + vartotal[["sigma"]] / (y_data ^ 2))) - tf$reduce_sum(vartotal[["mu"]] * y_data - vartotal[["sigma"]] / y_data) + tf$reduce_sum(tf$math$exp(vartotal[["mu"]] * y_data - vartotal[["sigma"]] / y_data))
                         } else if (dist == "Instantaneous Failures") {
-                                loss_value <- -tf$reduce_sum(tf$math$log((((vartotal[["lambda"]] ^ 2) + x - 2 * vartotal[["lambda"]]) * tf$math$exp(-x / vartotal[["lambda"]])) / ((vartotal[["lambda"]] ^ 2) * (vartotal[["lambda"]] - 1))))
+                                loss_value <- -tf$reduce_sum(tf$math$log((((vartotal[["lambda"]] ^ 2) + y_data - 2 * vartotal[["lambda"]]) * tf$math$exp(-y_data / vartotal[["lambda"]])) / ((vartotal[["lambda"]] ^ 2) * (vartotal[["lambda"]] - 1))))
                         } else {
                                 density <- do.call(what = dist, vartotal)
-                                loss_value <- tf$negative(tf$reduce_sum(density$log_prob(value = x)))
+                                loss_value <- tf$negative(tf$reduce_sum(density$log_prob(value = y_data)))
                         }
-                        grads <- tape$gradient(loss_value, new_list)
+                        #grads <- tape$gradient(loss_value, list(beta, intercept))
                         # Compute Hessian matrixin
-                        for(i in 1:np) hesslist[[i]] <- tape$gradient(grads[[i]], new_list)
-                        mhess <- as.matrix(tf$stack(values=hesslist, axis=0))
+                        #for(i in 1:length(paramtotal)) hesslist[[i]] <- tape$gradient(grads[[i]], c(betaslambda, interceptlambda))
+                        #mhess <- as.matrix(tf$stack(values=hesslist, axis=0))
                 })
+                grads <- tape$gradient(loss_value, list(beta, intercept))
+
 
                 # Compute gradientes
-                seloptimizer$apply_gradients(purrr::transpose(list(grads, new_list)))
+                seloptimizer$apply_gradients(purrr::transpose(list(grads, c(beta, intercept))))
 
                 # Save loss value
                 loss[[step]] <- as.numeric(loss_value)
@@ -265,39 +330,3 @@ eagerdist <- function(x, dist, fixparam, linkfun, initparam, opt, hyperparameter
         return(list(results = results.table, final = tail(results.table, 1), standarderror = stderror))
 }
 
-
-#' @title comparisondist function
-#'
-#' @description Function to compare TensorFlow parameter estimations with estimations from other R functions
-#'
-#' @author Sara Garcés Céspedes
-#'
-#' @param x a vector with data FALTA FALTA
-#' @param xdist a character indicating the name of the distribution of interest. The default value is \code{'Normal'}
-#' @param fixparam a list of the fixed parameters of the distribution of interest. The list must contain the parameters values and names
-#' @param initparam a list with initial values of the parameters to be estimated. The list must contain the parameters values and names
-#' @param lower a numeric vector with lower bounds, with the same lenght of argument `initparam`
-#' @param upper a numeric vector with upper bounds, with the same lenght of argument `initparam`
-#' @param method a character with the name of the optimization routine. \code{nlminb}, \code{optim}, \code{DEoptim} are available
-#'
-#' @return
-#'
-#' @examples
-comparisondist <- function(x, xdist, fixparam, initparam, lower, upper, method) {
-        distributionsr <- list(Bernoulli = "dbinom", Beta = "dbeta", Exponential = "dexp", Gamma = "dgamma",
-                               Normal = "dnorm", Uniform = "dunif", Poisson = "dpois", FWE = "dFWE")
-
-        parametersr <- list(loc = "mean", scale = "sd", concentration1 = "shape1", concentration2 = "shape2",
-                            concentration = "shape", low = "min", high = "max", lambda = "lambda", mu = "mu",
-                            sigma = "sigma")
-
-
-        if (!is.null(fixparam)) for (i in 1:length(fixparam)) names(fixparam)[i] <- parametersr[[match(names(fixparam)[i], names(parametersr))]]
-        if (!is.null(initparam)) for (i in 1:length(initparam)) names(initparam)[i] <- parametersr[[match(names(initparam)[i], names(parametersr))]]
-
-        estimation <- maxlogL(x = x, dist = distributionsr[[xdist]], fixed = fixparam,
-                              start = initparam, optimizer = method)
-        return(estimation)
-
-
-}
