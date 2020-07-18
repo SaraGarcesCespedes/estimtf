@@ -23,35 +23,35 @@ disableagerreg <- function(data, dist, design_matrix, fixparam, initparam, opt, 
         # Disable eager execution
         tf$compat$v1$disable_eager_execution()
 
-
-        # Create list to store the parameters to be estimated
-        #var_list <- place_list <- vector(mode = "list", length = np)
-        #names(var_list) <- names(initparam)
-        #names(place_list) <- paste0("X", names(initparam))
-
         # Create placeholders
-        Y <- tf$compat$v1$placeholder(dtype = tf$float64, name = "y_data")
+        Y <- tf$compat$v1$placeholder(dtype = tf$float32, name = "y_data")
         y_data <- design_matrix$y
 
-        #x_data <- design_matrix$data_reg[, -1]
 
-        nvar <- betas <- X <- param <- vector(mode = "list", length = np) #NO CREO QUE SEA NECESARIO CREAR LISTA BETAS
-        names(nvar) <- names(betas) <- names(X) <- names(param) <- names(initparam)
-        for (i in 1:np) {
-                X[[i]] <- eval(parse(text = paste("design_matrix$", names(initparam)[i], sep = "")))
-                nvar[[i]] <- dim(X[[i]])[2]
-                betas[[i]] <- assign(paste0("betas", names(initparam)[i]), tf$Variable(tf$zeros(list(nvar[[i]], 1L), dtype = tf$float64), name = paste0("betas", names(initparam)[i])))
-                param[[i]] <- assign(names(initparam[i]), tf$matmul(X[[i]], betas[[i]]))
+        #nvar <- betas <- X <- param <- vector(mode = "list", length = np) #NO CREO QUE SEA NECESARIO CREAR LISTA BETAS
+        #names(nvar) <- names(betas) <- names(X) <- names(param) <- names(initparam)
+
+        nbetas <- param <- vector(mode = "list", length = np)
+        names(nbetas) <- names(param) <- names(design_matrix)[1:np]
+        totalbetas <- sum(as.numeric(unlist(sapply(design_matrix[1:np], ncol))))
+        regparam <- vector(mode = "list", length = totalbetas)
+        t<- 0
+        for (i in 1:np){
+                sum <- 0
+                nbetas[[i]] <- sum(as.numeric(unlist(sapply(design_matrix[i], ncol))))
+                bnum <- rep(0:(nbetas[[i]]-1))
+                multparam <- vector(mode = "list", length = nbetas[[i]])
+                x_data <- eval(parse(text = paste("design_matrix$", names(nbetas)[i], sep = "")))
+                for (j in 1:nbetas[[i]]){
+                regparam[[j + t]] <- assign(paste0("beta", bnum[j], names(nbetas)[i]),
+                                                      tf$Variable(initparam[[names(nbetas)[i]]],
+                                                                  dtype = tf$float32))
+                multparam[[j]] <- tf$multiply(x_data[, j], regparam[[j + t]])
+                sum <- sum + multparam[[j]]
+                }
+                param[[i]] <- assign(names(nbetas)[i], sum)
+                t <- t + nbetas[[i]]
         }
-
-
-
-        #for (i in 1:np) {
-         #       X <- eval(parse(text = paste("design_matrix$", names(initparam)[i], sep = "")))
-          #      nvar <- dim(X)[2]
-           #     betas <- assign(paste0("betas", names(initparam)[i]), tf$Variable(tf$zeros(list(nvar, 1L), dtype = tf$float64), name = paste0("betas", names(initparam)[i])))
-            #    param <- assign(paste0(names(initparam)[i]), tf$matmul(X, betas))
-        #}
 
 
         # Create a list with all parameters, fixed and not fixed
@@ -60,25 +60,26 @@ disableagerreg <- function(data, dist, design_matrix, fixparam, initparam, opt, 
         # Create vectors to store parameters, gradientes and loss values of each iteration
         loss <- new_list <- parameters <- gradients <- itergrads <- objvariables <- vector(mode = "list")
 
-        # Create list with variables without names
-        for (i in 1:np) new_list[[i]] <- betas[[i]]
-
-        # Define loss function depending on the distribution
         if (dist == "Poisson") {
-                loss_value <- tf$reduce_sum(-Y * (tf$math$log(vartotal[["lambda"]])) + vartotal[["lambda"]])
+                loss_value <- tf$reduce_sum(-Y * (tf$math$log(lambda1)) + lambda1)
         } else if (dist == "FWE") {
                 loss_value <- -tf$reduce_sum(tf$math$log(vartotal[["mu"]] + vartotal[["sigma"]] / (Y ^ 2))) - tf$reduce_sum(vartotal[["mu"]] * Y - vartotal[["sigma"]] / Y) + tf$reduce_sum(tf$math$exp(vartotal[["mu"]] * Y - vartotal[["sigma"]] / Y))
         } else if (dist == "Instantaneous Failures") {
                 loss_value <- -tf$reduce_sum(tf$math$log((((vartotal[["lambda"]] ^ 2) + Y - 2 * vartotal[["lambda"]]) * tf$math$exp(-Y / vartotal[["lambda"]])) / ((vartotal[["lambda"]] ^ 2) * (vartotal[["lambda"]] - 1))))
         } else {
-                #density <- do.call(what = dist, vartotal)
-                #loss_value <- tf$negative(tf$reduce_sum(density$log_prob(value = Y)))
-                n <- length(y_data)
-                loss_value <- (n / 2) * tf$math$log(vartotal[["scale"]]^2) + (1 / (2 * vartotal[["scale"]]^2)) * tf$reduce_sum((Y - vartotal[["loc"]])^2)
+                density <- do.call(what = dist, vartotal)
+                loss_value <- tf$negative(tf$reduce_sum(density$log_prob(value = Y)))
+                #n <- length(y_data)
+                #loss_value <- (n / 2) * tf$math$log(vartotal[["scale"]]^2) + (1 / (2 * vartotal[["scale"]]^2)) * tf$reduce_sum((Y - vartotal[["loc"]])^2)
+                #loss_value <- (n / 2) * tf$math$log(scale^2) + (1.0 / (2.0 * scale^2)) * tf$reduce_sum((Y - mu1)^2)
+
         }
 
+        # Create list with variables without names
+        #for (i in 1:length(param)) new_list[[i]] <- regparam[[i]]
+
         # Compute gradients
-        grads <- tf$gradients(loss_value, new_list)
+        grads <- tf$gradients(loss_value, regparam)
 
         # Define optimizer
         seloptimizer <- do.call(what = opt, hyperparameters)
@@ -94,6 +95,7 @@ disableagerreg <- function(data, dist, design_matrix, fixparam, initparam, opt, 
 
         # Initialize step
         step <- 0
+        maxiter <- 10000
 
         while(TRUE){
                 # Update step
@@ -103,8 +105,8 @@ disableagerreg <- function(data, dist, design_matrix, fixparam, initparam, opt, 
                 sess$run(train, feed_dict = fd)
 
                 # Parameters and gradients as numeric vectors
-                for (i in 1:length(new_list)) {
-                        objvariables[[i]] <- as.numeric(sess$run(new_list[[i]]))
+                for (i in 1:length(regparam)) {
+                        objvariables[[i]] <- as.numeric(sess$run(regparam[[i]]))
                         #objvariables[[i]] <- as.numeric(objvariables[[i]])
                         itergrads[[i]] <- as.numeric(sess$run(grads, feed_dict = fd)[[i]])
                 }
@@ -123,10 +125,10 @@ disableagerreg <- function(data, dist, design_matrix, fixparam, initparam, opt, 
                         } else if (step >= maxiter) {
                                 print(paste("Maximum number of iterations reached."))
                                 break
-                        } else if (isTRUE(sapply(1:length(new_list), FUN= function(x) abs(parameters[[step]][[x]]) < tolerance$parameters))) {
+                        } else if (isTRUE(sapply(1:length(regparam), FUN= function(x) abs(parameters[[step]][[x]]) < tolerance$parameters))) {
                                 print(paste("Parameters convergence,", step, "iterations needed."))
                                 break
-                        } else if (isTRUE(sapply(1:length(new_list), FUN= function(x) abs(gradients[[step]][[x]]) < tolerance$gradients))) {
+                        } else if (isTRUE(sapply(1:length(regparam), FUN= function(x) abs(gradients[[step]][[x]]) < tolerance$gradients))) {
                                 print(paste("Gradients convergence,", step, "iterations needed."))
                                 break
                         }
@@ -134,14 +136,14 @@ disableagerreg <- function(data, dist, design_matrix, fixparam, initparam, opt, 
         }
 
         # Compute Hessian matrix
-        hesslist <- stderror <- vector(mode = "list", length = np)
-        for(i in 1:np) hesslist[[i]] <- tf$gradients(grads[[i]], new_list)
+        hesslist <- stderror <- vector(mode = "list", length = length(regparam))
+        for(i in 1:length(regparam)) hesslist[[i]] <- tf$gradients(grads[[i]], regparam)
         hess <- tf$stack(values=hesslist, axis=0)
         #hess <- tf$reshape(hess, shape(np, np))
         mhess <- sess$run(hess, feed_dict = fd)
         diagvarcov <- sqrt(diag(solve(mhess)))
-        names(stderror) <- names(var_list)
-        for (i in 1:np) stderror[[i]] <- diagvarcov[i] #ESTO PUEDE SER MAS EFICIENTE
+        #names(stderror) <- names(var_list)
+        for (i in 1:length(regparam)) stderror[[i]] <- diagvarcov[i] #ESTO PUEDE SER MAS EFICIENTE
 
         # Close tf session
         sess$close()
@@ -150,7 +152,7 @@ disableagerreg <- function(data, dist, design_matrix, fixparam, initparam, opt, 
         gradients <- purrr::transpose(gradients)
         parameters <- purrr::transpose(parameters)
         gradientsfinal <- parametersfinal <- namesgradients <- as.numeric()
-        for (j in 1:np) {
+        for (j in 1:length(regparam)) {
                 gradientsfinal <- cbind(gradientsfinal, as.numeric(gradients[[j]]))
                 parametersfinal <- cbind(parametersfinal, as.numeric(parameters[[j]]))
                 namesgradients <- cbind(namesgradients, paste0("Gradients ", names(var_list)[j]))
