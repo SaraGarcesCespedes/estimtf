@@ -7,7 +7,7 @@ y_data <- design_matrix$y
 x_data <- design_matrix$lambda
 
 #beta <- tf$Variable(0.0, dtype = tf$float64)
-beta <- tf$Variable(tf$zeros(list(2, 1L), dtype = tf$float64))
+beta <- tf$Variable(tf$ones(list(2, 1L), dtype = tf$float64))
 #intercept <- tf$Variable(0.0, dtype = tf$float64)
 lambda1 <- tf$exp(tf$matmul(X, beta))
 
@@ -52,7 +52,6 @@ while(TRUE){
         sess$run(train, feed_dict = fd)
 
         # Parameters and gradients as numeric vectors
-        np <- 1
         for (i in 1:np) {
                 objvariables[[i]] <- as.numeric(sess$run(param[[i]]))
                 #objvariables[[i]] <- as.numeric(objvariables[[i]])
@@ -115,17 +114,19 @@ return(list(results = results.table, final = tail(results.table, 1), standarderr
 
 
 
-b_length <-2
-npar <- 1
-all_betas <- function(b_length, npar, param){
-        A <- param_index(b_length, npar)
-        betas <- vector(mode = "list", length = npar)
+b_length <- sapply(design_matrix[1:np], ncol)
+np <- 1
+param <- list(1.0, 1.0)
+all_betas <- function(b_length, np, param){
+        A <- param_index(b_length, np)
+        betas <- vector(mode = "list", length = np)
         b_length_plus <- c(0, as.numeric(b_length))
         for ( i in 1:(length(b_length_plus)-1) ){
                 betas[[i]] <- matrix(param[A[i,1]:A[i,2]], ncol = 1)
         }
         return(betas)
 }
+all_betas(b_length, np, start)
 
 param_index <- function(b_length, npar){
         b_length_plus <- c(0, as.numeric(b_length))
@@ -138,4 +139,4 @@ param_index <- function(b_length, npar){
         }
         return(A)
 }
-param_index(b_length, npar)
+param_index(b_length, np)
