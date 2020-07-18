@@ -56,8 +56,8 @@ reg_estimtf <- function(formula, ydist = Y ~ Normal, data = NULL, subset = NULL,
                 stop(paste0("'ydist' argument must be ", "a formula specifying ", "the distribution of ",
                                                         "the response variable \n \n"))
         }
-        #ydist = y ~ Normal
-        ydist = y ~ Poisson
+        ydist = y ~ Normal
+        #ydist = y ~ Poisson
         # Defining loss function depending on xdist
         if (all.vars(ydist)[2] != "Poisson" & all.vars(ydist)[2] != "FWE" & all.vars(ydist)[2] != "Instantaneous Failures") {
                 dist <- eval(parse(text = paste("tf$compat$v1$distributions$", all.vars(ydist)[2], sep = "")))
@@ -77,8 +77,8 @@ reg_estimtf <- function(formula, ydist = Y ~ Normal, data = NULL, subset = NULL,
                 argumdist <- argumdist$parameters$copy()
         }
 
-        #fixparam <- list(scale = 3.0)
         fixparam <- NULL
+        #fixparam <- NULL
         # Errors in list fixparam
         # Update argumdist. Leaves all the arguments of the TF distribution except the ones that are fixed
         if (!is.null(fixparam)) {
@@ -107,7 +107,8 @@ reg_estimtf <- function(formula, ydist = Y ~ Normal, data = NULL, subset = NULL,
         # Names of parameters to be estimated
         par_names <- names(argumdist)
 
-        initparam <- list(lambda=1.0)
+        #initparam <- list(lambda=1.0)
+        initparam <- list(loc=1.0, scale=1.0)
         # Errors in list initparam
         if (!is.null(initparam)) {
                 if (length(match(names(initparam), names(argumdist))) == 0) {
@@ -191,18 +192,27 @@ reg_estimtf <- function(formula, ydist = Y ~ Normal, data = NULL, subset = NULL,
                 #hyperparameters$use_locking <- as.symbol(hyperparameters$use_locking)
         }
 
+        #JAIME
+        #n_betas <- sum(as.numeric(unlist(sapply(design_matrix[1:np], ncol))))
+        #b_names <- apply(matrix(1:np, nrow = np), MARGIN = 1,
+                         #FUN = function(x) colnames(design_matrix[[x]]))
+
+
         # Create the design matrix
-        #formulas <- list(loc.fo = ~ x)
+        formulas <- list(loc.fo = ~ x + x1, scale.fo = ~ x)
+        n <- 1000
+        x <- runif(n = n, 0, 6)
+        x1 <- runif(n = n, 0, 6)
+        #x <- cbind(x, x1)
+        y <- rnorm(n = n, mean = -2 + 3 * x + 9* x1, sd = 3 + 3* x)
+        data <- data.frame(y = y, x = x, x1=x1)
+
+        #formulas <- list(lambda.fo = ~ x)
         #n <- 1000
-        #x <- runif(n = n, -5, 6)
-        #y <- rnorm(n = n, mean = -2 + 3 * x, sd = 3)
+        #x <- runif(n = n, -1, 1)
+        #y <- rpois(n = n, lambda = exp(-2 + 3 * x))
         #data <- data.frame(y = y, x = x)
 
-        formulas <- list(lambda.fo = ~ x)
-        n <- 1000
-        x <- runif(n = n, -1, 1)
-        y <- rpois(n = n, lambda = exp(-2 + 3 * x))
-        data <- data.frame(y = y, x = x)
         design_matrix <- model.matrix.MLreg(formulas, data, ydist, np, par_names)
 
         # Estimation process starts
