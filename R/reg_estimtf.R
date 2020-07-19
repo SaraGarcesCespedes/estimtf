@@ -56,8 +56,9 @@ reg_estimtf <- function(formula, ydist = Y ~ Normal, data = NULL, subset = NULL,
                 stop(paste0("'ydist' argument must be ", "a formula specifying ", "the distribution of ",
                                                         "the response variable \n \n"))
         }
-        ydist = y ~ Normal
-        #ydist = y ~ Poisson
+
+        #ydist = y ~ Normal
+        ydist = y ~ Poisson
         # Defining loss function depending on xdist
         if (all.vars(ydist)[2] != "Poisson" & all.vars(ydist)[2] != "FWE" & all.vars(ydist)[2] != "Instantaneous Failures") {
                 dist <- eval(parse(text = paste("tf$compat$v1$distributions$", all.vars(ydist)[2], sep = "")))
@@ -107,8 +108,8 @@ reg_estimtf <- function(formula, ydist = Y ~ Normal, data = NULL, subset = NULL,
         # Names of parameters to be estimated
         par_names <- names(argumdist)
 
-        #initparam <- list(lambda=1.0)
-        initparam <- list(loc=1.0, scale=1.0)
+        initparam <- list(lambda=1.0)
+        #initparam <- list(loc=1.0, scale=1.0)
         # Errors in list initparam
         if (!is.null(initparam)) {
                 if (length(match(names(initparam), names(argumdist))) == 0) {
@@ -120,6 +121,9 @@ reg_estimtf <- function(formula, ydist = Y ~ Normal, data = NULL, subset = NULL,
         }
 
         # Errors in link_function
+        lfunctions <- c("logit", "log")
+        #link_function <- list(scale = "log")
+        link_function <- NULL
         if (!is.null(link_function)) {
                 if (length(match(gsub("\\..*","",names(link_function)), names(argumdist))) == 0) {
                         stop(paste0("Names of parameters included in the 'link_function' list do not match with the parameters of the ",
@@ -127,15 +131,17 @@ reg_estimtf <- function(formula, ydist = Y ~ Normal, data = NULL, subset = NULL,
                 } else if (length(match(gsub("\\..*","",names(link_function)), names(argumdist))) > np) {
                         stop(paste0("Only include in 'link_function' the parameters that are not fixed"))
                 }
+
+                for (i in 1:length(link_function)) {
+                        if (!(link_function[[i]] %in% lfunctions)) {
+                                stop(paste0("Unidentified link function Select one of the link functions included in the \n",
+                                            " following list: ", paste0(lfunctions, collapse = ", ")))
+                        }
+                }
         }
 
-        lfunctions <- c("logit", "log")
-        for (i in 1:length(link_function)) {
-                if (!(link_function[[i]] %in% lfunctions)) {
-                        stop(paste0("Unidentified link function Select one of the link functions included in the \n",
-                                    " following list: ", paste0(lfunctions, collapse = ", ")))
-                        }
-        }
+
+
 
 
         # List of optimizers
@@ -204,14 +210,14 @@ reg_estimtf <- function(formula, ydist = Y ~ Normal, data = NULL, subset = NULL,
         x <- runif(n = n, 0, 6)
         x1 <- runif(n = n, 0, 6)
         #x <- cbind(x, x1)
-        y <- rnorm(n = n, mean = -2 + 3 * x + 9* x1, sd = 3 + 3* x)
+        y <- rnorm(n = n, mean = -2 + 3 * x + 9* x1, sd = exp(3 + 3* x))
         data <- data.frame(y = y, x = x, x1=x1)
 
-        #formulas <- list(lambda.fo = ~ x)
-        #n <- 1000
-        #x <- runif(n = n, -1, 1)
-        #y <- rpois(n = n, lambda = exp(-2 + 3 * x))
-        #data <- data.frame(y = y, x = x)
+        formulas <- list(lambda.fo = ~ x)
+        n <- 1000
+        x <- runif(n = n, -1, 1)
+        y <- rpois(n = n, lambda = exp(-2 + 3 * x))
+        data <- data.frame(y = y, x = x)
 
         design_matrix <- model.matrix.MLreg(formulas, data, ydist, np, par_names)
 
@@ -219,9 +225,9 @@ reg_estimtf <- function(formula, ydist = Y ~ Normal, data = NULL, subset = NULL,
 
         # With eager execution or disable eager execution
         if (eager == TRUE) {
-                res <- eagerreg(data, dist, design_matrix, fixparam, initparam, opt, hyperparameters, maxiter, tolerance, np)
+                res <- eagerreg(data, dist, design_matrix, fixparam, initparam, opt, hyperparameters, maxiter, tolerance, np, link_function, ydist)
         } else {
-                res <- disableagerreg(data, dist, design_matrix, fixparam, initparam, opt, hyperparameters, maxiter, tolerance, np)
+                res <- disableagerreg(data, dist, design_matrix, fixparam, initparam, opt, hyperparameters, maxiter, tolerance, np, link_function, ydist)
         }
 }
 
