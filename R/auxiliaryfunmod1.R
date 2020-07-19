@@ -186,7 +186,7 @@ eagerdist <- function(x, dist, fixparam, linkfun, initparam, opt, hyperparameter
 
         # Create list with variables without names
         for (i in 1:np) new_list[[i]] <- var_list[[i]]
-
+        maxiter <- 10000
 
         while(TRUE){
                 # Update step
