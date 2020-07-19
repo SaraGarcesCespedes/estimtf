@@ -49,7 +49,7 @@ dist_estimtf <- function(x, xdist = "Normal", fixparam = NULL, initparam = NULL,
         if (!is.character(xdist)) {
                 stop("'xdist' must be a character \n \n")
         }
-
+        xdist <- "Normal"
         # Defining loss function depending on xdist
         if (xdist != "Poisson" & xdist != "FWE" & xdist != "Instantaneous Failures") {
                 dist <- eval(parse(text = paste("tf$compat$v1$distributions$", xdist, sep = "")))
@@ -69,7 +69,7 @@ dist_estimtf <- function(x, xdist = "Normal", fixparam = NULL, initparam = NULL,
                 argumdist <- argumdist$parameters$copy()
         }
 
-
+        fixparam <- NULL
         # Errors in list fixparam
         # Update argumdist. Leaves all the arguments of the TF distribution except the ones that are fixed
         if (!is.null(fixparam)) {
@@ -94,7 +94,7 @@ dist_estimtf <- function(x, xdist = "Normal", fixparam = NULL, initparam = NULL,
                 argumdist <- argumdist[arg]
         }
 
-
+        initparam <- list(loc = 1.0, scale = 1.0)
         # Errors in list initparam
         if (!is.null(initparam)) {
                 if (length(match(names(initparam), names(argumdist))) == 0) {
@@ -108,7 +108,7 @@ dist_estimtf <- function(x, xdist = "Normal", fixparam = NULL, initparam = NULL,
         # List of optimizers
         optimizers <- c("AdadeltaOptimizer", "AdagradDAOptimizer", "AdagradOptimizer", "AdamOptimizer", "GradientDescentOptimizer",
                         "MomentumOptimizer", "RMSPropOptimizer")
-
+        optimizer <- "AdamOptimizer"
         # Error in character for optimizer
         if (!(optimizer %in% optimizers)) {
                 stop(paste0("Unidentified optimizer. Select one of the optimizers included in the \n",
@@ -129,6 +129,7 @@ dist_estimtf <- function(x, xdist = "Normal", fixparam = NULL, initparam = NULL,
         }
 
         # If the user do not provide tolerance values, by default the values will be .Machine$double.eps
+        tolerance <- NULL
         if (is.null(tolerance)) {
                 tolerance <- list(parameters = .Machine$double.eps, loss = .Machine$double.eps, gradients = .Machine$double.eps)
         }
@@ -143,6 +144,7 @@ dist_estimtf <- function(x, xdist = "Normal", fixparam = NULL, initparam = NULL,
         argumopt <- within(argumopt, rm(name)) #remove name argument
 
         # If the user do not provide values for the hyperparameters, they will take the default values of tensorflow
+        hyperparameters <- NULL
         if (!is.null(hyperparameters)) {
                 if (length(match(names(hyperparameters), names(argumopt))) == 0) {
                         stop(paste0("Names hyperparameters do not match with the hyperparameters of ","TensorFlow ", optimizer, "."))
