@@ -142,3 +142,283 @@ disableagerreg <- function(data, dist, design_matrix, fixparam, initparam, opt, 
 
 
 }
+
+
+
+eagerreg <- function(data, dist, design_matrix, fixparam, initparam, opt, hyperparameters, maxiter, tolerance, np) {
+
+        # Create list to store the parameters to be estimated
+        #var_list <- vector(mode = "list", length = np)
+        #names(var_list) <- names(initparam)
+
+        # Create tf Variables
+        #for (i in 1:np) {
+        #       var_list[[i]] <- assign(names(initparam)[i], tf$Variable(initparam[[i]], dtype = tf$float32, name = names(initparam)[i]))
+        #}
+
+        y_data <- design_matrix$y
+
+        #x_data <- design_matrix$data_reg[, -1]
+
+        nvar <- betas <- X <- param <- intercept <- vector(mode = "list", length = np) #NO CREO QUE SEA NECESARIO CREAR LISTA BETAS
+        names(nvar) <- names(betas) <- names(X) <- names(param) <-  names(intercept) <-  names(initparam)
+        #for (i in 1:np) {
+        #       X[[i]] <- eval(parse(text = paste("design_matrix$", names(initparam)[i], sep = "")))
+        #      nvar[[i]] <- ncol(X[[i]])
+        #     betas[[i]] <- assign(paste0("betas", names(initparam)[i]), tf$Variable(tf$ones(list(nvar[[i]], 1L), dtype = tf$float64), name = paste0("betas", names(initparam)[i])))
+        #    param[[i]] <- assign(names(initparam[i]), tf$matmul(X[[i]], betas[[i]]))
+        #}
+
+        for (i in 1:np) {
+                nvar[[i]] <- eval(parse(text = paste("ncol(design_matrix$", names(initparam)[i], ")-1", sep = "")))
+                X[[i]] <- eval(parse(text = paste("design_matrix$", names(initparam)[i], "[, -1]", sep = "")))
+                betas[[i]] <- assign(paste0("betas", names(initparam)[i]), tf$Variable(tf$ones(list(nvar[[i]], 1L), dtype = tf$float64), name = paste0("betas", names(initparam)[i]), trainable =TRUE))
+                intercept[[i]] <- assign(paste0("intercept", names(initparam)[i]), tf$Variable(1.0, dtype = tf$float64, name = paste0("intercept", names(initparam)[i]), trainable =TRUE))
+                #matmul no funciona si es una sola variable
+                #param[[i]] <- assign(names(initparam[i]), tf$matmul(tf$constant(X[[i]], dtype = tf$float64), betas[[i]]) + intercept[[i]])
+                param[[i]] <- assign(names(initparam[i]), tf$exp(tf$constant(X[[i]], dtype = tf$float64) * betas[[i]] + intercept[[i]]))
+
+        }
+
+        X <- eval(parse(text = paste("design_matrix$", names(initparam)[1], "[, -1]", sep = "")))
+
+        beta <- tf$Variable(1.0, dtype = tf$float32)
+        intercept <- tf$Variable(1.0, dtype = tf$float32)
+        lambda <- tf$exp(x * beta + intercept)
+
+        vartotal <- append(fixparam, lambda)
+        names(vartotal) <- "lambda"
+
+        if (!is.null(fixparam)) {
+                for (j in length(fixparam)) {
+                        fixparam[[j]] <- tf$constant(fixparam[[j]], dtype = tf$float64)
+                }
+        }
+        # Create a list with all parameters, fixed and not fixed
+        vartotal <- append(fixparam, param)
+        paramtotal <- append(betas, intercept)
+        # Define optimizer
+        seloptimizer <- do.call(what = opt, hyperparameters)
+
+        # Initialize step
+        step <- 0
+
+        # Create vectors to store parameters, gradientes and loss values of each iteration
+        loss <- new_list <- parameters <- gradients <- hesslist <- objvariables <- vector(mode = "list")
+
+        # Create list with variables without names
+        #for (i in 1:np) new_list[[i]] <- betas[[i]]
+        for (i in 1:length(vartotal)) new_list[[i]] <- vartotal[[i]]
+
+        while(TRUE){
+                # Update step
+                step <- step + 1
+
+                with(tf$GradientTape(persistent = TRUE) %as% tape, {
+                        # Define loss function depending on the distribution
+                        if (dist == "Poisson") {
+                                #loss_value <- tf$reduce_sum(-y_data * (tf$math$log(vartotal[["lambda"]])) + vartotal[["lambda"]])
+                                loss_value <- tf$reduce_sum(-y_data * (tf$math$log(lambda)) + lambda)
+                        } else if (dist == "FWE") {
+                                loss_value <- -tf$reduce_sum(tf$math$log(vartotal[["mu"]] + vartotal[["sigma"]] / (y_data ^ 2))) - tf$reduce_sum(vartotal[["mu"]] * y_data - vartotal[["sigma"]] / y_data) + tf$reduce_sum(tf$math$exp(vartotal[["mu"]] * y_data - vartotal[["sigma"]] / y_data))
+                        } else if (dist == "Instantaneous Failures") {
+                                loss_value <- -tf$reduce_sum(tf$math$log((((vartotal[["lambda"]] ^ 2) + y_data - 2 * vartotal[["lambda"]]) * tf$math$exp(-y_data / vartotal[["lambda"]])) / ((vartotal[["lambda"]] ^ 2) * (vartotal[["lambda"]] - 1))))
+                        } else {
+                                density <- do.call(what = dist, vartotal)
+                                loss_value <- tf$negative(tf$reduce_sum(density$log_prob(value = y_data)))
+                        }
+                        #grads <- tape$gradient(loss_value, list(beta, intercept))
+                        # Compute Hessian matrixin
+                        #for(i in 1:length(paramtotal)) hesslist[[i]] <- tape$gradient(grads[[i]], c(betaslambda, interceptlambda))
+                        #mhess <- as.matrix(tf$stack(values=hesslist, axis=0))
+                })
+                grads <- tape$gradient(loss_value, list(beta, intercept))
+
+
+                # Compute gradientes
+                seloptimizer$apply_gradients(purrr::transpose(list(grads, c(beta, intercept))))
+
+                # Save loss value
+                loss[[step]] <- as.numeric(loss_value)
+
+                # Save gradients values
+                gradients[[step]] <- grads
+
+                # Parameters and gradients as numeric vectors
+                for (i in 1:np) {
+                        objvariables[[i]] <- as.numeric(get(names(var_list)[i]))
+                        gradients[[step]][[i]] <- as.numeric(gradients[[step]][[i]])
+                }
+                parameters[[step]] <- objvariables
+
+                # Conditions
+                if (step != 1) {
+                        if (abs(loss[[step]] - loss[[step-1]]) < tolerance$loss){
+                                print(paste("Loss function convergence,", step, "iterations needed."))
+                                break
+                        } else if (step >= maxiter) {
+                                print(paste("Maximum number of iterations reached."))
+                                break
+                        } else if (isTRUE(sapply(1:np, FUN= function(x) abs(parameters[[step]][[x]]) < tolerance$parameters))) {
+                                print(paste("Parameters convergence,", step, "iterations needed."))
+                                break
+                        } else if (isTRUE(sapply(1:np, FUN= function(x) abs(gradients[[step]][[x]]) < tolerance$gradients))) {
+                                print(paste("Gradients convergence,", step, "iterations needed."))
+                                break
+                        }
+                }
+        }
+
+        # Compute std error for each estimator
+        stderror <- vector(mode = "list", length = np)
+        diagvarcov <- sqrt(diag(solve(mhess)))
+        names(stderror) <- names(var_list)
+        for (i in 1:np) stderror[[i]] <- diagvarcov[i] #ESTO PUEDE SER MAS EFICIENTE
+
+        # Organize results of each iteration
+        gradients <- purrr::transpose(gradients)
+        parameters <- purrr::transpose(parameters)
+        gradientsfinal <- parametersfinal <- namesgradients <- as.numeric()
+        for (j in 1:np) {
+                gradientsfinal <- cbind(gradientsfinal, as.numeric(gradients[[j]]))
+                parametersfinal <- cbind(parametersfinal, as.numeric(parameters[[j]]))
+                namesgradients <- cbind(namesgradients, paste0("Gradients ", names(var_list)[j]))
+        }
+        # Table of results
+        results.table <- cbind(as.numeric(loss), parametersfinal, gradientsfinal)
+        colnames(results.table) <- c("loss", names(var_list), namesgradients)
+        return(list(results = results.table, final = tail(results.table, 1), standarderror = stderror))
+}
+
+
+eagerreg <- function(data, dist, design_matrix, fixparam, initparam, opt, hyperparameters, maxiter, tolerance, np) {
+
+        #y_data <- tf$constant(design_matrix$y, dtype = tf$float32)
+        y_data <- as.double(design_matrix$y)
+
+        nbetas <- param <- vector(mode = "list", length = np)
+        names(nbetas) <- names(param) <- names(design_matrix)[1:np]
+        totalbetas <- sum(as.numeric(unlist(sapply(design_matrix[1:np], ncol))))
+        regparam <- vector(mode = "list", length = totalbetas)
+        t<- 0
+        for (i in 1:np){
+                sum <- 0
+                nbetas[[i]] <- sum(as.numeric(unlist(sapply(design_matrix[i], ncol))))
+                bnum <- rep(0:(nbetas[[i]]-1))
+                multparam <- vector(mode = "list", length = nbetas[[i]])
+                x_data <- eval(parse(text = paste("design_matrix$", names(nbetas)[i], sep = "")))
+                for (j in 1:nbetas[[i]]){
+                        regparam[[j + t]] <- assign(paste0("beta", bnum[j], names(nbetas)[i]),
+                                                    tf$Variable(initparam[[names(nbetas)[i]]],
+                                                                dtype = tf$float32,
+                                                                name = paste0("beta", bnum[j], names(nbetas)[i])))
+                        multparam[[j]] <- tf$multiply(x_data[, j], regparam[[j + t]])
+                        names(regparam)[j + t] <- paste0("beta", bnum[j], names(nbetas)[i])
+                        sum <- sum + multparam[[j]]
+                }
+                #sum <- tf$exp(sum)
+                param[[i]] <- assign(names(nbetas)[i], sum)
+                t <- t + nbetas[[i]]
+        }
+
+
+        # SI ES NECESARIO?
+        if (!is.null(fixparam)) {
+                for (j in length(fixparam)) {
+                        fixparam[[j]] <- tf$constant(fixparam[[j]], dtype = tf$float32)
+                }
+        }
+
+        # Create a list with all parameters, fixed and not fixed
+        vartotal <- append(fixparam, param)
+
+        # Define optimizer
+        seloptimizer <- do.call(what = opt, hyperparameters)
+
+        # Initialize step
+        step <- 0
+
+        # Create vectors to store parameters, gradientes and loss values of each iteration
+        loss <- new_list <- parameters <- gradients <- hesslist <- objvariables <- vector(mode = "list")
+        for (i in 1:length(regparam)) new_list[[i]] <- regparam[[i]]
+
+        maxiter <- 10000
+
+        while(TRUE){
+                # Update step
+                step <- step + 1
+
+                with(tf$GradientTape(persistent = TRUE) %as% tape, {
+                        # Define loss function depending on the distribution
+                        if (dist == "Poisson") {
+                                loss_value <- tf$reduce_sum(-y_data * (tf$math$log(vartotal[["lambda"]])) + vartotal[["lambda"]])
+                        } else if (dist == "FWE") {
+                                loss_value <- -tf$reduce_sum(tf$math$log(vartotal[["mu"]] + vartotal[["sigma"]] / (y_data ^ 2))) - tf$reduce_sum(vartotal[["mu"]] * y_data - vartotal[["sigma"]] / y_data) + tf$reduce_sum(tf$math$exp(vartotal[["mu"]] * y_data - vartotal[["sigma"]] / y_data))
+                        } else if (dist == "Instantaneous Failures") {
+                                loss_value <- -tf$reduce_sum(tf$math$log((((vartotal[["lambda"]] ^ 2) + y_data - 2 * vartotal[["lambda"]]) * tf$math$exp(-y_data / vartotal[["lambda"]])) / ((vartotal[["lambda"]] ^ 2) * (vartotal[["lambda"]] - 1))))
+                        } else {
+                                density <- do.call(what = dist, vartotal)
+                                loss_value <- tf$negative(tf$reduce_sum(density$log_prob(value = y_data)))
+                        }
+                        grads <- tape$gradient(loss_value, new_list)
+                        # Compute Hessian matrixin
+                        #for(i in 1:length(paramtotal)) hesslist[[i]] <- tape$gradient(grads[[i]], c(betaslambda, interceptlambda))
+                        #mhess <- as.matrix(tf$stack(values=hesslist, axis=0))
+                })
+
+
+                # Compute gradientes
+                seloptimizer$apply_gradients(purrr::transpose(list(grads, new_list)))
+
+                # Save loss value
+                loss[[step]] <- as.numeric(loss_value)
+
+                # Save gradients values
+                gradients[[step]] <- grads
+
+                # Parameters and gradients as numeric vectors
+                for (i in 1:length(regparam)) {
+                        objvariables[[i]] <- as.numeric(get(names(regparam)[i]))
+                        gradients[[step]][[i]] <- as.numeric(gradients[[step]][[i]])
+                }
+                parameters[[step]] <- objvariables
+
+                # Conditions
+                if (step != 1) {
+                        if (abs(loss[[step]] - loss[[step-1]]) < tolerance$loss){
+                                print(paste("Loss function convergence,", step, "iterations needed."))
+                                break
+                        } else if (step >= maxiter) {
+                                print(paste("Maximum number of iterations reached."))
+                                break
+                        } else if (isTRUE(sapply(1:length(regparam), FUN= function(x) abs(parameters[[step]][[x]]) < tolerance$parameters))) {
+                                print(paste("Parameters convergence,", step, "iterations needed."))
+                                break
+                        } else if (isTRUE(sapply(1:length(regparam), FUN= function(x) abs(gradients[[step]][[x]]) < tolerance$gradients))) {
+                                print(paste("Gradients convergence,", step, "iterations needed."))
+                                break
+                        }
+                }
+        }
+
+        # Compute std error for each estimator
+        stderror <- vector(mode = "list", length = np)
+        diagvarcov <- sqrt(diag(solve(mhess)))
+        names(stderror) <- names(var_list)
+        for (i in 1:np) stderror[[i]] <- diagvarcov[i] #ESTO PUEDE SER MAS EFICIENTE
+
+        # Organize results of each iteration
+        gradients <- purrr::transpose(gradients)
+        parameters <- purrr::transpose(parameters)
+        gradientsfinal <- parametersfinal <- namesgradients <- as.numeric()
+        for (j in 1:np) {
+                gradientsfinal <- cbind(gradientsfinal, as.numeric(gradients[[j]]))
+                parametersfinal <- cbind(parametersfinal, as.numeric(parameters[[j]]))
+                namesgradients <- cbind(namesgradients, paste0("Gradients ", names(var_list)[j]))
+        }
+        # Table of results
+        results.table <- cbind(as.numeric(loss), parametersfinal, gradientsfinal)
+        colnames(results.table) <- c("loss", names(var_list), namesgradients)
+        return(list(results = results.table, final = tail(results.table, 1), standarderror = stderror))
+}
+
