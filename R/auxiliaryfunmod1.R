@@ -27,12 +27,17 @@ disableagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, 
 
         # Create list to store the parameters to be estimated
         var_list <- vector(mode = "list", length = np)
-        names(var_list) <- names(initparam)
 
         # Create tf Variables
-        for (i in 1:np) {
-                var_list[[i]] <- assign(names(initparam)[i], tf$Variable(initparam[[i]], dtype = tf$float32, name = names(initparam)[i]))
-        }
+        #for (i in 1:np) {
+         #       var_list[[i]] <- assign(names(initparam)[i], tf$Variable(initparam[[i]], dtype = tf$float32, name = names(initparam)[i]))
+        #}
+
+        var_list <- lapply(1:np, FUN = function(i) var_list[[i]] <- assign(names(initparam)[i],
+                                                                           tf$Variable(initparam[[i]],
+                                                                                       dtype = tf$float32,
+                                                                                       name = names(initparam)[i])))
+        names(var_list) <- names(initparam)
 
         # Create a list with all parameters, fixed and not fixed
         vartotal <- append(fixparam, var_list)
@@ -41,7 +46,8 @@ disableagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, 
         loss <- new_list <- parameters <- gradients <- itergrads <- objvariables <- vector(mode = "list")
 
         # Create list with variables without names
-        for (i in 1:np) new_list[[i]] <- var_list[[i]]
+        #for (i in 1:np) new_list[[i]] <- var_list[[i]]
+        new_list <- lapply(1:np, FUN = function(i) new_list[[i]] <- var_list[[i]])
 
         # Define loss function depending on the distribution
         if (dist == "Poisson") {
@@ -81,11 +87,14 @@ disableagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, 
                 sess$run(train, feed_dict = fd)
 
                 # Parameters and gradients as numeric vectors
-                for (i in 1:np) {
-                        objvariables[[i]] <- as.numeric(sess$run(new_list[[i]]))
+                #for (i in 1:np) {
+                 #       objvariables[[i]] <- as.numeric(sess$run(new_list[[i]]))
                         #objvariables[[i]] <- as.numeric(objvariables[[i]])
-                        itergrads[[i]] <- as.numeric(sess$run(grads, feed_dict = fd)[[i]])
-                }
+                  #      itergrads[[i]] <- as.numeric(sess$run(grads, feed_dict = fd)[[i]])
+                #}
+
+                objvariables <- lapply(1:np, FUN = function(i) objvariables[[i]] <- as.numeric(sess$run(new_list[[i]])))
+                itergrads <- lapply(1:np, FUN = function(i) itergrads[[i]] <- as.numeric(sess$run(grads, feed_dict = fd)[[i]]))
 
                 parameters[[step]] <- objvariables
                 gradients[[step]] <- itergrads
@@ -113,13 +122,15 @@ disableagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, 
 
         # Compute Hessian matrix
         hesslist <- stderror <- vector(mode = "list", length = np)
-        for(i in 1:np) hesslist[[i]] <- tf$gradients(grads[[i]], new_list)
+        #for(i in 1:np) hesslist[[i]] <- tf$gradients(grads[[i]], new_list)
+        hesslist <- lapply(1:np, FUN = function(i) hesslist[[i]] <- tf$gradients(grads[[i]], new_list))
         hess <- tf$stack(values=hesslist, axis=0)
         #hess <- tf$reshape(hess, shape(np, np))
         mhess <- sess$run(hess, feed_dict = fd)
         diagvarcov <- sqrt(diag(solve(mhess)))
+        #for (i in 1:np) stderror[[i]] <- diagvarcov[i] #ESTO PUEDE SER MAS EFICIENTE
+        stderror <- lapply(1:np, FUN = function(i) stderror[[i]] <- diagvarcov[i])
         names(stderror) <- names(var_list)
-        for (i in 1:np) stderror[[i]] <- diagvarcov[i] #ESTO PUEDE SER MAS EFICIENTE
 
         # Close tf session
         sess$close()
@@ -128,11 +139,15 @@ disableagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, 
         gradients <- purrr::transpose(gradients)
         parameters <- purrr::transpose(parameters)
         gradientsfinal <- parametersfinal <- namesgradients <- as.numeric()
-        for (j in 1:np) {
-                gradientsfinal <- cbind(gradientsfinal, as.numeric(gradients[[j]]))
-                parametersfinal <- cbind(parametersfinal, as.numeric(parameters[[j]]))
-                namesgradients <- cbind(namesgradients, paste0("Gradients ", names(var_list)[j]))
-        }
+        #for (j in 1:np) {
+         #       gradientsfinal <- cbind(gradientsfinal, as.numeric(gradients[[j]]))
+          #      parametersfinal <- cbind(parametersfinal, as.numeric(parameters[[j]]))
+           #     namesgradients <- cbind(namesgradients, paste0("Gradients ", names(var_list)[j]))
+        #}
+        gradientsfinal <- sapply(1:np, FUN = function(i) gradientsfinal <- cbind(gradientsfinal, as.numeric(gradients[[i]])))
+        parametersfinal <- sapply(1:np, FUN = function(i) parametersfinal <- cbind(parametersfinal, as.numeric(parameters[[i]])))
+        namesgradients <- sapply(1:np, FUN = function(i) namesgradients <- cbind(namesgradients, paste0("Gradients ", names(var_list)[i])))
+
         # Table of results
         results.table <- cbind(as.numeric(loss), parametersfinal, gradientsfinal)
         colnames(results.table) <- c("loss", names(var_list), namesgradients)
@@ -165,12 +180,16 @@ eagerdist <- function(x, dist, fixparam, linkfun, initparam, opt, hyperparameter
 
         # Create list to store the parameters to be estimated
         var_list <- vector(mode = "list", length = np)
-        names(var_list) <- names(initparam)
 
         # Create tf Variables
-        for (i in 1:np) {
-                var_list[[i]] <- assign(names(initparam)[i], tf$Variable(initparam[[i]], dtype = tf$float32, name = names(initparam)[i]))
-        }
+        #for (i in 1:np) {
+         #       var_list[[i]] <- assign(names(initparam)[i], tf$Variable(initparam[[i]], dtype = tf$float32, name = names(initparam)[i]))
+        #}
+        var_list <- lapply(1:np, FUN = function(i) var_list[[i]] <- assign(names(initparam)[i],
+                                                                           tf$Variable(initparam[[i]],
+                                                                                       dtype = tf$float32,
+                                                                                       name = names(initparam)[i])))
+        names(var_list) <- names(initparam)
 
         # Create a list with all parameters, fixed and not fixed
         vartotal <- append(fixparam, var_list)
@@ -185,7 +204,9 @@ eagerdist <- function(x, dist, fixparam, linkfun, initparam, opt, hyperparameter
         loss <- new_list <- parameters <- gradients <- hesslist <- objvariables <- vector(mode = "list")
 
         # Create list with variables without names
-        for (i in 1:np) new_list[[i]] <- var_list[[i]]
+        #for (i in 1:np) new_list[[i]] <- var_list[[i]]
+        new_list <- lapply(1:np, FUN = function(i) new_list[[i]] <- var_list[[i]])
+
         maxiter <- 10000
 
         while(TRUE){
@@ -206,7 +227,8 @@ eagerdist <- function(x, dist, fixparam, linkfun, initparam, opt, hyperparameter
                         }
                         grads <- tape$gradient(loss_value, new_list)
                         # Compute Hessian matrixin
-                        for(i in 1:np) hesslist[[i]] <- tape$gradient(grads[[i]], new_list)
+                        #for(i in 1:np) hesslist[[i]] <- tape$gradient(grads[[i]], new_list)
+                        hesslist <- lapply(1:np, FUN = function(i) hesslist[[i]] <- tape$gradient(grads[[i]], new_list))
                         mhess <- as.matrix(tf$stack(values=hesslist, axis=0))
                 })
 
@@ -220,10 +242,13 @@ eagerdist <- function(x, dist, fixparam, linkfun, initparam, opt, hyperparameter
                 gradients[[step]] <- grads
 
                 # Parameters and gradients as numeric vectors
-                for (i in 1:np) {
-                        objvariables[[i]] <- as.numeric(get(names(var_list)[i]))
-                        gradients[[step]][[i]] <- as.numeric(gradients[[step]][[i]])
-                }
+                #for (i in 1:np) {
+                #        objvariables[[i]] <- as.numeric(get(names(var_list)[i]))
+                 #       gradients[[step]][[i]] <- as.numeric(gradients[[step]][[i]])
+                #}
+                objvariables <- lapply(1:np, objvariables[[i]] <- as.numeric(get(names(var_list)[i])))
+                gradients[[step]] <- lapply(1:np, gradients[[step]][[i]] <- as.numeric(gradients[[step]][[i]]))
+
                 parameters[[step]] <- objvariables
 
                 # Conditions
@@ -248,17 +273,22 @@ eagerdist <- function(x, dist, fixparam, linkfun, initparam, opt, hyperparameter
         stderror <- vector(mode = "list", length = np)
         diagvarcov <- sqrt(diag(solve(mhess)))
         names(stderror) <- names(var_list)
-        for (i in 1:np) stderror[[i]] <- diagvarcov[i] #ESTO PUEDE SER MAS EFICIENTE
+        #for (i in 1:np) stderror[[i]] <- diagvarcov[i] #ESTO PUEDE SER MAS EFICIENTE
+        stderror <- lapply(1:np, FUN = function(i) stderror[[i]] <- diagvarcov[i])
 
         # Organize results of each iteration
         gradients <- purrr::transpose(gradients)
         parameters <- purrr::transpose(parameters)
         gradientsfinal <- parametersfinal <- namesgradients <- as.numeric()
-        for (j in 1:np) {
-                gradientsfinal <- cbind(gradientsfinal, as.numeric(gradients[[j]]))
-                parametersfinal <- cbind(parametersfinal, as.numeric(parameters[[j]]))
-                namesgradients <- cbind(namesgradients, paste0("Gradients ", names(var_list)[j]))
-        }
+        #for (j in 1:np) {
+         #       gradientsfinal <- cbind(gradientsfinal, as.numeric(gradients[[j]]))
+          #      parametersfinal <- cbind(parametersfinal, as.numeric(parameters[[j]]))
+           #     namesgradients <- cbind(namesgradients, paste0("Gradients ", names(var_list)[j]))
+        #}
+        gradientsfinal <- sapply(1:np, function(i) gradientsfinal <- cbind(gradientsfinal, as.numeric(gradients[[i]])))
+        parametersfinal <- sapply(1:np, function(i) parametersfinal <- cbind(parametersfinal, as.numeric(parameters[[i]])))
+        namesgradients <- sapply(1:np, function(i) namesgradients <- cbind(namesgradients, paste0("Gradients ", names(var_list)[j])))
+
         # Table of results
         results.table <- cbind(as.numeric(loss), parametersfinal, gradientsfinal)
         colnames(results.table) <- c("loss", names(var_list), namesgradients)
@@ -296,7 +326,8 @@ comparisondist <- function(x, xdist, fixparam, initparam, lower, upper, method) 
         if (!is.null(initparam)) for (i in 1:length(initparam)) names(initparam)[i] <- parametersr[[match(names(initparam)[i], names(parametersr))]]
 
         estimation <- maxlogL(x = x, dist = distributionsr[[xdist]], fixed = fixparam,
-                              start = initparam, optimizer = method)
+                              start = initparam, optimizer = method, lower = lower,
+                              upper = upper)
         return(estimation)
 
 

@@ -4,8 +4,8 @@
 #'
 #' @author Sara Garcés Céspedes
 #'
-#' @param formula
 #' @param ydist
+#' @param formula
 #' @param data
 #' @param subset
 #' @param fixparam
@@ -25,7 +25,7 @@
 #' @export
 #'
 #' @examples
-reg_estimtf <- function(formula, ydist = Y ~ Normal, data = NULL, subset = NULL, fixparam = NULL, initparam = NULL, link_function = NULL,
+reg_estimtf <- function(ydist = Y ~ Normal, formula, data = NULL, subset = NULL, fixparam = NULL, initparam = NULL, link_function = NULL,
                         optimizer = "AdamOptimizer", hyperparameters = NULL, maxiter = 1000, tolerance = NULL, eager = TRUE, comparison = FALSE,
                         lower = NULL, upper = NULL, method = "nlminb") {
 
@@ -122,7 +122,7 @@ reg_estimtf <- function(formula, ydist = Y ~ Normal, data = NULL, subset = NULL,
 
         # Errors in link_function
         lfunctions <- c("logit", "log")
-        #link_function <- list(scale = "log")
+        link_function <- list(scale = "log")
         link_function <- NULL
         if (!is.null(link_function)) {
                 if (length(match(gsub("\\..*","",names(link_function)), names(argumdist))) == 0) {
@@ -131,18 +131,13 @@ reg_estimtf <- function(formula, ydist = Y ~ Normal, data = NULL, subset = NULL,
                 } else if (length(match(gsub("\\..*","",names(link_function)), names(argumdist))) > np) {
                         stop(paste0("Only include in 'link_function' the parameters that are not fixed"))
                 }
-
-                for (i in 1:length(link_function)) {
-                        if (!(link_function[[i]] %in% lfunctions)) {
+                verifylink <- lapply(1:length(link_function), FUN = function(x) {
+                        if (!(link_function[[x]] %in% lfunctions)) {
                                 stop(paste0("Unidentified link function Select one of the link functions included in the \n",
                                             " following list: ", paste0(lfunctions, collapse = ", ")))
                         }
-                }
+                })
         }
-
-
-
-
 
         # List of optimizers
         optimizers <- c("AdadeltaOptimizer", "AdagradDAOptimizer", "AdagradOptimizer", "AdamOptimizer", "GradientDescentOptimizer",
@@ -163,8 +158,9 @@ reg_estimtf <- function(formula, ydist = Y ~ Normal, data = NULL, subset = NULL,
                 } else {
                         param <- names(argumdist)[which(names(argumdist)[x] != "validate_args" & names(argumdist)[x] != "allow_nan_stats" & names(argumdist)[x] != "name" & names(argumdist)[x] != "dtype")]
                 }
+                #for (i in 1:np) initparam[[i]] <- 0.0 #SEGURAMENTE SE PUEDE HACER MAS EFICIENTE
+                initparam <- lapply(1:np, FUN = function (i) initparam[[i]] <- 0.0)
                 names(initparam) <- c(param)
-                for (i in 1:length(np)) initparam[[i]] <- 0.0 #SEGURAMENTE SE PUEDE HACER MAS EFICIENTE
         }
 
 
@@ -194,24 +190,22 @@ reg_estimtf <- function(formula, ydist = Y ~ Normal, data = NULL, subset = NULL,
                 hyperparameters <- vector(mode = "list", length = length(argumopt))
                 names(hyperparameters) <- names(argumopt)
                 splitarg <- sapply(1:length(argumopt), FUN = function(x) argumopt[[x]] %>% str_split("\\="))
-                for (i in 1:length(hyperparameters)) hyperparameters[[i]] <- ifelse(splitarg[[i]][2] == "True" | splitarg[[i]][2] == "False", splitarg[[i]][2], as.numeric(splitarg[[i]][2])) #SE PUEDE HACER MAS EFICIENTE?
+                #for (i in 1:length(hyperparameters)) hyperparameters[[i]] <- ifelse(splitarg[[i]][2] == "True" | splitarg[[i]][2] == "False", splitarg[[i]][2], as.numeric(splitarg[[i]][2])) #SE PUEDE HACER MAS EFICIENTE?
                 #hyperparameters$use_locking <- as.symbol(hyperparameters$use_locking)
+                hyperparameters <- lapply(1:length(hyperparameters),
+                                          FUN = function(i) hyperparameters[[i]] <- ifelse(splitarg[[i]][2] == "True" | splitarg[[i]][2] == "False",
+                                                                                           splitarg[[i]][2], as.numeric(splitarg[[i]][2])))
         }
-
-        #JAIME
-        #n_betas <- sum(as.numeric(unlist(sapply(design_matrix[1:np], ncol))))
-        #b_names <- apply(matrix(1:np, nrow = np), MARGIN = 1,
-                         #FUN = function(x) colnames(design_matrix[[x]]))
 
 
         # Create the design matrix
-        formulas <- list(loc.fo = ~ x + x1, scale.fo = ~ x)
-        n <- 1000
-        x <- runif(n = n, 0, 6)
-        x1 <- runif(n = n, 0, 6)
+        #formulas <- list(loc.fo = ~ x + x1, scale.fo = ~ x)
+        #n <- 1000
+        #x <- runif(n = n, 0, 6)
+        #x1 <- runif(n = n, 0, 6)
         #x <- cbind(x, x1)
-        y <- rnorm(n = n, mean = -2 + 3 * x + 9* x1, sd = exp(3 + 3* x))
-        data <- data.frame(y = y, x = x, x1=x1)
+        #y <- rnorm(n = n, mean = -2 + 3 * x + 9* x1, sd = exp(3 + 3* x))
+        #data <- data.frame(y = y, x = x, x1=x1)
 
         formulas <- list(lambda.fo = ~ x)
         n <- 1000
@@ -229,6 +223,29 @@ reg_estimtf <- function(formula, ydist = Y ~ Normal, data = NULL, subset = NULL,
         } else {
                 res <- disableagerreg(data, dist, design_matrix, fixparam, initparam, opt, hyperparameters, maxiter, tolerance, np, link_function, ydist)
         }
+
+
+        # Estimations with other R optimizers using Estimation Tools function
+
+        # List of optimizers available in EstimationTools
+        methodsET <- c("nlminb", "optim", "DEoptim")
+
+        # NULL lower and upper
+        if (is.null(lower)) lower <- rep(x = -Inf, times = np)
+        if (is.null(upper)) upper <- rep(x = Inf, times = np)
+
+        # Error in character for metho
+        if (!(method %in% methodsET)) {
+                stop(paste0("Unidentified EstimationTools package optimizer. Select one of the optimizers included in the \n",
+                            " following list: ", paste0(methodsET, collapse = ", ")))
+        }
+
+        if (comparison == TRUE){
+                resET <- comparisonreg(ydist, formula, data, link_function, fixparam, initparam, lower, upper, method)
+        }
+
+
+        return(list(tf = res$final, stderrtf = res$standarderror, esttools = summary(resET)))
 }
 
 

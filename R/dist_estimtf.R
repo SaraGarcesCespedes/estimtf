@@ -124,8 +124,11 @@ dist_estimtf <- function(x, xdist = "Normal", fixparam = NULL, initparam = NULL,
                 } else {
                         param <- names(argumdist)[which(names(argumdist)[x] != "validate_args" & names(argumdist)[x] != "allow_nan_stats" & names(argumdist)[x] != "name" & names(argumdist)[x] != "dtype")]
                 }
+                #for (i in 1:length(np)) initparam[[i]] <- ifelse(dist == "Instantaneous Failures" | dist == "Poisson", 2.0, 0.0) #SEGURAMENTE SE PUEDE HACER MAS EFICIENTE
+                initparam <- lapply(1:np,
+                                    FUN = function(i) initparam[[i]] <- ifelse(dist == "Instantaneous Failures" | dist == "Poisson", 2.0, 0.0))
                 names(initparam) <- c(param)
-                for (i in 1:length(np)) initparam[[i]] <- ifelse(dist == "Instantaneous Failures" | dist == "Poisson", 2.0, 0.0) #SEGURAMENTE SE PUEDE HACER MAS EFICIENTE
+
         }
 
         # If the user do not provide tolerance values, by default the values will be .Machine$double.eps
@@ -153,8 +156,11 @@ dist_estimtf <- function(x, xdist = "Normal", fixparam = NULL, initparam = NULL,
                 hyperparameters <- vector(mode = "list", length = length(argumopt))
                 names(hyperparameters) <- names(argumopt)
                 splitarg <- sapply(1:length(argumopt), FUN = function(x) argumopt[[x]] %>% str_split("\\="))
-                for (i in 1:length(hyperparameters)) hyperparameters[[i]] <- ifelse(splitarg[[i]][2] == "True" | splitarg[[i]][2] == "False", splitarg[[i]][2], as.numeric(splitarg[[i]][2])) #SE PUEDE HACER MAS EFICIENTE?
+                #for (i in 1:length(hyperparameters)) hyperparameters[[i]] <- ifelse(splitarg[[i]][2] == "True" | splitarg[[i]][2] == "False", splitarg[[i]][2], as.numeric(splitarg[[i]][2])) #SE PUEDE HACER MAS EFICIENTE?
                 #hyperparameters$use_locking <- as.symbol(hyperparameters$use_locking)
+                hyperparameters <- lapply(1:length(hyperparameters),
+                                          FUN = function(i) hyperparameters[[i]] <- ifelse(splitarg[[i]][2] == "True" | splitarg[[i]][2] == "False",
+                                                                                           splitarg[[i]][2], as.numeric(splitarg[[i]][2])))
         }
 
         # Estimation process starts

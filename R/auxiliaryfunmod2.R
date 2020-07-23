@@ -96,10 +96,13 @@ disableagerreg <- function(data, dist, design_matrix, fixparam, initparam, opt, 
                 sess$run(train, feed_dict = fd)
 
                 # Parameters and gradients as numeric vectors
-                for (i in 1:length(regparam)) {
-                        objvariables[[i]] <- as.numeric(sess$run(regparam[[i]]))
-                        itergrads[[i]] <- as.numeric(sess$run(grads, feed_dict = fd)[[i]])
-                }
+                #for (i in 1:length(regparam)) {
+                 #       objvariables[[i]] <- as.numeric(sess$run(regparam[[i]]))
+                  #      itergrads[[i]] <- as.numeric(sess$run(grads, feed_dict = fd)[[i]])
+                #}
+                objvariables <- lapply(1:length(regparam), FUN = function(i) objvariables[[i]] <- as.numeric(sess$run(regparam[[i]])))
+                itergrads <- lapply(1:length(regparam), FUN = function(i) itergrads[[i]] <- as.numeric(sess$run(grads, feed_dict = fd)[[i]]))
+
 
                 parameters[[step]] <- objvariables
                 gradients[[step]] <- itergrads
@@ -128,13 +131,16 @@ disableagerreg <- function(data, dist, design_matrix, fixparam, initparam, opt, 
         # TODAVIA FALTAAAAA ARREGLAR ESTO
         # Compute Hessian matrix
         hesslist <- stderror <- vector(mode = "list", length = length(regparam))
-        for(i in 1:length(regparam)) hesslist[[i]] <- tf$gradients(grads[[i]], regparam)
+        #for(i in 1:length(regparam)) hesslist[[i]] <- tf$gradients(grads[[i]], regparam)
+        hesslist <- lapply(1:length(regparam), FUN = function(i) hesslist[[i]] <- tf$gradients(grads[[i]], regparam))
         hess <- tf$stack(values=hesslist, axis=0)
         #hess <- tf$reshape(hess, shape(np, np))
         mhess <- sess$run(hess, feed_dict = fd)
         diagvarcov <- sqrt(diag(solve(mhess)))
         #names(stderror) <- names(var_list)
-        for (i in 1:length(regparam)) stderror[[i]] <- diagvarcov[i] #ESTO PUEDE SER MAS EFICIENTE
+        #for (i in 1:length(regparam)) stderror[[i]] <- diagvarcov[i] #ESTO PUEDE SER MAS EFICIENTE
+        stderror <- lapply(1:length(regparam), FUN = function(i) stderror[[i]] <- diagvarcov[i])
+        names(stderror) <- names(regparam)
 
         # Close tf session
         sess$close()
@@ -143,11 +149,15 @@ disableagerreg <- function(data, dist, design_matrix, fixparam, initparam, opt, 
         gradients <- purrr::transpose(gradients)
         parameters <- purrr::transpose(parameters)
         gradientsfinal <- parametersfinal <- namesgradients <- as.numeric()
-        for (j in 1:length(regparam)) {
-                gradientsfinal <- cbind(gradientsfinal, as.numeric(gradients[[j]]))
-                parametersfinal <- cbind(parametersfinal, as.numeric(parameters[[j]]))
-                namesgradients <- cbind(namesgradients, paste0("Gradients ", names(regparam)[j]))
-        }
+        #for (j in 1:length(regparam)) {
+         #       gradientsfinal <- cbind(gradientsfinal, as.numeric(gradients[[j]]))
+          #      parametersfinal <- cbind(parametersfinal, as.numeric(parameters[[j]]))
+           #     namesgradients <- cbind(namesgradients, paste0("Gradients ", names(regparam)[j]))
+        #}
+        gradientsfinal <- sapply(1:length(regparam), function(i) gradientsfinal <- cbind(gradientsfinal, as.numeric(gradients[[i]])))
+        parametersfinal <- sapply(1:length(regparam), function(i) parametersfinal <- cbind(parametersfinal, as.numeric(parameters[[i]])))
+        namesgradients <- sapply(1:length(regparam), function(i) namesgradients <- cbind(namesgradients, paste0("Gradients ", names(regparam)[i])))
+
         # Table of results
         results.table <- cbind(as.numeric(loss), parametersfinal, gradientsfinal)
         colnames(results.table) <- c("loss", names(var_list), namesgradients)
@@ -221,7 +231,8 @@ eagerreg <- function(data, dist, design_matrix, fixparam, initparam, opt, hyperp
 
         # Create vectors to store parameters, gradientes and loss values of each iteration
         loss <- new_list <- parameters <- gradients <- hesslist <- objvariables <- vector(mode = "list")
-        for (i in 1:length(regparam)) new_list[[i]] <- regparam[[i]]
+        #for (i in 1:length(regparam)) new_list[[i]] <- regparam[[i]]
+        new_list <- lapply(1:length(regparam), FUN = function(i) new_list[[i]] <- regparam[[i]])
 
         maxiter <- 10000
 
@@ -258,7 +269,8 @@ eagerreg <- function(data, dist, design_matrix, fixparam, initparam, opt, hyperp
                         }
                         grads <- tape$gradient(loss_value, new_list)
                         # Compute Hessian matrixin
-                        for(i in 1:length(new_list)) hesslist[[i]] <- tape$gradient(grads[[i]], new_list)
+                        #for(i in 1:length(new_list)) hesslist[[i]] <- tape$gradient(grads[[i]], new_list)
+                        hesslist <- lapply(1:length(new_list), FUN = function(i) hesslist[[i]] <- tape$gradient(grads[[i]], new_list))
                         mhess <- as.matrix(tf$stack(values=hesslist, axis=0))
                 })
 
@@ -273,10 +285,13 @@ eagerreg <- function(data, dist, design_matrix, fixparam, initparam, opt, hyperp
                 gradients[[step]] <- grads
 
                 # Parameters and gradients as numeric vectors
-                for (i in 1:length(regparam)) {
-                        objvariables[[i]] <- as.numeric(get(names(regparam)[i]))
-                        gradients[[step]][[i]] <- as.numeric(gradients[[step]][[i]])
-                }
+                #for (i in 1:length(regparam)) {
+                 #       objvariables[[i]] <- as.numeric(get(names(regparam)[i]))
+                  #      gradients[[step]][[i]] <- as.numeric(gradients[[step]][[i]])
+                #}
+                objvariables <- lapply(1:length(regparam), objvariables[[i]] <- as.numeric(get(names(regparam)[i])))
+                gradients[[step]] <- lapply(1:length(regparam), gradients[[step]][[i]] <- as.numeric(gradients[[step]][[i]]))
+
                 parameters[[step]] <- objvariables
 
                 # Conditions
@@ -301,17 +316,22 @@ eagerreg <- function(data, dist, design_matrix, fixparam, initparam, opt, hyperp
         stderror <- vector(mode = "list", length = length(new_list))
         diagvarcov <- sqrt(diag(solve(mhess)))
         names(stderror) <- names(regparam)
-        for (i in 1:length(new_list)) stderror[[i]] <- diagvarcov[i] #ESTO PUEDE SER MAS EFICIENTE
+        #for (i in 1:length(new_list)) stderror[[i]] <- diagvarcov[i] #ESTO PUEDE SER MAS EFICIENTE
+        stderror <- lapply(1:length(new_list), FUN = function(i) stderror[[i]] <- diagvarcov[i])
 
         # Organize results of each iteration
         gradients <- purrr::transpose(gradients)
         parameters <- purrr::transpose(parameters)
         gradientsfinal <- parametersfinal <- namesgradients <- as.numeric()
-        for (j in 1:length(new_list)) {
-                gradientsfinal <- cbind(gradientsfinal, as.numeric(gradients[[j]]))
-                parametersfinal <- cbind(parametersfinal, as.numeric(parameters[[j]]))
-                namesgradients <- cbind(namesgradients, paste0("Gradients ", names(regparam)[j]))
-        }
+        #for (j in 1:length(new_list)) {
+         #       gradientsfinal <- cbind(gradientsfinal, as.numeric(gradients[[j]]))
+          #      parametersfinal <- cbind(parametersfinal, as.numeric(parameters[[j]]))
+           #     namesgradients <- cbind(namesgradients, paste0("Gradients ", names(regparam)[j]))
+        #}
+        gradientsfinal <- sapply(1:length(new_list), function(i) gradientsfinal <- cbind(gradientsfinal, as.numeric(gradients[[i]])))
+        parametersfinal <- sapply(1:length(new_list), function(i) parametersfinal <- cbind(parametersfinal, as.numeric(parameters[[i]])))
+        namesgradients <- sapply(1:length(new_list), function(i) namesgradients <- cbind(namesgradients, paste0("Gradients ", names(regparam)[i])))
+
         # Table of results
         results.table <- cbind(as.numeric(loss), parametersfinal, gradientsfinal)
         colnames(results.table) <- c("loss", names(regparam), namesgradients)
@@ -343,3 +363,37 @@ link <- function(link_function, sum, parameter) {
         }
 }
 
+
+comparisonreg <- function(ydist, formula, data, link_function, fixparam, initparam, lower, upper, method) {
+        distributionsr <- list(Bernoulli = "dbinom", Beta = "dbeta", Exponential = "dexp", Gamma = "dgamma",
+                               Normal = "dnorm", Uniform = "dunif", Poisson = "dpois", FWE = "dFWE")
+
+        parametersr <- list(loc = "mean", scale = "sd", concentration1 = "shape1", concentration2 = "shape2",
+                            concentration = "shape", low = "min", high = "max", lambda = "lambda", mu = "mu",
+                            sigma = "sigma")
+
+
+        if (!is.null(fixparam)) for (i in 1:length(fixparam)) names(fixparam)[i] <- parametersr[[match(names(fixparam)[i], names(parametersr))]]
+        if (!is.null(initparam)) for (i in 1:length(initparam)) names(initparam)[i] <- parametersr[[match(names(initparam)[i], names(parametersr))]]
+        if (!is.null(link_function)) for (i in 1:length(link_function)) names(link_function)[i] <- parametersr[[match(names(link_function)[i], names(parametersr))]]
+
+
+        link <- vector(mode = "list", length = 2 * length(link_function))
+        if (!is.null(link_function)) {
+                p <- 0
+                for (i in 1:length(link_function)) {
+                        link[[i + p]] <- names(link_function)[i]
+                        link[[i + p + 1]] <- paste0(link_function[[i]], "_link")
+                        names(link)[[i + p]] <- "over"
+                        names(link)[[i + p + 1]] <- "fun"
+                        p <- 1
+                }
+        }
+
+        estimation <- maxlogLreg(formulas = formula, y_dist = ydist, data = data,
+                               link = link, lower = lower, upper = upper, start = initparam,
+                               optimizer = method)
+        return(estimation)
+
+
+}
