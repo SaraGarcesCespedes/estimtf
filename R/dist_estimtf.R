@@ -145,6 +145,7 @@ dist_estimtf <- function(x, xdist = "Normal", fixparam = NULL, initparam = NULL,
         argumopt <- inspect$signature(opt)
         argumopt <- argumopt$parameters$copy()
         argumopt <- within(argumopt, rm(name)) #remove name argument
+        argumopt <- within(argumopt, rm(use_locking))
 
         # If the user do not provide values for the hyperparameters, they will take the default values of tensorflow
         hyperparameters <- NULL
@@ -178,15 +179,16 @@ dist_estimtf <- function(x, xdist = "Normal", fixparam = NULL, initparam = NULL,
         methodsET <- c("nlminb", "optim", "DEoptim")
 
         # NULL lower and upper
+        lower <- upper <- NULL
         if (is.null(lower)) lower <- rep(x = -Inf, times = np)
         if (is.null(upper)) upper <- rep(x = Inf, times = np)
-
+        method <- "nlminb"
         # Error in character for metho
         if (!(method %in% methodsET)) {
                 stop(paste0("Unidentified EstimationTools package optimizer. Select one of the optimizers included in the \n",
                             " following list: ", paste0(methodsET, collapse = ", ")))
         }
-
+        comparison <- TRUE
         if (comparison == TRUE){
                 resET <- comparisondist(x, xdist, fixparam, initparam, lower, upper, method)
         }

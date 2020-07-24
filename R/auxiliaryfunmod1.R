@@ -36,7 +36,7 @@ disableagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, 
         var_list <- lapply(1:np, FUN = function(i) var_list[[i]] <- assign(names(initparam)[i],
                                                                            tf$Variable(initparam[[i]],
                                                                                        dtype = tf$float32,
-                                                                                       name = names(initparam)[i])))
+                                                                                       name = names(initparam)[i]), envir = .GlobalEnv))
         names(var_list) <- names(initparam)
 
         # Create a list with all parameters, fixed and not fixed
@@ -79,6 +79,7 @@ disableagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, 
         # Initialize step
         step <- 0
 
+        maxiter <- 10000
         while(TRUE){
                 # Update step
                 step <- step + 1
@@ -178,6 +179,7 @@ disableagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, 
 #' @examples
 eagerdist <- function(x, dist, fixparam, linkfun, initparam, opt, hyperparameters, maxiter, tolerance, np) {
 
+        #tf$compat$v1$enable_eager_execution()
         # Create list to store the parameters to be estimated
         var_list <- vector(mode = "list", length = np)
 
@@ -188,7 +190,8 @@ eagerdist <- function(x, dist, fixparam, linkfun, initparam, opt, hyperparameter
         var_list <- lapply(1:np, FUN = function(i) var_list[[i]] <- assign(names(initparam)[i],
                                                                            tf$Variable(initparam[[i]],
                                                                                        dtype = tf$float32,
-                                                                                       name = names(initparam)[i])))
+                                                                                       name = names(initparam)[i]),
+                                                                           envir = .GlobalEnv))
         names(var_list) <- names(initparam)
 
         # Create a list with all parameters, fixed and not fixed
@@ -246,8 +249,8 @@ eagerdist <- function(x, dist, fixparam, linkfun, initparam, opt, hyperparameter
                 #        objvariables[[i]] <- as.numeric(get(names(var_list)[i]))
                  #       gradients[[step]][[i]] <- as.numeric(gradients[[step]][[i]])
                 #}
-                objvariables <- lapply(1:np, objvariables[[i]] <- as.numeric(get(names(var_list)[i])))
-                gradients[[step]] <- lapply(1:np, gradients[[step]][[i]] <- as.numeric(gradients[[step]][[i]]))
+                objvariables <- lapply(1:np, FUN = function(i) objvariables[[i]] <- as.numeric(get(names(var_list)[i])))
+                gradients[[step]] <- lapply(1:np, FUN = function(i) gradients[[step]][[i]] <- as.numeric(gradients[[step]][[i]]))
 
                 parameters[[step]] <- objvariables
 
@@ -287,7 +290,7 @@ eagerdist <- function(x, dist, fixparam, linkfun, initparam, opt, hyperparameter
         #}
         gradientsfinal <- sapply(1:np, function(i) gradientsfinal <- cbind(gradientsfinal, as.numeric(gradients[[i]])))
         parametersfinal <- sapply(1:np, function(i) parametersfinal <- cbind(parametersfinal, as.numeric(parameters[[i]])))
-        namesgradients <- sapply(1:np, function(i) namesgradients <- cbind(namesgradients, paste0("Gradients ", names(var_list)[j])))
+        namesgradients <- sapply(1:np, function(i) namesgradients <- cbind(namesgradients, paste0("Gradients ", names(var_list)[i])))
 
         # Table of results
         results.table <- cbind(as.numeric(loss), parametersfinal, gradientsfinal)
@@ -322,8 +325,11 @@ comparisondist <- function(x, xdist, fixparam, initparam, lower, upper, method) 
                             sigma = "sigma")
 
 
-        if (!is.null(fixparam)) for (i in 1:length(fixparam)) names(fixparam)[i] <- parametersr[[match(names(fixparam)[i], names(parametersr))]]
-        if (!is.null(initparam)) for (i in 1:length(initparam)) names(initparam)[i] <- parametersr[[match(names(initparam)[i], names(parametersr))]]
+        #if (!is.null(fixparam)) for (i in 1:length(fixparam)) names(fixparam)[i] <- parametersr[[match(names(fixparam)[i], names(parametersr))]]
+        #if (!is.null(initparam)) for (i in 1:length(initparam)) names(initparam)[i] <- parametersr[[match(names(initparam)[i], names(parametersr))]]
+
+        if (!is.null(fixparam)) names(fixparam) <- lapply(1:length(fixparam), FUN = function(i) names(fixparam)[i] <- parametersr[[match(names(fixparam)[i], names(parametersr))]])
+        if (!is.null(initparam)) names(initparam) <- lapply(1:length(initparam), FUN = function(i) names(initparam)[i] <- parametersr[[match(names(initparam)[i], names(parametersr))]])
 
         estimation <- maxlogL(x = x, dist = distributionsr[[xdist]], fixed = fixparam,
                               start = initparam, optimizer = method, lower = lower,
