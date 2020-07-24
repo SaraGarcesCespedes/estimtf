@@ -373,9 +373,13 @@ comparisonreg <- function(ydist, formula, data, link_function, fixparam, initpar
                             sigma = "sigma")
 
 
-        if (!is.null(fixparam)) for (i in 1:length(fixparam)) names(fixparam)[i] <- parametersr[[match(names(fixparam)[i], names(parametersr))]]
-        if (!is.null(initparam)) for (i in 1:length(initparam)) names(initparam)[i] <- parametersr[[match(names(initparam)[i], names(parametersr))]]
-        if (!is.null(link_function)) for (i in 1:length(link_function)) names(link_function)[i] <- parametersr[[match(names(link_function)[i], names(parametersr))]]
+        #if (!is.null(fixparam)) for (i in 1:length(fixparam)) names(fixparam)[i] <- parametersr[[match(names(fixparam)[i], names(parametersr))]]
+        #if (!is.null(initparam)) for (i in 1:length(initparam)) names(initparam)[i] <- parametersr[[match(names(initparam)[i], names(parametersr))]]
+        #if (!is.null(link_function)) for (i in 1:length(link_function)) names(link_function)[i] <- parametersr[[match(names(link_function)[i], names(parametersr))]]
+
+        if (!is.null(fixparam)) names(fixparam) <- lapply(1:length(fixparam), FUN = function(i) names(fixparam)[i] <- parametersr[[match(names(fixparam)[i], names(parametersr))]])
+        if (!is.null(initparam)) names(initparam) <- lapply(1:length(initparam), FUN = function(i) names(initparam)[i] <- parametersr[[match(names(initparam)[i], names(parametersr))]])
+        if (!is.null(link_function)) names(link_function) <- lapply(1:length(link_function), FUN = function(i) names(link_function)[i] <- parametersr[[match(names(link_function)[i], names(parametersr))]])
 
 
         link <- vector(mode = "list", length = 2 * length(link_function))
