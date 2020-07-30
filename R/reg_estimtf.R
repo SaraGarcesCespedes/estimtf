@@ -4,29 +4,67 @@
 #'
 #' @author Sara Garcés Céspedes
 #'
-#' @param ydist
-#' @param formula
-#' @param data
-#' @param subset
-#' @param fixparam
+#' @param ydist an object of class "formula" that specifies the distribution of the response variable. FALTA
+#' @param formulas a list containing objects of class "formula". Each element of the list specifies the
+#' linear predictor for each of the parameters of the distribution of interest. FALTA
+#' @param data an optional data frame containing the variables in the model. If these variables are
+#' not found in \code{data}, they ara taken from the environment from which \code{reg_estimtf} is called.
+#' @param subset an optional vector specifying a subset of observations to be used in the fitting process.
+#' @param fixparam a list of the fixed parameters of the distribution of interest. The list must contain the parameters values and names.
 #' @param initparam
 #' @param link_function
-#' @param optimizer
-#' @param hyperparameters
-#' @param maxiter
-#' @param tolerance
-#' @param eager
-#' @param comparison
+#' @param optimizer a character indicating the name of the TensorFlow optimizer to be used in the estimation process The default value is \code{'AdamOptimizer'}.
+#' @param hyperparameters a list with the hyperparameters values of the TensorFlow optimizer. FALTA DETALLES
+#' @param maxiter a positive integer indicating the maximum number of iterations for the optimization algorithm. The default value is \code{10000}.
+#' @param tolerance a small positive number indicating the FALTA FALTA
+#' @param eager If \code{TRUE}, the estimation process is performed in the eager execution envirnment. DEFAULT VALUE
+#' @param comparison If \code{TRUE}, the paramaters of interest are estimated using R optimizers included in the \code{EstimationTools} package.
 #' @param lower
 #' @param upper
-#' @param method
+#' @param method a character with the name of the optimization routine. \code{nlminb}, \code{optim}, \code{DEoptim} are available.
 #'
 #' @return
-#' @export
 #'
-#' @examples
-reg_estimtf <- function(ydist = Y ~ Normal, formula, data = NULL, subset = NULL, fixparam = NULL, initparam = NULL, link_function = NULL,
-                        optimizer = "AdamOptimizer", hyperparameters = NULL, maxiter = 1000, tolerance = NULL, eager = TRUE, comparison = FALSE,
+#' @details \code{reg_estimtf} computes the log-likelihood function of the distribution specified in
+#' \code{ydist} with linear predictors specified in \code{formulas}. Then, it finds the regression parameters
+#' that maximizes it using TensorFlow.
+#'
+#' #' @examples
+#' #-------------------------------------------------------------
+#' # Estimation of parameters of a linear regression model
+#' n <- 1000
+#' x <- runif(n = 1000, 0, 10)
+#' x1 <- runif(n = n, 0, 6)
+#' y <- rnorm(n = n, mean = -2 + 3 * x + 9 * x1, sd = exp(3 + 3* x))
+#' data <- data.frame(y = y, x = x, x1 = x1)
+#'
+#' formulas <- list(loc.fo = ~ x + x1, scale.fo = ~ x)
+#'
+#' estimation_1 <- reg_estimtf(ydist = "Normal", formulas = formulas, data = data,
+#'                             initparam <- list(loc = 1.0, scale = 1.0),
+#'                             link_function <- list(scale = "log"), optimizer = "AdamOptimizer",
+#'                             hyperparameters = list(learning_rate = 0.1))
+#'
+#' estimation_1
+#'
+#' #-------------------------------------------------------------
+#' # Estimation of parameters of a linear regression model with one fixed parameter
+#' x <- runif(n = 1000, -3, 3)
+#' y <- rnorm(n = 1000, mean = 5 - 2 * x, sigma = 3)
+#' data <- data.frame(y = y, x = x)
+#'
+#' formulas <- list(loc.fo = ~ x)
+#'
+#' estimation_2 <- reg_estimtf(ydist = "Normal", formulas = formulas, data = data,
+#'                             fixparam = list(scale = 3), initparam <- list(loc = 1.0, scale = 1.0),
+#'                             link_function <- list(scale = "log"), optimizer = "AdamOptimizer",
+#'                             hyperparameters = list(learning_rate = 0.1))
+#'
+#' estimation_2
+#'
+#' @export
+reg_estimtf <- function(ydist = Y ~ Normal, formulas, data = NULL, subset = NULL, fixparam = NULL, initparam = NULL, link_function = NULL,
+                        optimizer = "AdamOptimizer", hyperparameters = NULL, maxiter = 10000, tolerance = NULL, eager = TRUE, comparison = FALSE,
                         lower = NULL, upper = NULL, method = "nlminb") {
 
         library(EstimationTools)
@@ -57,7 +95,7 @@ reg_estimtf <- function(ydist = Y ~ Normal, formula, data = NULL, subset = NULL,
                                                         "the response variable \n \n"))
         }
 
-        #ydist = y ~ Normal
+        ydist = y ~ Normal
         ydist = y ~ Poisson
         # Defining loss function depending on xdist
         if (all.vars(ydist)[2] != "Poisson" & all.vars(ydist)[2] != "FWE" & all.vars(ydist)[2] != "Instantaneous Failures") {
@@ -109,7 +147,7 @@ reg_estimtf <- function(ydist = Y ~ Normal, formula, data = NULL, subset = NULL,
         par_names <- names(argumdist)
 
         initparam <- list(lambda=1.0)
-        #initparam <- list(loc=1.0, scale=1.0)
+        initparam <- list(loc=1.0, scale=1.0)
         # Errors in list initparam
         if (!is.null(initparam)) {
                 if (length(match(names(initparam), names(argumdist))) == 0) {
@@ -122,7 +160,7 @@ reg_estimtf <- function(ydist = Y ~ Normal, formula, data = NULL, subset = NULL,
 
         # Errors in link_function
         lfunctions <- c("logit", "log")
-        link_function <- list(scale = "log")
+        link_function <- list(scale = "log", loc = "log")
         link_function <- NULL
         if (!is.null(link_function)) {
                 if (length(match(gsub("\\..*","",names(link_function)), names(argumdist))) == 0) {
@@ -199,13 +237,12 @@ reg_estimtf <- function(ydist = Y ~ Normal, formula, data = NULL, subset = NULL,
 
 
         # Create the design matrix
-        #formulas <- list(loc.fo = ~ x + x1, scale.fo = ~ x)
-        #n <- 1000
-        #x <- runif(n = n, 0, 6)
-        #x1 <- runif(n = n, 0, 6)
-        #x <- cbind(x, x1)
-        #y <- rnorm(n = n, mean = -2 + 3 * x + 9* x1, sd = exp(3 + 3* x))
-        #data <- data.frame(y = y, x = x, x1=x1)
+        formulas <- list(loc.fo = ~ x + x1, scale.fo = ~ x)
+        n <- 1000
+        x <- runif(n = n, 0, 6)
+        x1 <- runif(n = n, 0, 6)
+        y <- rnorm(n = n, mean = -2 + 3 * x + 9* x1, sd = 3 + 3* x)
+        data <- data.frame(y = y, x = x, x1=x1)
 
         formulas <- list(lambda.fo = ~ x)
         n <- 1000
@@ -241,7 +278,7 @@ reg_estimtf <- function(ydist = Y ~ Normal, formula, data = NULL, subset = NULL,
         }
 
         if (comparison == TRUE){
-                resET <- comparisonreg(ydist, formula, data, link_function, fixparam, initparam, lower, upper, method)
+                resET <- comparisonreg(ydist, formulas, data, link_function, fixparam, initparam, lower, upper, method)
         }
 
 

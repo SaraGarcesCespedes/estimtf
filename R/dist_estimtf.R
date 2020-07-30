@@ -1,29 +1,56 @@
 #' @title dist_estimtf function
 #'
-#' @description Function to compute the Maximum Likelihood Estimators of distributional parameters using TensorFlow
+#' @description Function to compute the Maximum Likelihood Estimators of distributional parameters using TensorFlow.
 #'
 #' @author Sara Garcés Céspedes
 #'
-#' @param x a vector with data FALTA FALTA
-#' @param xdist a character indicating the name of the distribution of interest. The default value is \code{'Normal'}
-#' @param fixparam a list of the fixed parameters of the distribution of interest. The list must contain the parameters values and names
-#' @param initparam a list with initial values of the parameters to be estimated. The list must contain the parameters values and names
-#' @param optimizer a character indicating the name of the TensorFlow optimizer to be used in the estimation process The default value is \code{'Adam'}
-#' @param hyperparameters a list with the hyperparameters values of the TensorFlow optimizer
-#' @param maxiter a positive integer indicating the maximum number of iterations for the optimization algorithm
+#' @param x a vector containing the data to be fitted.
+#' @param xdist a character indicating the name of the distribution of interest. The default value is \code{'Normal'}.
+#' @param fixparam a list of the fixed parameters of the distribution of interest. The list must contain the parameters values and names.
+#' @param initparam a list with initial values of the parameters to be estimated. The list must contain the parameters values and names.
+#' @param optimizer a character indicating the name of the TensorFlow optimizer to be used in the estimation process The default value is \code{'AdamOptimizer'}.
+#' @param hyperparameters a list with the hyperparameters values of the TensorFlow optimizer. FALTA DETALLES
+#' @param maxiter a positive integer indicating the maximum number of iterations for the optimization algorithm.
 #' @param tolerance a small positive number indicating the FALTA FALTA
-#' @param eager logical. If TRUE, the estimation process is performed in the eager execution envirnment
-#' @param comparison logical. If TRUE, the paramaters of interest are estimated using R optimizers included in the Estimation Tools package
-#' @param lower a numeric vector with lower bounds, with the same lenght of argument `initparam`
-#' @param upper a numeric vector with upper bounds, with the same lenght of argument `initparam`
-#' @param method a character with the name of the optimization routine. \code{nlminb}, \code{optim}, \code{DEoptim} are available
+#' @param eager logical. If \code{TRUE}, the estimation process is performed in the eager execution envirnment. DEFAULT VALUE
+#' @param comparison logical. If \code{TRUE}, the paramaters of interest are estimated using R optimizers included in the \code{EstimationTools} package.
+#' @param lower a numeric vector with lower bounds, with the same lenght of argument `initparam`.
+#' @param upper a numeric vector with upper bounds, with the same lenght of argument `initparam`.
+#' @param method a character with the name of the optimization routine. \code{nlminb}, \code{optim}, \code{DEoptim} are available.
 #'
 #' @return The output from
-#' @export
+#'
+#' @details \code{dist_estimtf} computes the log-likelihood function of the distribution specified in
+#' \code{xdist} and finds the distributional parameters that maximizes it using TensorFlow.
+#'
+#' @importFrom EstimationTools maxlogL
+#' @importFrom stringr str_split
+#'
 #'
 #' @examples
-dist_estimtf <- function(x, xdist = "Normal", fixparam = NULL, initparam = NULL, optimizer, hyperparameters = NULL,
-                   maxiter = 1000, tolerance = NULL, eager = TRUE, comparison = FALSE, lower = NULL,
+#' #-------------------------------------------------------------
+#' # Estimation of both normal distrubution parameters
+#' x <- rnorm(n = 1000, mean = 10, sigma = 3)
+#'
+#' estimation_1 <- dist_estimtf(x, xdist = "Normal", optimizer = "AdamOptimizer",
+#'                            hyperparameters = list(learning_rate = 0.1))
+#'
+#' estimation_1
+#'
+#' #-------------------------------------------------------------
+#' # Estimation with one fixed parameter
+#' x <- rnorm(n = 1000, mean = 10, sigma = 3)
+#'
+#' estimation_2 <- dist_estimtf(x, xdist = "Normal", optimizer = "AdamOptimizer",
+#'                            hyperparameters = list(learning_rate = 0.1),
+#'                            fixparam = list(loc = 10))
+#'
+#' estimation_2
+#'
+#'
+#' @export
+dist_estimtf <- function(x, xdist = "Normal", fixparam = NULL, initparam = NULL, optimizer = "AdamOptimizer", hyperparameters = NULL,
+                   maxiter = 10000, tolerance = NULL, eager = TRUE, comparison = FALSE, lower = NULL,
                    upper = NULL, method = "nlminb") {
 
         library(EstimationTools)
