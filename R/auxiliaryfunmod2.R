@@ -27,29 +27,51 @@ disableagerreg <- function(data, dist, design_matrix, fixparam, initparam, opt, 
         Y <- tf$compat$v1$placeholder(dtype = tf$float32, name = "y_data")
         y_data <- design_matrix$y
 
-        nbetas <- param <- vector(mode = "list", length = np)
-        names(nbetas) <- names(param) <- names(design_matrix)[1:np]
+        nbetas <- param <- bnum <- sum <- sumlink <- vector(mode = "list", length = np)
         totalbetas <- sum(as.numeric(unlist(sapply(design_matrix[1:np], ncol))))
-        regparam <- vector(mode = "list", length = totalbetas)
-        t<- 0
-        for (i in 1:np){
-                sum <- 0
-                nbetas[[i]] <- sum(as.numeric(unlist(sapply(design_matrix[i], ncol))))
-                bnum <- rep(0:(nbetas[[i]]-1))
-                multparam <- vector(mode = "list", length = nbetas[[i]])
-                x_data <- eval(parse(text = paste("design_matrix$", names(nbetas)[i], sep = "")))
-                for (j in 1:nbetas[[i]]){
-                regparam[[j + t]] <- assign(paste0("beta", bnum[j], names(nbetas)[i]),
-                                                      tf$Variable(initparam[[names(nbetas)[i]]],
-                                                                  dtype = tf$float32))
-                names(regparam)[j + t] <- paste0("beta", bnum[j], names(nbetas)[i])
-                multparam[[j]] <- tf$multiply(x_data[, j], regparam[[j + t]])
-                sum <- sum + multparam[[j]]
-                }
-                sum <- link(link_function, sum, names(nbetas)[i])
-                param[[i]] <- assign(names(nbetas)[i], sum)
-                t <- t + nbetas[[i]]
+        regparam <- multparam <- vector(mode = "list", length = totalbetas)
+
+        nbetas <- lapply(1:np, FUN = function(i) nbetas[[i]] <- sum(as.numeric(unlist(sapply(design_matrix[i], ncol)))))
+        bnum <- lapply(1:np, FUN = function(i) bnum[[i]] <- rep(0:(nbetas[[i]]-1)))
+        bnumvector <- unlist(bnum, use.names=FALSE)
+        names(nbetas) <- names(param) <- names(bnum) <- names(design_matrix)[1:np]
+        namesbetas <- unlist(lapply(1:np, FUN = function(i) rep(names(nbetas)[i], nbetas[[i]])))
+        initparamvector <- unlist(lapply(1:np, FUN = function(i) rep(initparam[[i]], nbetas[[i]])))
+
+        nameregparam <- unlist(lapply(1:totalbetas, FUN = function(i) paste0("beta", bnumvector[i], namesbetas[i])))
+
+        regparam <- lapply(1:totalbetas, FUN = function(i) assign(nameregparam[i],
+                                                                  tf$Variable(initparamvector[i],
+                                                                              dtype = tf$float32),
+                                                                  envir = .GlobalEnv))
+        names(regparam) <- nameregparam
+
+        nbetasvector <- unlist(lapply(1:np, FUN = function(i) rep(1:nbetas[[i]])))
+
+        multparam <- lapply(1:totalbetas, FUN = function(i) tf$multiply(design_matrix[[namesbetas[i]]][, nbetasvector[i]], regparam[[i]]))
+
+        nbetasvector <- unlist(nbetas, use.names = FALSE)
+
+        t <- vector(mode = "list")
+        if (np > 1) {
+                t <- lapply(1:np, FUN = function(i) t[[i]] <- ifelse(i == 1, 0,
+                                                                     Reduce("+", nbetas[[1:(i - 1)]])))
+        } else {
+                t[[1]] <- 0
         }
+
+        addparam <- function(i) {
+                add <- function(x) Reduce("+", x)
+                sumparam <- add(multparam[(1 + t[[i]]):(nbetas[[i]] + t[[i]])])
+                return(sumparam)
+        }
+
+        sum <- lapply(1:np, FUN = function(i) sum[[i]] <- addparam(i))
+
+        sumlink <- lapply(1:np, FUN = function(i) sumlink[[i]] <- link(link_function, sum[[i]], names(nbetas)[i]))
+
+        param <- lapply(1:np, FUN = function(i) param[[i]] <- assign(names(nbetas)[i], sumlink[[i]], envir = .GlobalEnv))
+        names(param) <- names(design_matrix)[1:np]
 
 
         # Create a list with all parameters, fixed and not fixed
@@ -70,7 +92,8 @@ disableagerreg <- function(data, dist, design_matrix, fixparam, initparam, opt, 
         }
 
         # Compute gradients
-        grads <- tf$gradients(loss_value, regparam)
+        new_list <- lapply(1:totalbetas, FUN = function(i) new_list[[i]] <- regparam[[i]])
+        grads <- tf$gradients(loss_value, new_list)
 
         # Define optimizer
         seloptimizer <- do.call(what = opt, hyperparameters)
@@ -132,7 +155,7 @@ disableagerreg <- function(data, dist, design_matrix, fixparam, initparam, opt, 
         # Compute Hessian matrix
         hesslist <- stderror <- vector(mode = "list", length = length(regparam))
         #for(i in 1:length(regparam)) hesslist[[i]] <- tf$gradients(grads[[i]], regparam)
-        hesslist <- lapply(1:length(regparam), FUN = function(i) hesslist[[i]] <- tf$gradients(grads[[i]], regparam))
+        hesslist <- lapply(1:length(regparam), FUN = function(i) hesslist[[i]] <- tf$gradients(grads[[i]], new_list))
         hess <- tf$stack(values=hesslist, axis=0)
         #hess <- tf$reshape(hess, shape(np, np))
         mhess <- sess$run(hess, feed_dict = fd)
@@ -160,7 +183,7 @@ disableagerreg <- function(data, dist, design_matrix, fixparam, initparam, opt, 
 
         # Table of results
         results.table <- cbind(as.numeric(loss), parametersfinal, gradientsfinal)
-        colnames(results.table) <- c("loss", names(var_list), namesgradients)
+        colnames(results.table) <- c("loss", names(regparam), namesgradients)
         return(list(results = results.table, final = tail(results.table, 1), standarderror = stderror))
 
 
@@ -197,21 +220,25 @@ eagerreg <- function(data, dist, design_matrix, fixparam, initparam, opt, hyperp
         names(nbetas) <- names(param) <- names(design_matrix)[1:np]
         totalbetas <- sum(as.numeric(unlist(sapply(design_matrix[1:np], ncol))))
         regparam <- vector(mode = "list", length = totalbetas)
-        t <- 0
-        for (i in 1:np){
-                sum <- 0
-                nbetas[[i]] <- sum(as.numeric(unlist(sapply(design_matrix[i], ncol))))
-                bnum <- rep(0:(nbetas[[i]]-1))
-                for (j in 1:nbetas[[i]]){
-                        regparam[[j + t]] <- assign(paste0("beta", bnum[j], names(nbetas)[i]),
-                                                    tf$Variable(initparam[[names(nbetas)[i]]],
-                                                                dtype = tf$float32,
-                                                                name = paste0("beta", bnum[j], names(nbetas)[i])))
-                        names(regparam)[j + t] <- paste0("beta", bnum[j], names(nbetas)[i])
 
-                }
-                t <- t + nbetas[[i]]
-        }
+        nbetas <- param <- bnum <- sum <- sumlink <- vector(mode = "list", length = np)
+        totalbetas <- sum(as.numeric(unlist(sapply(design_matrix[1:np], ncol))))
+        regparam <- multparam <- vector(mode = "list", length = totalbetas)
+
+        nbetas <- lapply(1:np, FUN = function(i) nbetas[[i]] <- sum(as.numeric(unlist(sapply(design_matrix[i], ncol)))))
+        bnum <- lapply(1:np, FUN = function(i) bnum[[i]] <- rep(0:(nbetas[[i]]-1)))
+        bnumvector <- unlist(bnum, use.names=FALSE)
+        names(nbetas) <- names(param) <- names(bnum) <- names(design_matrix)[1:np]
+        namesbetas <- unlist(lapply(1:np, FUN = function(i) rep(names(nbetas)[i], nbetas[[i]])))
+        initparamvector <- unlist(lapply(1:np, FUN = function(i) rep(initparam[[i]], nbetas[[i]])))
+
+        nameregparam <- unlist(lapply(1:totalbetas, FUN = function(i) paste0("beta", bnumvector[i], namesbetas[i])))
+
+        regparam <- lapply(1:totalbetas, FUN = function(i) assign(nameregparam[i],
+                                                                  tf$Variable(initparamvector[i],
+                                                                              dtype = tf$float32),
+                                                                  envir = .GlobalEnv))
+        names(regparam) <- nameregparam
 
         # SI ES NECESARIO?
         if (!is.null(fixparam)) {
@@ -241,19 +268,34 @@ eagerreg <- function(data, dist, design_matrix, fixparam, initparam, opt, hyperp
                 step <- step + 1
 
                 with(tf$GradientTape(persistent = TRUE) %as% tape, {
-                        t <- 0
-                        for (i in 1:np){
-                                sum <- 0
-                                multparam <- vector(mode = "list", length = nbetas[[i]])
-                                x_data <- eval(parse(text = paste("design_matrix$", names(nbetas)[i], sep = "")))
-                                for (j in 1:nbetas[[i]]){
-                                        multparam[[j]] <- tf$multiply(x_data[, j], regparam[[j + t]])
-                                        sum <- sum + multparam[[j]]
-                                }
-                                sum <- link(link_function, sum, names(nbetas)[i])
-                                param[[i]] <- assign(names(nbetas)[i], sum)
-                                t <- t + nbetas[[i]]
+                        nbetasvector <- unlist(lapply(1:np, FUN = function(i) rep(1:nbetas[[i]])))
+
+                        multparam <- lapply(1:totalbetas, FUN = function(i) tf$multiply(design_matrix[[namesbetas[i]]][, nbetasvector[i]], regparam[[i]]))
+
+                        nbetasvector <- unlist(nbetas, use.names = FALSE)
+
+                        t <- vector(mode = "list")
+                        if (np > 1) {
+                                t <- lapply(1:np, FUN = function(i) t[[i]] <- ifelse(i == 1, 0,
+                                                                                     Reduce("+", nbetas[[1:(i - 1)]])))
+                        } else {
+                                t[[1]] <- 0
                         }
+
+                        addparam <- function(i) {
+                                add <- function(x) Reduce("+", x)
+                                sumparam <- add(multparam[(1 + t[[i]]):(nbetas[[i]] + t[[i]])])
+                                return(sumparam)
+                        }
+
+                        sum <- lapply(1:np, FUN = function(i) sum[[i]] <- addparam(i))
+
+                        sumlink <- lapply(1:np, FUN = function(i) sumlink[[i]] <- link(link_function, sum[[i]], names(nbetas)[i]))
+
+                        param <- lapply(1:np, FUN = function(i) param[[i]] <- assign(names(nbetas)[i], sumlink[[i]], envir = .GlobalEnv))
+                        names(param) <- names(design_matrix)[1:np]
+
+
                         vartotal <- append(fixparam, param)
 
                         # Define loss function depending on the distribution
@@ -286,11 +328,11 @@ eagerreg <- function(data, dist, design_matrix, fixparam, initparam, opt, hyperp
 
                 # Parameters and gradients as numeric vectors
                 #for (i in 1:length(regparam)) {
-                 #       objvariables[[i]] <- as.numeric(get(names(regparam)[i]))
-                  #      gradients[[step]][[i]] <- as.numeric(gradients[[step]][[i]])
+                #       objvariables[[i]] <- as.numeric(get(names(regparam)[i]))
+                #      gradients[[step]][[i]] <- as.numeric(gradients[[step]][[i]])
                 #}
-                objvariables <- lapply(1:length(regparam), objvariables[[i]] <- as.numeric(get(names(regparam)[i])))
-                gradients[[step]] <- lapply(1:length(regparam), gradients[[step]][[i]] <- as.numeric(gradients[[step]][[i]]))
+                objvariables <- lapply(1:length(regparam), FUN = function(i) objvariables[[i]] <- as.numeric(get(names(regparam)[i])))
+                gradients[[step]] <- lapply(1:length(regparam),  FUN = function(i)gradients[[step]][[i]] <- as.numeric(gradients[[step]][[i]]))
 
                 parameters[[step]] <- objvariables
 
@@ -324,9 +366,9 @@ eagerreg <- function(data, dist, design_matrix, fixparam, initparam, opt, hyperp
         parameters <- purrr::transpose(parameters)
         gradientsfinal <- parametersfinal <- namesgradients <- as.numeric()
         #for (j in 1:length(new_list)) {
-         #       gradientsfinal <- cbind(gradientsfinal, as.numeric(gradients[[j]]))
-          #      parametersfinal <- cbind(parametersfinal, as.numeric(parameters[[j]]))
-           #     namesgradients <- cbind(namesgradients, paste0("Gradients ", names(regparam)[j]))
+        #       gradientsfinal <- cbind(gradientsfinal, as.numeric(gradients[[j]]))
+        #      parametersfinal <- cbind(parametersfinal, as.numeric(parameters[[j]]))
+        #     namesgradients <- cbind(namesgradients, paste0("Gradients ", names(regparam)[j]))
         #}
         gradientsfinal <- sapply(1:length(new_list), function(i) gradientsfinal <- cbind(gradientsfinal, as.numeric(gradients[[i]])))
         parametersfinal <- sapply(1:length(new_list), function(i) parametersfinal <- cbind(parametersfinal, as.numeric(parameters[[i]])))
@@ -361,10 +403,11 @@ link <- function(link_function, sum, parameter) {
                         sum <- sum
                 }
         }
+        return(sum)
 }
 
 
-comparisonreg <- function(ydist, formula, data, link_function, fixparam, initparam, lower, upper, method) {
+comparisonreg <- function(ydist, formulas, data, link_function, fixparam, initparam, lower, upper, method) {
         distributionsr <- list(Bernoulli = "dbinom", Beta = "dbeta", Exponential = "dexp", Gamma = "dgamma",
                                Normal = "dnorm", Uniform = "dunif", Poisson = "dpois", FWE = "dFWE")
 
@@ -381,6 +424,8 @@ comparisonreg <- function(ydist, formula, data, link_function, fixparam, initpar
         if (!is.null(initparam)) names(initparam) <- lapply(1:length(initparam), FUN = function(i) names(initparam)[i] <- parametersr[[match(names(initparam)[i], names(parametersr))]])
         if (!is.null(link_function)) names(link_function) <- lapply(1:length(link_function), FUN = function(i) names(link_function)[i] <- parametersr[[match(names(link_function)[i], names(parametersr))]])
 
+        #JAIME
+        link = list(over=c("mu", "sigma"), fun = c("log_link", "logit_link"))
 
         link <- vector(mode = "list", length = 2 * length(link_function))
         if (!is.null(link_function)) {
@@ -394,7 +439,7 @@ comparisonreg <- function(ydist, formula, data, link_function, fixparam, initpar
                 }
         }
 
-        estimation <- maxlogLreg(formulas = formula, y_dist = ydist, data = data,
+        estimation <- maxlogLreg(formulas = formulas, y_dist = ydist, data = data,
                                link = link, lower = lower, upper = upper, start = initparam,
                                optimizer = method)
         return(estimation)
