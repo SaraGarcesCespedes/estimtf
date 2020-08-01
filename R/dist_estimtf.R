@@ -76,16 +76,18 @@ dist_estimtf <- function(x, xdist = "Normal", fixparam = NULL, initparam = NULL,
         if (!is.character(xdist)) {
                 stop("'xdist' must be a character \n \n")
         }
-        xdist <- "Normal"
+        xdist <- "Exponential"
+
+        xdist = "Uniform"
         # Defining loss function depending on xdist
-        if (xdist != "Poisson" & xdist != "FWE" & xdist != "Instantaneous Failures") {
+        if (xdist != "Poisson" & xdist != "FWE" & xdist != "InstantaneousFailures") {
                 dist <- eval(parse(text = paste("tf$compat$v1$distributions$", xdist, sep = "")))
         } else {
                 dist <- xdist
         }
 
         # List of arguments of TensorFlow functions
-        if (dist == "Instantaneous Failures" | dist == "Poisson") {
+        if (dist == "InstantaneousFailures" | dist == "Poisson") {
                 argumdist <- list(lambda = NULL)
         } else if (dist == "FWE") {
                 argumdist <- list(mu = NULL, sigma = NULL)
@@ -112,7 +114,7 @@ dist_estimtf <- function(x, xdist = "Normal", fixparam = NULL, initparam = NULL,
 
 
         # Calculate number of parameters to be estimated. Remove from argumdist the arguments that are not related with parameters
-        if (dist == "Instantaneous Failures" | dist == "Poisson" | dist == "FWE"){
+        if (dist == "InstantaneousFailures" | dist == "Poisson" | dist == "FWE"){
                 np <- length(argumdist) # number of parameters to be estimated
         } else {
                 arg <- sapply(1:length(argumdist),
@@ -121,7 +123,8 @@ dist_estimtf <- function(x, xdist = "Normal", fixparam = NULL, initparam = NULL,
                 argumdist <- argumdist[arg]
         }
 
-        initparam <- list(loc = 1.0, scale = 1.0)
+        #initparam <- list(loc = 1.0, scale = 1.0)
+        initparam <- NULL
         # Errors in list initparam
         if (!is.null(initparam)) {
                 if (length(match(names(initparam), names(argumdist))) == 0) {
@@ -130,6 +133,22 @@ dist_estimtf <- function(x, xdist = "Normal", fixparam = NULL, initparam = NULL,
                 } else if (length(match(names(initparam), names(argumdist))) > np) {
                         stop(paste0("Only include in 'initparam' the names of parameters that are not fixed"))
                 }
+        }
+
+        # If the user do not provide initial values for the parameters to be estimated, by default the values will be 0 or 2
+        if (is.null(initparam)) {
+                initparam <- vector(mode = "list", length = np)
+                if (dist == "InstantaneousFailures" | dist == "Poisson" | dist == "FWE"){
+                        param <- names(argumdist)
+                } else {
+                        #param <- names(argumdist)[which(names(argumdist)[x] != "validate_args" & names(argumdist)[x] != "allow_nan_stats" & names(argumdist)[x] != "name" & names(argumdist)[x] != "dtype")]
+                        param <- names(argumdist)
+                }
+                #for (i in 1:length(np)) initparam[[i]] <- ifelse(dist == "Instantaneous Failures" | dist == "Poisson", 2.0, 0.0) #SEGURAMENTE SE PUEDE HACER MAS EFICIENTE
+                initparam <- lapply(1:np,
+                                    FUN = function(i) initparam[[i]] <- ifelse(dist == "InstantaneousFailures" | dist == "Poisson", 2.0, 1.0))
+                names(initparam) <- c(param)
+
         }
 
         # List of optimizers
@@ -143,20 +162,7 @@ dist_estimtf <- function(x, xdist = "Normal", fixparam = NULL, initparam = NULL,
         }
 
 
-        # If the user do not provide initial values for the parameters to be estimated, by default the values will be 0 or 2
-        if (is.null(initparam)) {
-                initparam <- vector(mode = "list", length = np)
-                if (dist == "Instantaneous Failures" | dist == "Poisson" | dist == "FWE"){
-                        param <- names(argumdist)
-                } else {
-                        param <- names(argumdist)[which(names(argumdist)[x] != "validate_args" & names(argumdist)[x] != "allow_nan_stats" & names(argumdist)[x] != "name" & names(argumdist)[x] != "dtype")]
-                }
-                #for (i in 1:length(np)) initparam[[i]] <- ifelse(dist == "Instantaneous Failures" | dist == "Poisson", 2.0, 0.0) #SEGURAMENTE SE PUEDE HACER MAS EFICIENTE
-                initparam <- lapply(1:np,
-                                    FUN = function(i) initparam[[i]] <- ifelse(dist == "Instantaneous Failures" | dist == "Poisson", 2.0, 0.0))
-                names(initparam) <- c(param)
 
-        }
 
         # If the user do not provide tolerance values, by default the values will be .Machine$double.eps
         tolerance <- NULL
@@ -175,7 +181,7 @@ dist_estimtf <- function(x, xdist = "Normal", fixparam = NULL, initparam = NULL,
         argumopt <- within(argumopt, rm(use_locking))
 
         # If the user do not provide values for the hyperparameters, they will take the default values of tensorflow
-        hyperparameters <- NULL
+        hyperparameters <- list(learning_rate = 0.001)
         if (!is.null(hyperparameters)) {
                 if (length(match(names(hyperparameters), names(argumopt))) == 0) {
                         stop(paste0("Names hyperparameters do not match with the hyperparameters of ","TensorFlow ", optimizer, "."))

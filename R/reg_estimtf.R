@@ -9,7 +9,6 @@
 #' linear predictor for each of the parameters of the distribution of interest. FALTA
 #' @param data an optional data frame containing the variables in the model. If these variables are
 #' not found in \code{data}, they ara taken from the environment from which \code{reg_estimtf} is called.
-#' @param subset an optional vector specifying a subset of observations to be used in the fitting process.
 #' @param fixparam a list of the fixed parameters of the distribution of interest. The list must contain the parameters values and names.
 #' @param initparam
 #' @param link_function
@@ -63,7 +62,7 @@
 #' estimation_2
 #'
 #' @export
-reg_estimtf <- function(ydist = Y ~ Normal, formulas, data = NULL, subset = NULL, fixparam = NULL, initparam = NULL, link_function = NULL,
+reg_estimtf <- function(ydist = Y ~ Normal, formulas, data = NULL, fixparam = NULL, initparam = NULL, link_function = NULL,
                         optimizer = "AdamOptimizer", hyperparameters = NULL, maxiter = 10000, tolerance = NULL, eager = TRUE, comparison = FALSE,
                         lower = NULL, upper = NULL, method = "nlminb") {
 
@@ -76,8 +75,7 @@ reg_estimtf <- function(ydist = Y ~ Normal, formulas, data = NULL, subset = NULL
         library(ggplot2)
 
         # Subset
-        if (!is.null(subset)) data <- subset(data, eval(parse(text = subset)))
-
+        #if (!is.null(subset)) data <- subset(data, eval(parse(text = subset)))
 
         # Errors in arguments
 
@@ -97,15 +95,17 @@ reg_estimtf <- function(ydist = Y ~ Normal, formulas, data = NULL, subset = NULL
 
         ydist = y ~ Normal
         ydist = y ~ Poisson
+        ydist = y ~ FWE
+        ydist = y ~ Beta
         # Defining loss function depending on xdist
-        if (all.vars(ydist)[2] != "Poisson" & all.vars(ydist)[2] != "FWE" & all.vars(ydist)[2] != "Instantaneous Failures") {
+        if (all.vars(ydist)[2] != "Poisson" & all.vars(ydist)[2] != "FWE" & all.vars(ydist)[2] != "InstantaneousFailures") {
                 dist <- eval(parse(text = paste("tf$compat$v1$distributions$", all.vars(ydist)[2], sep = "")))
         } else {
                 dist <- all.vars(ydist)[2]
         }
 
         # List of arguments of TensorFlow functions
-        if (dist == "Instantaneous Failures" | dist == "Poisson") {
+        if (dist == "InstantaneousFailures" | dist == "Poisson") {
                 argumdist <- list(lambda = NULL)
         } else if (dist == "FWE") {
                 argumdist <- list(mu = NULL, sigma = NULL)
@@ -116,7 +116,7 @@ reg_estimtf <- function(ydist = Y ~ Normal, formulas, data = NULL, subset = NULL
                 argumdist <- argumdist$parameters$copy()
         }
 
-        fixparam <- NULL
+        fixparam <- list(concentration0 = 2)
         #fixparam <- NULL
         # Errors in list fixparam
         # Update argumdist. Leaves all the arguments of the TF distribution except the ones that are fixed
@@ -133,7 +133,7 @@ reg_estimtf <- function(ydist = Y ~ Normal, formulas, data = NULL, subset = NULL
 
 
         # Calculate number of parameters to be estimated. Remove from argumdist the arguments that are not related with parameters
-        if (dist == "Instantaneous Failures" | dist == "Poisson" | dist == "FWE"){
+        if (dist == "InstantaneousFailures" | dist == "Poisson" | dist == "FWE"){
                 np <- length(argumdist) # number of parameters to be estimated
         } else {
                 arg <- sapply(1:length(argumdist),
@@ -146,8 +146,9 @@ reg_estimtf <- function(ydist = Y ~ Normal, formulas, data = NULL, subset = NULL
         # Names of parameters to be estimated
         par_names <- names(argumdist)
 
-        initparam <- list(lambda=1.0)
-        initparam <- list(loc=1.0, scale=1.0)
+        initparam <- NULL
+        #initparam <- list(lambda=1.0)
+        #initparam <- list(mu=1.0, sigma=1.0)
         # Errors in list initparam
         if (!is.null(initparam)) {
                 if (length(match(names(initparam), names(argumdist))) == 0) {
@@ -158,10 +159,24 @@ reg_estimtf <- function(ydist = Y ~ Normal, formulas, data = NULL, subset = NULL
                 }
         }
 
+        # If the user do not provide initial values for the parameters to be estimated, by default the values will be 0
+        if (is.null(initparam)) {
+                initparam <- vector(mode = "list", length = np)
+                if (dist == "InstantaneousFailures" | dist == "Poisson" | dist == "FWE"){
+                        param <- names(argumdist)
+                } else {
+                        param <- names(argumdist)
+                        #param <- names(argumdist)[which(names(argumdist)[x] != "validate_args" & names(argumdist)[x] != "allow_nan_stats" & names(argumdist)[x] != "name" & names(argumdist)[x] != "dtype")]
+                }
+                #for (i in 1:np) initparam[[i]] <- 0.0 #SEGURAMENTE SE PUEDE HACER MAS EFICIENTE
+                initparam <- lapply(1:np, FUN = function (i) initparam[[i]] <- 0.0)
+                names(initparam) <- c(param)
+        }
+
         # Errors in link_function
         lfunctions <- c("logit", "log")
-        link_function <- list(scale = "log", loc = "log")
-        link_function <- NULL
+        link_function <- list(concentration1 = "log")
+        #link_function <- NULL
         if (!is.null(link_function)) {
                 if (length(match(gsub("\\..*","",names(link_function)), names(argumdist))) == 0) {
                         stop(paste0("Names of parameters included in the 'link_function' list do not match with the parameters of the ",
@@ -177,6 +192,9 @@ reg_estimtf <- function(ydist = Y ~ Normal, formulas, data = NULL, subset = NULL
                 })
         }
 
+
+
+
         # List of optimizers
         optimizers <- c("AdadeltaOptimizer", "AdagradDAOptimizer", "AdagradOptimizer", "AdamOptimizer", "GradientDescentOptimizer",
                         "MomentumOptimizer", "RMSPropOptimizer")
@@ -188,18 +206,6 @@ reg_estimtf <- function(ydist = Y ~ Normal, formulas, data = NULL, subset = NULL
         }
 
 
-        # If the user do not provide initial values for the parameters to be estimated, by default the values will be 0
-        if (is.null(initparam)) {
-                initparam <- vector(mode = "list", length = np)
-                if (dist == "Instantaneous Failures" | dist == "Poisson" | dist == "FWE"){
-                        param <- names(argumdist)
-                } else {
-                        param <- names(argumdist)[which(names(argumdist)[x] != "validate_args" & names(argumdist)[x] != "allow_nan_stats" & names(argumdist)[x] != "name" & names(argumdist)[x] != "dtype")]
-                }
-                #for (i in 1:np) initparam[[i]] <- 0.0 #SEGURAMENTE SE PUEDE HACER MAS EFICIENTE
-                initparam <- lapply(1:np, FUN = function (i) initparam[[i]] <- 0.0)
-                names(initparam) <- c(param)
-        }
 
 
         # If the user do not provide tolerance values, by default the values will be .Machine$double.eps
@@ -219,7 +225,7 @@ reg_estimtf <- function(ydist = Y ~ Normal, formulas, data = NULL, subset = NULL
         argumopt <- within(argumopt, rm(use_locking))
 
         # If the user do not provide values for the hyperparameters, they will take the default values of tensorflow
-        hyperparameters <- list(learning_rate = 0.1)
+        hyperparameters <- list(learning_rate = 0.01)
         if (!is.null(hyperparameters)) {
                 if (length(match(names(hyperparameters), names(argumopt))) == 0) {
                         stop(paste0("Names hyperparameters do not match with the hyperparameters of ","TensorFlow ", optimizer, "."))
@@ -237,18 +243,6 @@ reg_estimtf <- function(ydist = Y ~ Normal, formulas, data = NULL, subset = NULL
 
 
         # Create the design matrix
-        formulas <- list(loc.fo = ~ x + x1, scale.fo = ~ x)
-        n <- 1000
-        x <- runif(n = n, 0, 6)
-        x1 <- runif(n = n, 0, 6)
-        y <- rnorm(n = n, mean = -2 + 3 * x + 9* x1, sd = 3 + 3* x)
-        data <- data.frame(y = y, x = x, x1=x1)
-
-        formulas <- list(lambda.fo = ~ x)
-        n <- 1000
-        x <- runif(n = n, -1, 1)
-        y <- rpois(n = n, lambda = exp(-2 + 3 * x))
-        data <- data.frame(y = y, x = x)
 
         design_matrix <- model.matrix.MLreg(formulas, data, ydist, np, par_names)
 
