@@ -1,22 +1,3 @@
-#' @title disableagerdist function
-#'
-#' @description Function to estimate distributional parameters disabling the TensorFlow eager execution mode
-#'
-#' @author Sara Garcés Céspedes
-#'
-#' @param x a vector with data
-#' @param dist an expression indicating the density or mass function depending on xdist
-#' @param fixparam a list of the fixed parameters of the distribution of interest. The list must contain the parameters values and names
-#' @param initparam a list with initial values of the parameters to be estimated. The list must contain the parameters values and names
-#' @param opt an expression indicating the TensorFlow optimizer
-#' @param hyperparameters a list with the hyperparameters values of the TensorFlow optimizer
-#' @param maxiter a positive integer indicating the maximum number of iterations for the optimization algorithm
-#' @param tolerance a small positive number indicating the FALTA FALTA
-#' @param np a integer value indicating the number of parameters to be estimated
-#'
-#' @return
-#'
-#' @examples
 disableagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, maxiter, tolerance, np) {
 
         # Disable eager execution
@@ -54,7 +35,7 @@ disableagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, 
                 loss_value <- tf$reduce_sum(-X * (tf$math$log(vartotal[["lambda"]])) + vartotal[["lambda"]])
         } else if (dist == "FWE") {
                 loss_value <- -tf$reduce_sum(tf$math$log(vartotal[["mu"]] + vartotal[["sigma"]] / (X ^ 2))) - tf$reduce_sum(vartotal[["mu"]] * X - vartotal[["sigma"]] / X) + tf$reduce_sum(tf$math$exp(vartotal[["mu"]] * X - vartotal[["sigma"]] / X))
-        } else if (dist == "Instantaneous Failures") {
+        } else if (dist == "InstantaneousFailures") {
                 loss_value <- -tf$reduce_sum(tf$math$log((((vartotal[["lambda"]] ^ 2) + X - 2 * vartotal[["lambda"]]) * tf$math$exp(-X / vartotal[["lambda"]])) / ((vartotal[["lambda"]] ^ 2) * (vartotal[["lambda"]] - 1))))
         } else {
                 density <- do.call(what = dist, vartotal)
@@ -158,25 +139,7 @@ disableagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, 
 }
 
 
-#' @title eagerdist function
-#'
-#' @description Function to estimate distributional parameters in TensorFlow eager execution mode
-#'
-#' @author Sara Garcés Céspedes
-#'
-#' @param x a vector with data
-#' @param dist an expression indicating the density or mass function depending on xdist
-#' @param fixparam a list of the fixed parameters of the distribution of interest. The list must contain the parameters values and names
-#' @param initparam a list with initial values of the parameters to be estimated. The list must contain the parameters values and names
-#' @param opt an expression indicating the TensorFlow optimizer
-#' @param hyperparameters a list with the hyperparameters values of the TensorFlow optimizer
-#' @param maxiter a positive integer indicating the maximum number of iterations for the optimization algorithm
-#' @param tolerance a small positive number indicating the FALTA FALTA
-#' @param np a integer value indicating the number of parameters to be estimated
-#'
-#' @return
-#'
-#' @examples
+
 eagerdist <- function(x, dist, fixparam, linkfun, initparam, opt, hyperparameters, maxiter, tolerance, np) {
 
         #tf$compat$v1$enable_eager_execution()
@@ -222,7 +185,7 @@ eagerdist <- function(x, dist, fixparam, linkfun, initparam, opt, hyperparameter
                                 loss_value <- tf$reduce_sum(-x * (tf$math$log(vartotal[["lambda"]])) + vartotal[["lambda"]])
                         } else if (dist == "FWE") {
                                 loss_value <- -tf$reduce_sum(tf$math$log(vartotal[["mu"]] + vartotal[["sigma"]] / (x ^ 2))) - tf$reduce_sum(vartotal[["mu"]] * x - vartotal[["sigma"]] / x) + tf$reduce_sum(tf$math$exp(vartotal[["mu"]] * x - vartotal[["sigma"]] / x))
-                        } else if (dist == "Instantaneous Failures") {
+                        } else if (dist == "InstantaneousFailures") {
                                 loss_value <- -tf$reduce_sum(tf$math$log((((vartotal[["lambda"]] ^ 2) + x - 2 * vartotal[["lambda"]]) * tf$math$exp(-x / vartotal[["lambda"]])) / ((vartotal[["lambda"]] ^ 2) * (vartotal[["lambda"]] - 1))))
                         } else {
                                 density <- do.call(what = dist, vartotal)
@@ -299,23 +262,8 @@ eagerdist <- function(x, dist, fixparam, linkfun, initparam, opt, hyperparameter
 }
 
 
-#' @title comparisondist function
-#'
-#' @description Function to compare TensorFlow parameter estimations with estimations from other R functions
-#'
-#' @author Sara Garcés Céspedes
-#'
-#' @param x a vector with data FALTA FALTA
-#' @param xdist a character indicating the name of the distribution of interest. The default value is \code{'Normal'}
-#' @param fixparam a list of the fixed parameters of the distribution of interest. The list must contain the parameters values and names
-#' @param initparam a list with initial values of the parameters to be estimated. The list must contain the parameters values and names
-#' @param lower a numeric vector with lower bounds, with the same lenght of argument `initparam`
-#' @param upper a numeric vector with upper bounds, with the same lenght of argument `initparam`
-#' @param method a character with the name of the optimization routine. \code{nlminb}, \code{optim}, \code{DEoptim} are available
-#'
-#' @return
-#'
-#' @examples
+
+
 comparisondist <- function(x, xdist, fixparam, initparam, lower, upper, method) {
         distributionsr <- list(Bernoulli = "dbinom", Beta = "dbeta", Exponential = "dexp", Gamma = "dgamma",
                                Normal = "dnorm", Uniform = "dunif", Poisson = "dpois", FWE = "dFWE")
