@@ -1,23 +1,3 @@
-#' @title disableagerreg function
-#'
-#' @description Function to estimate regression parameters disabling the TensorFlow eager execution mode
-#'
-#' @author Sara Garcés Céspedes
-#' @param x
-#' @param dist
-#' @param design_matrix
-#' @param fixparam
-#' @param initparam
-#' @param opt
-#' @param hyperparameters
-#' @param maxiter
-#' @param tolerance
-#' @param np
-#'
-#' @return
-#' @export
-#'
-#' @examples
 disableagerreg <- function(data, dist, design_matrix, fixparam, initparam, opt, hyperparameters, maxiter, tolerance, np, link_function, ydist) {
 
         # Disable eager execution
@@ -84,7 +64,7 @@ disableagerreg <- function(data, dist, design_matrix, fixparam, initparam, opt, 
                 loss_value <- tf$reduce_sum(-Y * (tf$math$log(vartotal[["lambda"]])) + vartotal[["lambda"]])
         } else if (dist == "FWE") {
                 loss_value <- -tf$reduce_sum(tf$math$log(vartotal[["mu"]] + vartotal[["sigma"]] / (Y ^ 2))) - tf$reduce_sum(vartotal[["mu"]] * Y - vartotal[["sigma"]] / Y) + tf$reduce_sum(tf$math$exp(vartotal[["mu"]] * Y - vartotal[["sigma"]] / Y))
-        } else if (dist == "Instantaneous Failures") {
+        } else if (dist == "InstantaneousFailures") {
                 loss_value <- -tf$reduce_sum(tf$math$log((((vartotal[["lambda"]] ^ 2) + Y - 2 * vartotal[["lambda"]]) * tf$math$exp(-Y / vartotal[["lambda"]])) / ((vartotal[["lambda"]] ^ 2) * (vartotal[["lambda"]] - 1))))
         } else {
                 density <- do.call(what = dist, vartotal)
@@ -92,7 +72,7 @@ disableagerreg <- function(data, dist, design_matrix, fixparam, initparam, opt, 
         }
 
         # Compute gradients
-        new_list <- lapply(1:totalbetas, FUN = function(i) new_list[[i]] <- regparam[[i]])
+        new_list <- lapply(1:length(regparam), FUN = function(i) new_list[[i]] <- regparam[[i]])
         grads <- tf$gradients(loss_value, new_list)
 
         # Define optimizer
@@ -109,7 +89,7 @@ disableagerreg <- function(data, dist, design_matrix, fixparam, initparam, opt, 
 
         # Initialize step
         step <- 0
-        maxiter <- 10000
+        maxiter <- 20000
 
         while(TRUE){
                 # Update step
@@ -190,27 +170,7 @@ disableagerreg <- function(data, dist, design_matrix, fixparam, initparam, opt, 
 }
 
 
-#' @title eagerreg function
-#'
-#' @description Function to estimate regression parameters in TensorFlow eager execution mode
-#'
-#' @author Sara Garcés Céspedes
-#' @param x
-#' @param dist
-#' @param fixparam
-#' @param linkfun
-#' @param initparam
-#' @param opt
-#' @param hyperparameters
-#' @param maxiter
-#' @param tolerance
-#' @param np
-#'
-#' @return
-#' @export
-#'
-#' @examples
-#'
+
 eagerreg <- function(data, dist, design_matrix, fixparam, initparam, opt, hyperparameters, maxiter, tolerance, np, link_function, ydist) {
 
         #y_data <- tf$constant(design_matrix$y, dtype = tf$float32)
@@ -303,7 +263,7 @@ eagerreg <- function(data, dist, design_matrix, fixparam, initparam, opt, hyperp
                                 loss_value <- tf$reduce_sum(-y_data * (tf$math$log(vartotal[["lambda"]])) + vartotal[["lambda"]])
                         } else if (dist == "FWE") {
                                 loss_value <- -tf$reduce_sum(tf$math$log(vartotal[["mu"]] + vartotal[["sigma"]] / (y_data ^ 2))) - tf$reduce_sum(vartotal[["mu"]] * y_data - vartotal[["sigma"]] / y_data) + tf$reduce_sum(tf$math$exp(vartotal[["mu"]] * y_data - vartotal[["sigma"]] / y_data))
-                        } else if (dist == "Instantaneous Failures") {
+                        } else if (dist == "InstantaneousFailures") {
                                 loss_value <- -tf$reduce_sum(tf$math$log((((vartotal[["lambda"]] ^ 2) + y_data - 2 * vartotal[["lambda"]]) * tf$math$exp(-y_data / vartotal[["lambda"]])) / ((vartotal[["lambda"]] ^ 2) * (vartotal[["lambda"]] - 1))))
                         } else {
                                 density <- do.call(what = dist, vartotal)
