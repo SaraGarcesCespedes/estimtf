@@ -1,4 +1,8 @@
-disableagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, maxiter, tolerance, np) {
+#------------------------------------------------------------------------
+# Estimation of distribution parameters (disable eager execution) -------
+#------------------------------------------------------------------------
+
+disableagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, maxiter, np, tolerance) {
 
         # Disable eager execution
         tf$compat$v1$disable_eager_execution()
@@ -10,14 +14,12 @@ disableagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, 
         var_list <- vector(mode = "list", length = np)
 
         # Create tf Variables
-        #for (i in 1:np) {
-         #       var_list[[i]] <- assign(names(initparam)[i], tf$Variable(initparam[[i]], dtype = tf$float32, name = names(initparam)[i]))
-        #}
-
-        var_list <- lapply(1:np, FUN = function(i) var_list[[i]] <- assign(names(initparam)[i],
+        var_list <- lapply(1:np,
+                           FUN = function(i) var_list[[i]] <- assign(names(initparam)[i],
                                                                            tf$Variable(initparam[[i]],
                                                                                        dtype = tf$float32,
-                                                                                       name = names(initparam)[i]), envir = .GlobalEnv))
+                                                                                       name = names(initparam)[i]),
+                                                                     envir = .GlobalEnv))
         names(var_list) <- names(initparam)
 
         # Create a list with all parameters, fixed and not fixed
@@ -27,16 +29,12 @@ disableagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, 
         loss <- new_list <- parameters <- gradients <- itergrads <- objvariables <- vector(mode = "list")
 
         # Create list with variables without names
-        #for (i in 1:np) new_list[[i]] <- var_list[[i]]
         new_list <- lapply(1:np, FUN = function(i) new_list[[i]] <- var_list[[i]])
 
+        n <- length(x)
         # Define loss function depending on the distribution
-        if (dist == "Poisson") {
-                loss_value <- tf$reduce_sum(-X * (tf$math$log(vartotal[["lambda"]])) + vartotal[["lambda"]])
-        } else if (dist == "FWE") {
-                loss_value <- -tf$reduce_sum(tf$math$log(vartotal[["mu"]] + vartotal[["sigma"]] / (X ^ 2))) - tf$reduce_sum(vartotal[["mu"]] * X - vartotal[["sigma"]] / X) + tf$reduce_sum(tf$math$exp(vartotal[["mu"]] * X - vartotal[["sigma"]] / X))
-        } else if (dist == "InstantaneousFailures") {
-                loss_value <- -tf$reduce_sum(tf$math$log((((vartotal[["lambda"]] ^ 2) + X - 2 * vartotal[["lambda"]]) * tf$math$exp(-X / vartotal[["lambda"]])) / ((vartotal[["lambda"]] ^ 2) * (vartotal[["lambda"]] - 1))))
+        if (dist %in% distnotf) {
+                loss_value <- lossfun(dist)
         } else {
                 density <- do.call(what = dist, vartotal)
                 loss_value <- tf$negative(tf$reduce_sum(density$log_prob(value = X)))
@@ -60,20 +58,12 @@ disableagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, 
         # Initialize step
         step <- 0
 
-        maxiter <- 10000
         while(TRUE){
                 # Update step
                 step <- step + 1
 
                 # Gradient step
                 sess$run(train, feed_dict = fd)
-
-                # Parameters and gradients as numeric vectors
-                #for (i in 1:np) {
-                 #       objvariables[[i]] <- as.numeric(sess$run(new_list[[i]]))
-                        #objvariables[[i]] <- as.numeric(objvariables[[i]])
-                  #      itergrads[[i]] <- as.numeric(sess$run(grads, feed_dict = fd)[[i]])
-                #}
 
                 objvariables <- lapply(1:np, FUN = function(i) objvariables[[i]] <- as.numeric(sess$run(new_list[[i]])))
                 itergrads <- lapply(1:np, FUN = function(i) itergrads[[i]] <- as.numeric(sess$run(grads, feed_dict = fd)[[i]]))
@@ -104,13 +94,10 @@ disableagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, 
 
         # Compute Hessian matrix
         hesslist <- stderror <- vector(mode = "list", length = np)
-        #for(i in 1:np) hesslist[[i]] <- tf$gradients(grads[[i]], new_list)
         hesslist <- lapply(1:np, FUN = function(i) hesslist[[i]] <- tf$gradients(grads[[i]], new_list))
         hess <- tf$stack(values=hesslist, axis=0)
-        #hess <- tf$reshape(hess, shape(np, np))
         mhess <- sess$run(hess, feed_dict = fd)
         diagvarcov <- sqrt(diag(solve(mhess)))
-        #for (i in 1:np) stderror[[i]] <- diagvarcov[i] #ESTO PUEDE SER MAS EFICIENTE
         stderror <- lapply(1:np, FUN = function(i) stderror[[i]] <- diagvarcov[i])
         names(stderror) <- names(var_list)
 
@@ -121,11 +108,6 @@ disableagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, 
         gradients <- purrr::transpose(gradients)
         parameters <- purrr::transpose(parameters)
         gradientsfinal <- parametersfinal <- namesgradients <- as.numeric()
-        #for (j in 1:np) {
-         #       gradientsfinal <- cbind(gradientsfinal, as.numeric(gradients[[j]]))
-          #      parametersfinal <- cbind(parametersfinal, as.numeric(parameters[[j]]))
-           #     namesgradients <- cbind(namesgradients, paste0("Gradients ", names(var_list)[j]))
-        #}
         gradientsfinal <- sapply(1:np, FUN = function(i) gradientsfinal <- cbind(gradientsfinal, as.numeric(gradients[[i]])))
         parametersfinal <- sapply(1:np, FUN = function(i) parametersfinal <- cbind(parametersfinal, as.numeric(parameters[[i]])))
         namesgradients <- sapply(1:np, FUN = function(i) namesgradients <- cbind(namesgradients, paste0("Gradients ", names(var_list)[i])))
@@ -134,22 +116,18 @@ disableagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, 
         results.table <- cbind(as.numeric(loss), parametersfinal, gradientsfinal)
         colnames(results.table) <- c("loss", names(var_list), namesgradients)
         return(list(results = results.table, final = tail(results.table, 1), standarderror = stderror))
-
-
 }
 
-
+#------------------------------------------------------------------------
+# Estimation of distribution parameters (with eager execution) ----------
+#------------------------------------------------------------------------
 
 eagerdist <- function(x, dist, fixparam, linkfun, initparam, opt, hyperparameters, maxiter, tolerance, np) {
 
-        #tf$compat$v1$enable_eager_execution()
         # Create list to store the parameters to be estimated
         var_list <- vector(mode = "list", length = np)
 
         # Create tf Variables
-        #for (i in 1:np) {
-         #       var_list[[i]] <- assign(names(initparam)[i], tf$Variable(initparam[[i]], dtype = tf$float32, name = names(initparam)[i]))
-        #}
         var_list <- lapply(1:np, FUN = function(i) var_list[[i]] <- assign(names(initparam)[i],
                                                                            tf$Variable(initparam[[i]],
                                                                                        dtype = tf$float32,
@@ -170,10 +148,7 @@ eagerdist <- function(x, dist, fixparam, linkfun, initparam, opt, hyperparameter
         loss <- new_list <- parameters <- gradients <- hesslist <- objvariables <- vector(mode = "list")
 
         # Create list with variables without names
-        #for (i in 1:np) new_list[[i]] <- var_list[[i]]
         new_list <- lapply(1:np, FUN = function(i) new_list[[i]] <- var_list[[i]])
-
-        maxiter <- 10000
 
         while(TRUE){
                 # Update step
@@ -181,19 +156,16 @@ eagerdist <- function(x, dist, fixparam, linkfun, initparam, opt, hyperparameter
 
                 with(tf$GradientTape(persistent = TRUE) %as% tape, {
                         # Define loss function depending on the distribution
-                        if (dist == "Poisson") {
-                                loss_value <- tf$reduce_sum(-x * (tf$math$log(vartotal[["lambda"]])) + vartotal[["lambda"]])
-                        } else if (dist == "FWE") {
-                                loss_value <- -tf$reduce_sum(tf$math$log(vartotal[["mu"]] + vartotal[["sigma"]] / (x ^ 2))) - tf$reduce_sum(vartotal[["mu"]] * x - vartotal[["sigma"]] / x) + tf$reduce_sum(tf$math$exp(vartotal[["mu"]] * x - vartotal[["sigma"]] / x))
-                        } else if (dist == "InstantaneousFailures") {
-                                loss_value <- -tf$reduce_sum(tf$math$log((((vartotal[["lambda"]] ^ 2) + x - 2 * vartotal[["lambda"]]) * tf$math$exp(-x / vartotal[["lambda"]])) / ((vartotal[["lambda"]] ^ 2) * (vartotal[["lambda"]] - 1))))
+                        X <- x
+                        n <- length(x)
+                        if (dist %in% distnotf) {
+                                loss_value <- lossfun(dist)
                         } else {
                                 density <- do.call(what = dist, vartotal)
-                                loss_value <- tf$negative(tf$reduce_sum(density$log_prob(value = x)))
+                                loss_value <- tf$negative(tf$reduce_sum(density$log_prob(value = X)))
                         }
                         grads <- tape$gradient(loss_value, new_list)
                         # Compute Hessian matrixin
-                        #for(i in 1:np) hesslist[[i]] <- tape$gradient(grads[[i]], new_list)
                         hesslist <- lapply(1:np, FUN = function(i) hesslist[[i]] <- tape$gradient(grads[[i]], new_list))
                         mhess <- as.matrix(tf$stack(values=hesslist, axis=0))
                 })
@@ -208,10 +180,6 @@ eagerdist <- function(x, dist, fixparam, linkfun, initparam, opt, hyperparameter
                 gradients[[step]] <- grads
 
                 # Parameters and gradients as numeric vectors
-                #for (i in 1:np) {
-                #        objvariables[[i]] <- as.numeric(get(names(var_list)[i]))
-                 #       gradients[[step]][[i]] <- as.numeric(gradients[[step]][[i]])
-                #}
                 objvariables <- lapply(1:np, FUN = function(i) objvariables[[i]] <- as.numeric(get(names(var_list)[i])))
                 gradients[[step]] <- lapply(1:np, FUN = function(i) gradients[[step]][[i]] <- as.numeric(gradients[[step]][[i]]))
 
@@ -239,18 +207,12 @@ eagerdist <- function(x, dist, fixparam, linkfun, initparam, opt, hyperparameter
         stderror <- vector(mode = "list", length = np)
         diagvarcov <- sqrt(diag(solve(mhess)))
         names(stderror) <- names(var_list)
-        #for (i in 1:np) stderror[[i]] <- diagvarcov[i] #ESTO PUEDE SER MAS EFICIENTE
         stderror <- lapply(1:np, FUN = function(i) stderror[[i]] <- diagvarcov[i])
 
         # Organize results of each iteration
         gradients <- purrr::transpose(gradients)
         parameters <- purrr::transpose(parameters)
         gradientsfinal <- parametersfinal <- namesgradients <- as.numeric()
-        #for (j in 1:np) {
-         #       gradientsfinal <- cbind(gradientsfinal, as.numeric(gradients[[j]]))
-          #      parametersfinal <- cbind(parametersfinal, as.numeric(parameters[[j]]))
-           #     namesgradients <- cbind(namesgradients, paste0("Gradients ", names(var_list)[j]))
-        #}
         gradientsfinal <- sapply(1:np, function(i) gradientsfinal <- cbind(gradientsfinal, as.numeric(gradients[[i]])))
         parametersfinal <- sapply(1:np, function(i) parametersfinal <- cbind(parametersfinal, as.numeric(parameters[[i]])))
         namesgradients <- sapply(1:np, function(i) namesgradients <- cbind(namesgradients, paste0("Gradients ", names(var_list)[i])))
@@ -261,28 +223,42 @@ eagerdist <- function(x, dist, fixparam, linkfun, initparam, opt, hyperparameter
         return(list(results = results.table, final = tail(results.table, 1), standarderror = stderror))
 }
 
+#------------------------------------------------------------------------
+# Loss function for distributions not included in TF --------------------
+#------------------------------------------------------------------------
+lossfun <- function(dist) {
+        if (dist == "Poisson") {
+                loss <- tf$reduce_sum(-X * (tf$math$log(vartotal[["lambda"]])) + vartotal[["lambda"]])
+        } else if (dist == "FWE") {
+                loss <- -tf$reduce_sum(tf$math$log(vartotal[["mu"]] + vartotal[["sigma"]] / (X ^ 2))) -
+                        tf$reduce_sum(vartotal[["mu"]] * X - vartotal[["sigma"]] / X) +
+                        tf$reduce_sum(tf$math$exp(vartotal[["mu"]] * X - vartotal[["sigma"]] / X))
+        } else if (dist == "InstantaneousFailures") {
+                loss <- -tf$reduce_sum(tf$math$log((((vartotal[["lambda"]] ^ 2) +
+                                                             X - 2 * vartotal[["lambda"]]) *
+                                                            tf$math$exp(-X / vartotal[["lambda"]])) /
+                                                           ((vartotal[["lambda"]] ^ 2) * (vartotal[["lambda"]] - 1))))
+        } else if (dist == "Weibull") {
+                loss <- -n * tf$math$log(vartotal[["shape"]]) + vartotal[["shape"]] * n * tf$math$log(vartotal[["scale"]]) -
+                        (vartotal[["shape"]] - 1) * tf$reduce_sum(tf$math$log(X)) +
+                        tf$reduce_sum((X / vartotal[["scale"]]) ^ vartotal[["shape"]])
+        } else if (dist == "Cauchy") {
+                loss <- n * tf$math$log(pi * vartotal[["scale"]]) +
+                        tf$reduce_sum(tf$math$log(1 + ((X - vartotal[["loc"]]) / vartotal[["scale"]])^2))
 
+        } else if (dist == "Geometric") {
+                loss <- -n * tf$math$log(vartotal[["prob"]]) -
+                        (tf$reduce_sum(X) - n) * tf$math$log(1 - vartotal[["prob"]])
+        } else if (dist == "DoubleExponential") {
+                loss <- -n * tf$math$log(1 / (2 * vartotal[["scale"]])) +
+                        (1 / vartotal[["scale"]]) * tf$reduce_sum(tf$abs(X - vartotal[["loc"]]))
+        } else if (dist == "LogNormal") {
+                loss <- (n / 2) * tf$math$log(2 * pi * vartotal[["sdlog"]] ^ 2) +
+                        tf$reduce_sum(tf$math$log(X)) +
+                        (tf$reduce_sum(tf$math$log(X ^ 2)) / (2 * vartotal[["sdlog"]] ^ 2)) -
+                        (tf$reduce_sum(tf$math$log(X) * vartotal[["meanlog"]]) /  (vartotal[["sdlog"]] ^ 2)) +
+                        ((n *  vartotal[["meanlog"]] ^ 2) / (2 * vartotal[["sdlog"]] ^ 2))
+        }
 
-
-comparisondist <- function(x, xdist, fixparam, initparam, lower, upper, method) {
-        distributionsr <- list(Bernoulli = "dbinom", Beta = "dbeta", Exponential = "dexp", Gamma = "dgamma",
-                               Normal = "dnorm", Uniform = "dunif", Poisson = "dpois", FWE = "dFWE")
-
-        parametersr <- list(loc = "mean", scale = "sd", concentration1 = "shape1", concentration2 = "shape2",
-                            concentration = "shape", low = "min", high = "max", lambda = "lambda", mu = "mu",
-                            sigma = "sigma")
-
-
-        #if (!is.null(fixparam)) for (i in 1:length(fixparam)) names(fixparam)[i] <- parametersr[[match(names(fixparam)[i], names(parametersr))]]
-        #if (!is.null(initparam)) for (i in 1:length(initparam)) names(initparam)[i] <- parametersr[[match(names(initparam)[i], names(parametersr))]]
-
-        if (!is.null(fixparam)) names(fixparam) <- lapply(1:length(fixparam), FUN = function(i) names(fixparam)[i] <- parametersr[[match(names(fixparam)[i], names(parametersr))]])
-        if (!is.null(initparam)) names(initparam) <- lapply(1:length(initparam), FUN = function(i) names(initparam)[i] <- parametersr[[match(names(initparam)[i], names(parametersr))]])
-
-        estimation <- maxlogL(x = x, dist = distributionsr[[xdist]], fixed = fixparam,
-                              start = initparam, optimizer = method, lower = lower,
-                              upper = upper)
-        return(estimation)
-
-
+        return(loss)
 }
