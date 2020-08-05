@@ -126,7 +126,7 @@ reg_estimtf <- function(ydist = y ~ Normal, formulas, data = NULL, fixparam = NU
         }
 
         # Names of parameters to be estimated
-        par_names <- names(argumdist)
+        #par_names <- names(argumdist)
 
         # Errors in list initparam
         if (!is.null(initparam)) {
@@ -220,9 +220,9 @@ reg_estimtf <- function(ydist = y ~ Normal, formulas, data = NULL, fixparam = NU
 
         # With eager execution or disable eager execution
         if (eager == TRUE) {
-                res <- eagerreg(data, dist, design_matrix, fixparam, initparam, argumdist, opt, hyperparameters, maxiter, tolerance, np, link_function, ydist)
+                res <- eagerreg(data, dist, design_matrix, fixparam, initparam, argumdist, opt, hyperparameters, maxiter, tolerance, np, link_function, ydist, distnotf)
         } else {
-                res <- disableagerreg(data, dist, design_matrix, fixparam, initparam, argumdist, opt, hyperparameters, maxiter, tolerance, np, link_function, ydist)
+                res <- disableagerreg(data, dist, design_matrix, fixparam, initparam, argumdist, opt, hyperparameters, maxiter, tolerance, np, link_function, ydist, distnotf)
         }
 
         return(list(tf = res$final, stderrtf = res$standarderror))

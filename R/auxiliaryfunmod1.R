@@ -2,7 +2,7 @@
 # Estimation of distribution parameters (disable eager execution) -------
 #------------------------------------------------------------------------
 
-disableagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, maxiter, np, tolerance) {
+disableagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, maxiter, tolerance, np, distnotf) {
 
         # Disable eager execution
         tf$compat$v1$disable_eager_execution()
@@ -20,6 +20,7 @@ disableagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, 
                                                                                        dtype = tf$float32,
                                                                                        name = names(initparam)[i]),
                                                                      envir = .GlobalEnv))
+
         names(var_list) <- names(initparam)
 
         # Create a list with all parameters, fixed and not fixed
@@ -34,7 +35,7 @@ disableagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, 
         n <- length(x)
         # Define loss function depending on the distribution
         if (dist %in% distnotf) {
-                loss_value <- lossfun(dist)
+                loss_value <- lossfun(dist, vartotal, X)
         } else {
                 density <- do.call(what = dist, vartotal)
                 loss_value <- tf$negative(tf$reduce_sum(density$log_prob(value = X)))
@@ -122,7 +123,7 @@ disableagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, 
 # Estimation of distribution parameters (with eager execution) ----------
 #------------------------------------------------------------------------
 
-eagerdist <- function(x, dist, fixparam, linkfun, initparam, opt, hyperparameters, maxiter, tolerance, np) {
+eagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, maxiter, tolerance, np, distnotf) {
 
         # Create list to store the parameters to be estimated
         var_list <- vector(mode = "list", length = np)
@@ -159,7 +160,7 @@ eagerdist <- function(x, dist, fixparam, linkfun, initparam, opt, hyperparameter
                         X <- x
                         n <- length(x)
                         if (dist %in% distnotf) {
-                                loss_value <- lossfun(dist)
+                                loss_value <- lossfun(dist, vartotal, X)
                         } else {
                                 density <- do.call(what = dist, vartotal)
                                 loss_value <- tf$negative(tf$reduce_sum(density$log_prob(value = X)))
@@ -226,7 +227,7 @@ eagerdist <- function(x, dist, fixparam, linkfun, initparam, opt, hyperparameter
 #------------------------------------------------------------------------
 # Loss function for distributions not included in TF --------------------
 #------------------------------------------------------------------------
-lossfun <- function(dist) {
+lossfun <- function(dist, vartotal, X) {
         if (dist == "Poisson") {
                 loss <- tf$reduce_sum(-X * (tf$math$log(vartotal[["lambda"]])) + vartotal[["lambda"]])
         } else if (dist == "FWE") {

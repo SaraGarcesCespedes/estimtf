@@ -180,9 +180,9 @@ dist_estimtf <- function(x, xdist = "Normal", fixparam = NULL, initparam = NULL,
 
         # With eager execution or disable eager execution
         if (eager == TRUE) {
-                res <- eagerdist(x, dist, fixparam, initparam, opt, hyperparameters, maxiter, tolerance, np)
+                res <- eagerdist(x, dist, fixparam, initparam, opt, hyperparameters, maxiter, tolerance, np, distnotf)
         } else {
-                res <- disableagerdist(x, dist, fixparam, initparam, opt, hyperparameters, maxiter, tolerance, np)
+                res <- disableagerdist(x, dist, fixparam, initparam, opt, hyperparameters, maxiter, tolerance, np, distnotf)
         }
 
         return(list(tf = res$final, stderrtf = res$standarderror))

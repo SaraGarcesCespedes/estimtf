@@ -1,7 +1,7 @@
 #------------------------------------------------------------------------
 # Estimation of regression parameters (disable eager execution) ---------
 #------------------------------------------------------------------------
-disableagerreg <- function(data, dist, design_matrix, fixparam, initparam, argumdist, opt, hyperparameters, maxiter, tolerance, np, link_function, ydist) {
+disableagerreg <- function(data, dist, design_matrix, fixparam, initparam, argumdist, opt, hyperparameters, maxiter, tolerance, np, link_function, ydist, distnotf) {
 
         # Disable eager execution
         tf$compat$v1$disable_eager_execution()
@@ -40,12 +40,12 @@ disableagerreg <- function(data, dist, design_matrix, fixparam, initparam, argum
                 if (is.numeric(initparam[[i]])) {
                         vector <- rep(initparam[[i]], nbetas[[i]])
                 } else {
-                        selparam <- namesparamvectornew[(1 + t[[i]]):(1 + t[[i]] + nbetas[[i]] - 1)]
+                        selparam <- namesparamvectornew[(1 + t[[i]]):(t[[i]] + nbetas[[i]])]
                         paramprovided <- match(names(initparam[[i]]), selparam)
                         namesparamprovided <- names(initparam[[i]])
                         missingparam <- selparam[-paramprovided]
                         initparam[[i]] <- append(initparam[[i]], rep(1.0, length(missingparam)))
-                        names(initparam[[i]]) <- c(namesparamprovided, names(missingparam))
+                        names(initparam[[i]]) <- c(namesparamprovided, missingparam)
                         # order of initparam and namesparamvectornew must be the same
                         initparam[[i]] <- initparam[[i]][selparam]
                         vector <- unlist(initparam[[i]], use.names=FALSE)
@@ -68,7 +68,7 @@ disableagerreg <- function(data, dist, design_matrix, fixparam, initparam, argum
 
         multparam <- lapply(1:totalbetas, FUN = function(i) tf$multiply(design_matrix[[namesbetas[i]]][, nbetasvector[i]], regparam[[i]]))
 
-        nbetasvector <- unlist(nbetas, use.names = FALSE)
+        #nbetasvector <- unlist(nbetas, use.names = FALSE)
 
         #es posible que me genere problemas
         addparam <- function(i) {
@@ -94,8 +94,8 @@ disableagerreg <- function(data, dist, design_matrix, fixparam, initparam, argum
         n <- length(y_data)
         X <- Y
         # Define loss function depending on the distribution
-        if (dist %in% distnotf) {
-                loss_value <- lossfun(dist)
+        if (all.vars(ydist)[2] %in% distnotf) {
+                loss_value <- lossfun(dist, vartotal, X)
         } else {
                 density <- do.call(what = dist, vartotal)
                 loss_value <- tf$negative(tf$reduce_sum(density$log_prob(value = X)))
@@ -187,24 +187,57 @@ disableagerreg <- function(data, dist, design_matrix, fixparam, initparam, argum
 #------------------------------------------------------------------------
 # Estimation of regression parameters (with eager execution) ------------
 #------------------------------------------------------------------------
-eagerreg <- function(data, dist, design_matrix, fixparam, initparam, argumdist, opt, hyperparameters, maxiter, tolerance, np, link_function, ydist) {
+eagerreg <- function(data, dist, design_matrix, fixparam, initparam, argumdist, opt, hyperparameters, maxiter, tolerance, np, link_function, ydist, distnotf) {
 
         y_data <- as.double(design_matrix$y)
 
-        nbetas <- param <- bnum <- sum <- sumlink <- vector(mode = "list", length = np)
+        nbetas <- initparamvector <- param <- sum <- sumlink <- namesparam <- vector(mode = "list", length = np)
         totalbetas <- sum(as.numeric(unlist(sapply(design_matrix[1:np], ncol))))
         regparam <- multparam <- vector(mode = "list", length = totalbetas)
 
         nbetas <- lapply(1:np, FUN = function(i) nbetas[[i]] <- sum(as.numeric(unlist(sapply(design_matrix[i], ncol)))))
-        bnum <- lapply(1:np, FUN = function(i) bnum[[i]] <- rep(0:(nbetas[[i]]-1)))
-        bnumvector <- unlist(bnum, use.names=FALSE)
-        names(nbetas) <- names(param) <- names(bnum) <- names(design_matrix)[1:np]
+        namesparam <- lapply(1:np, FUN = function(i) namesparam[[i]] <- lapply(design_matrix[i], colnames))
+
+        namesparamvector <- unlist(namesparam, use.names=FALSE)
+        namesparamvectornew <- numeric()
+        namesparamvectornew <- sapply(1:length(namesparamvector),
+                                      FUN = function(i) namesparamvectornew[i] <- ifelse(namesparamvector[i] == "(Intercept)",
+                                                                                         gsub("[()]","", namesparamvector[i]),
+                                                                                         namesparamvector[i]))
+
+        names(nbetas) <- names(param) <- names(design_matrix)[1:np]
         namesbetas <- unlist(lapply(1:np, FUN = function(i) rep(names(nbetas)[i], nbetas[[i]])))
 
-        # si se quiere el mismo valor para todos los parametros de regresion
-        initparamvector <- unlist(lapply(1:np, FUN = function(i) rep(initparam[[i]], nbetas[[i]])))
+        t <- vector(mode = "list")
+        if (np > 1) {
+                t <- lapply(1:np,
+                            FUN = function(i) t[[i]] <- ifelse(i == 1, 0,
+                                                               Reduce("+", nbetas[[1:(i - 1)]])))
+        } else {
+                t[[1]] <- 0
+        }
 
-        nameregparam <- unlist(lapply(1:totalbetas, FUN = function(i) paste0("beta", bnumvector[i], namesbetas[i])))
+        initvalues <- function(i) {
+                if (is.numeric(initparam[[i]])) {
+                        vector <- rep(initparam[[i]], nbetas[[i]])
+                } else {
+                        selparam <- namesparamvectornew[(1 + t[[i]]):(t[[i]] + nbetas[[i]])]
+                        paramprovided <- match(names(initparam[[i]]), selparam)
+                        namesparamprovided <- names(initparam[[i]])
+                        missingparam <- selparam[-paramprovided]
+                        initparam[[i]] <- append(initparam[[i]], rep(1.0, length(missingparam)))
+                        names(initparam[[i]]) <- c(namesparamprovided, missingparam)
+                        # order of initparam and namesparamvectornew must be the same
+                        initparam[[i]] <- initparam[[i]][selparam]
+                        vector <- unlist(initparam[[i]], use.names=FALSE)
+                }
+        }
+
+        initparamvector <- lapply(1:np, FUN = function(i) initparamvector[[i]] <- initvalues(i))
+        initparamvector <- unlist(initparamvector, use.names=FALSE)
+
+        nameregparam <- unlist(lapply(1:totalbetas, FUN = function(i) paste0(namesparamvectornew[i],
+                                                                             "_", namesbetas[i])))
 
         regparam <- lapply(1:totalbetas, FUN = function(i) assign(nameregparam[i],
                                                                   tf$Variable(initparamvector[i],
@@ -238,16 +271,9 @@ eagerreg <- function(data, dist, design_matrix, fixparam, initparam, argumdist, 
 
                         multparam <- lapply(1:totalbetas, FUN = function(i) tf$multiply(design_matrix[[namesbetas[i]]][, nbetasvector[i]], regparam[[i]]))
 
-                        nbetasvector <- unlist(nbetas, use.names = FALSE)
+                        #nbetasvector <- unlist(nbetas, use.names = FALSE)
 
-                        t <- vector(mode = "list")
-                        if (np > 1) {
-                                t <- lapply(1:np, FUN = function(i) t[[i]] <- ifelse(i == 1, 0,
-                                                                                     Reduce("+", nbetas[[1:(i - 1)]])))
-                        } else {
-                                t[[1]] <- 0
-                        }
-
+                        #es posible que me genere problemas
                         addparam <- function(i) {
                                 add <- function(x) Reduce("+", x)
                                 sumparam <- add(multparam[(1 + t[[i]]):(nbetas[[i]] + t[[i]])])
@@ -262,13 +288,14 @@ eagerreg <- function(data, dist, design_matrix, fixparam, initparam, argumdist, 
                         names(param) <- names(design_matrix)[1:np]
 
 
+                        # Create a list with all parameters, fixed and not fixed
                         vartotal <- append(fixparam, param)
 
-                        # Define loss function depending on the distribution
-                        X <- y_data
                         n <- length(y_data)
-                        if (dist %in% distnotf) {
-                                loss_value <- lossfun(dist)
+                        X <- y_data
+                        # Define loss function depending on the distribution
+                        if (all.vars(ydist)[2] %in% distnotf) {
+                                loss_value <- lossfun(dist, vartotal, X)
                         } else {
                                 density <- do.call(what = dist, vartotal)
                                 loss_value <- tf$negative(tf$reduce_sum(density$log_prob(value = X)))
@@ -335,7 +362,7 @@ eagerreg <- function(data, dist, design_matrix, fixparam, initparam, argumdist, 
 #------------------------------------------------------------------------
 # Loss function for distributions not included in TF --------------------
 #------------------------------------------------------------------------
-lossfun <- function(dist) {
+lossfun <- function(dist, vartotal, X) {
         if (dist == "Poisson") {
                 loss <- tf$reduce_sum(-X * (tf$math$log(vartotal[["lambda"]])) + vartotal[["lambda"]])
         } else if (dist == "FWE") {
