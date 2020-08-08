@@ -2,7 +2,7 @@
 #'
 #' @description Function to compute the Maximum Likelihood Estimators of distributional parameters using TensorFlow.
 #'
-#' @author Sara Garcés Céspedes
+#' @author Sara Garces Cespedes
 #'
 #' @param x a vector containing the data to be fitted.
 #' @param xdist a character indicating the name of the distribution of interest. The default value is \code{'Normal'}.
@@ -12,13 +12,13 @@
 #' @param hyperparameters a list with the hyperparameters values of the TensorFlow optimizer. FALTA DETALLES
 #' @param maxiter a positive integer indicating the maximum number of iterations for the optimization algorithm.
 #' @param eager logical. If \code{TRUE}, the estimation process is performed in the eager execution environment. The default value is \code{TRUE}.
-
-#' @return The output from
+#'
+#' @return This function returns the estimates and standard errors of distributional parameters as well as
+#' some information of the optimization process like the number of iterations needed for convergence.
 #'
 #' @details \code{dist_estimtf} computes the log-likelihood function of the distribution specified in
 #' \code{xdist} and finds the distributional parameters that maximizes it using TensorFlow.
 #'
-#' @importFrom EstimationTools maxlogL
 #' @importFrom stringr str_split
 #'
 #'
@@ -30,7 +30,7 @@
 #' estimation_1 <- dist_estimtf(x, xdist = "Normal", optimizer = "AdamOptimizer",
 #'                            hyperparameters = list(learning_rate = 0.1))
 #'
-#' estimation_1
+#' summary(estimation_1)
 #'
 #' #-------------------------------------------------------------
 #' # Estimation with one fixed parameter
@@ -40,7 +40,7 @@
 #'                            hyperparameters = list(learning_rate = 0.1),
 #'                            fixparam = list(loc = 10))
 #'
-#' estimation_2
+#' summary(estimation_2)
 #'
 #'
 #' @export
@@ -182,9 +182,9 @@ dist_estimtf <- function(x, xdist = "Normal", fixparam = NULL, initparam = NULL,
 
         # With eager execution or disable eager execution
         if (eager == TRUE) {
-                res <- eagerdist(x, dist, fixparam, initparam, opt, hyperparameters, maxiter, tolerance, np, distnotf, xdist)
+                res <- eagerdist(x, dist, fixparam, initparam, opt, hyperparameters, maxiter, tolerance, np, distnotf, xdist, optimizer)
         } else {
-                res <- disableagerdist(x, dist, fixparam, initparam, opt, hyperparameters, maxiter, tolerance, np, distnotf, xdist)
+                res <- disableagerdist(x, dist, fixparam, initparam, opt, hyperparameters, maxiter, tolerance, np, distnotf, xdist, optimizer)
         }
 
         result <- list(tf = res$results, vvoc = res$vcov, stderrtf = res$standarderror,

@@ -2,7 +2,7 @@
 #'
 #' @description Function to compute the Maximum Likelihood Estimators of regression parameters using TensorFlow
 #'
-#' @author Sara Garcés Céspedes
+#' @author Sara Garces Cespedes
 #'
 #' @param ydist an object of class "formula" that specifies the distribution of the response variable. FALTA
 #' @param formulas a list containing objects of class "formula". Each element of the list specifies the
@@ -19,8 +19,10 @@
 #' @param hyperparameters a list with the hyperparameters values of the TensorFlow optimizer. FALTA DETALLES
 #' @param maxiter a positive integer indicating the maximum number of iterations for the optimization algorithm. The default value is \code{10000}.
 #' @param eager If \code{TRUE}, the estimation process is performed in the eager execution environment. The default value is \code{TRUE}.
-
-#' @return
+#'
+#' @return This function returns the estimates, standard errors, z scores and p-values of significance tests
+#' for the regression parameters as well as some information of the optimization process like the number of
+#' iterations needed for convergence.
 #'
 #' @details \code{reg_estimtf} computes the log-likelihood function of the distribution specified in
 #' \code{ydist} with linear predictors specified in \code{formulas}. Then, it finds the regression parameters
@@ -42,7 +44,7 @@
 #'                             link_function <- list(scale = "log"), optimizer = "AdamOptimizer",
 #'                             hyperparameters = list(learning_rate = 0.1))
 #'
-#' estimation_1
+#' summary(estimation_1)
 #'
 #' #-------------------------------------------------------------
 #' # Estimation of parameters of a linear regression model with one fixed parameter
@@ -58,7 +60,7 @@
 #'                             link_function <- list(scale = "log"), optimizer = "AdamOptimizer",
 #'                             hyperparameters = list(learning_rate = 0.1))
 #'
-#' estimation_2
+#' summary(estimation_2)
 #'
 #' @export
 reg_estimtf <- function(ydist = y ~ Normal, formulas, data = NULL, fixparam = NULL, initparam = NULL, link_function = NULL,
@@ -223,9 +225,9 @@ reg_estimtf <- function(ydist = y ~ Normal, formulas, data = NULL, fixparam = NU
 
         # With eager execution or disable eager execution
         if (eager == TRUE) {
-                res <- eagerreg(data, dist, design_matrix, fixparam, initparam, argumdist, opt, hyperparameters, maxiter, tolerance, np, link_function, ydist, distnotf)
+                res <- eagerreg(data, dist, design_matrix, fixparam, initparam, argumdist, opt, hyperparameters, maxiter, tolerance, np, link_function, ydist, distnotf, optimizer)
         } else {
-                res <- disableagerreg(data, dist, design_matrix, fixparam, initparam, argumdist, opt, hyperparameters, maxiter, tolerance, np, link_function, ydist, distnotf)
+                res <- disableagerreg(data, dist, design_matrix, fixparam, initparam, argumdist, opt, hyperparameters, maxiter, tolerance, np, link_function, ydist, distnotf, optimizer)
         }
 
         result <- list(tf = res$results, vvoc = res$vcov, stderrtf = res$standarderror, dsgmatrix = design_matrix,
