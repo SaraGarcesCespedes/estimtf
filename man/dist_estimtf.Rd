@@ -9,45 +9,62 @@ dist_estimtf(
   xdist = "Normal",
   fixparam = NULL,
   initparam = NULL,
-  optimizer,
+  optimizer = "AdamOptimizer",
   hyperparameters = NULL,
-  maxiter = 1000,
-  tolerance = NULL,
-  eager = TRUE,
-  comparison = FALSE,
-  lower = NULL,
-  upper = NULL,
-  method = "nlminb"
+  maxiter = 10000,
+  eager = TRUE
 )
 }
 \arguments{
-\item{x}{a vector with data}
+\item{x}{a vector containing the data to be fitted.}
 
-\item{xdist}{a character indicating the name of the distribution of interest. The default value is \code{'Normal'}}
+\item{xdist}{a character indicating the name of the distribution of interest. The default value is \code{'Normal'}.}
 
-\item{fixparam}{a list of the fixed parameters of the distribution of interest. The list must contain the parameters values and names}
+\item{fixparam}{a list of the fixed parameters of the distribution of interest. The list must contain the parameters values and names.}
 
-\item{initparam}{a list with initial values of the parameters to be estimated. The list must contain the parameters values and names}
+\item{initparam}{a list with initial values of the parameters to be estimated. The list must contain the parameters values and names.}
 
-\item{optimizer}{a character indicating the name of the TensorFlow optimizer to be used in the estimation process The default value is \code{'Adam'}}
+\item{optimizer}{a character indicating the name of the TensorFlow optimizer to be used in the estimation process The default value is \code{'AdamOptimizer'}.}
 
-\item{hyperparameters}{a list with the hyperparameters values of the TensorFlow optimizer}
+\item{hyperparameters}{a list with the hyperparameters values of the TensorFlow optimizer. FALTA DETALLES}
 
-\item{maxiter}{a positive integer indicating the maximum number of iterations for the optimization algorithm}
+\item{maxiter}{a positive integer indicating the maximum number of iterations for the optimization algorithm.}
 
-\item{eager}{logical. If TRUE}
-
-\item{comparison}{logical. If TRUE the}
-
-\item{lower}{a numeric vector with lower bounds, with the same lenght of argument `initparam`}
-
-\item{upper}{a numeric vector with upper bounds, with the same lenght of argument `initparam`}
-
-\item{method}{a character with the name of the optimization routine. \code{nlminb}, \code{optim}, \code{DEoptim} are available}
+\item{eager}{logical. If \code{TRUE}, the estimation process is performed in the eager execution environment. The default value is \code{TRUE}.}
 }
 \value{
-The output from
+This function returns the estimates and standard errors of distributional parameters as well as
+some information of the optimization process like the number of iterations needed for convergence.
 }
 \description{
-Function to estimate distributional parameters using TensorFlow
+Function to compute the Maximum Likelihood Estimators of distributional parameters using TensorFlow.
+}
+\details{
+\code{dist_estimtf} computes the log-likelihood function of the distribution specified in
+\code{xdist} and finds the distributional parameters that maximizes it using TensorFlow.
+}
+\examples{
+#-------------------------------------------------------------
+# Estimation of both normal distrubution parameters
+x <- rnorm(n = 1000, mean = 10, sigma = 3)
+
+estimation_1 <- dist_estimtf(x, xdist = "Normal", optimizer = "AdamOptimizer",
+                           hyperparameters = list(learning_rate = 0.1))
+
+summary(estimation_1)
+
+#-------------------------------------------------------------
+# Estimation with one fixed parameter
+x <- rnorm(n = 1000, mean = 10, sigma = 3)
+
+estimation_2 <- dist_estimtf(x, xdist = "Normal", optimizer = "AdamOptimizer",
+                           hyperparameters = list(learning_rate = 0.1),
+                           fixparam = list(loc = 10))
+
+summary(estimation_2)
+
+
+}
+\author{
+Sara Garces Cespedes
 }
