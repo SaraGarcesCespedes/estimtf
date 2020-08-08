@@ -2,7 +2,7 @@
 # Estimation of distribution parameters (disable eager execution) -------
 #------------------------------------------------------------------------
 
-disableagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, maxiter, tolerance, np, distnotf, xdist) {
+disableagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, maxiter, tolerance, np, distnotf, xdist, optimizer) {
 
         # Disable eager execution
         tf$compat$v1$disable_eager_execution()
@@ -45,8 +45,19 @@ disableagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, 
         grads <- tf$gradients(loss_value, new_list)
 
         # Define optimizer
-        seloptimizer <- do.call(what = opt, hyperparameters)
-        train <- eval(parse(text = "seloptimizer$minimize(loss_value)"))
+        if (optimizer == "GradientDescentOptimizer") {
+                global_step <- tf$Variable(0, trainable = FALSE)
+                starter_learning_rate <- hyperparameters$learning_rate
+                learning.rate <- tf$compat$v1$train$exponential_decay(starter_learning_rate, global_step,
+                                                                      100000, 0.96, staircase=TRUE)
+                hyperparameters$learning_rate <- learning.rate
+                seloptimizer <- do.call(what = opt, hyperparameters)
+                train <- eval(parse(text = "seloptimizer$minimize(loss_value, global_step = global_step)"))
+
+        } else {
+                seloptimizer <- do.call(what = opt, hyperparameters)
+                train <- eval(parse(text = "seloptimizer$minimize(loss_value)"))
+        }
 
         # Initialize the variables and open the session
         init <- tf$compat$v1$initialize_all_variables()
@@ -128,7 +139,7 @@ disableagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, 
 # Estimation of distribution parameters (with eager execution) ----------
 #------------------------------------------------------------------------
 
-eagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, maxiter, tolerance, np, distnotf, xdist) {
+eagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, maxiter, tolerance, np, distnotf, xdist, optimizer) {
 
         # Create list to store the parameters to be estimated
         var_list <- vector(mode = "list", length = np)

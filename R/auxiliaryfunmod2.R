@@ -1,7 +1,7 @@
 #------------------------------------------------------------------------
 # Estimation of regression parameters (disable eager execution) ---------
 #------------------------------------------------------------------------
-disableagerreg <- function(data, dist, design_matrix, fixparam, initparam, argumdist, opt, hyperparameters, maxiter, tolerance, np, link_function, ydist, distnotf) {
+disableagerreg <- function(data, dist, design_matrix, fixparam, initparam, argumdist, opt, hyperparameters, maxiter, tolerance, np, link_function, ydist, distnotf, optimizer) {
 
         # Disable eager execution
         tf$compat$v1$disable_eager_execution()
@@ -105,8 +105,19 @@ disableagerreg <- function(data, dist, design_matrix, fixparam, initparam, argum
         grads <- tf$gradients(loss_value, new_list)
 
         # Define optimizer
-        seloptimizer <- do.call(what = opt, hyperparameters)
-        train <- eval(parse(text = "seloptimizer$minimize(loss_value)"))
+        if (optimizer == "GradientDescentOptimizer") {
+                global_step <- tf$Variable(0, trainable = FALSE)
+                starter_learning_rate <- hyperparameters$learning_rate
+                learning.rate <- tf$compat$v1$train$exponential_decay(starter_learning_rate, global_step,
+                                                                      100000, 0.96, staircase=TRUE)
+                hyperparameters$learning_rate <- learning.rate
+                seloptimizer <- do.call(what = opt, hyperparameters)
+                train <- eval(parse(text = "seloptimizer$minimize(loss_value, global_step = global_step)"))
+
+        } else {
+                seloptimizer <- do.call(what = opt, hyperparameters)
+                train <- eval(parse(text = "seloptimizer$minimize(loss_value)"))
+        }
 
         # Initialize the variables and open the session
         init <- tf$compat$v1$initialize_all_variables()
@@ -192,7 +203,7 @@ disableagerreg <- function(data, dist, design_matrix, fixparam, initparam, argum
 #------------------------------------------------------------------------
 # Estimation of regression parameters (with eager execution) ------------
 #------------------------------------------------------------------------
-eagerreg <- function(data, dist, design_matrix, fixparam, initparam, argumdist, opt, hyperparameters, maxiter, tolerance, np, link_function, ydist, distnotf) {
+eagerreg <- function(data, dist, design_matrix, fixparam, initparam, argumdist, opt, hyperparameters, maxiter, tolerance, np, link_function, ydist, distnotf, optimizer) {
 
         y_data <- as.double(design_matrix$y)
 
