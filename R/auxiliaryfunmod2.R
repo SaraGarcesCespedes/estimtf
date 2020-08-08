@@ -30,8 +30,7 @@ disableagerreg <- function(data, dist, design_matrix, fixparam, initparam, argum
         t <- vector(mode = "list")
         if (np > 1) {
                 t <- lapply(1:np,
-                            FUN = function(i) t[[i]] <- ifelse(i == 1, 0,
-                                                               Reduce("+", nbetas[[1:(i - 1)]])))
+                            FUN = function(i) t[[i]] <- ifelse(i == 1, 0, Reduce("+", nbetas[[1:(i - 1)]])))
         } else {
                 t[[1]] <- 0
         }
@@ -140,16 +139,16 @@ disableagerreg <- function(data, dist, design_matrix, fixparam, initparam, argum
                 # Conditions
                 if (step != 1) {
                         if (abs(loss[[step]] - loss[[step-1]]) < tolerance$loss){
-                                print(paste("Loss function convergence,", step, "iterations needed."))
+                                convergence <- paste("Loss function convergence,", step, "iterations needed.")
                                 break
                         } else if (step >= maxiter) {
-                                print(paste("Maximum number of iterations reached."))
+                                convergence <- paste("Maximum number of iterations reached.")
                                 break
                         } else if (isTRUE(sapply(1:length(regparam), FUN= function(x) abs(parameters[[step]][[x]]) < tolerance$parameters))) {
-                                print(paste("Parameters convergence,", step, "iterations needed."))
+                                convergence <- paste("Parameters convergence,", step, "iterations needed.")
                                 break
                         } else if (isTRUE(sapply(1:length(regparam), FUN= function(x) abs(gradients[[step]][[x]]) < tolerance$gradients))) {
-                                print(paste("Gradients convergence,", step, "iterations needed."))
+                                convergence <- paste("Gradients convergence,", step, "iterations needed.")
                                 break
                         }
                 }
@@ -179,7 +178,13 @@ disableagerreg <- function(data, dist, design_matrix, fixparam, initparam, argum
         # Table of results
         results.table <- cbind(as.numeric(loss), parametersfinal, gradientsfinal)
         colnames(results.table) <- c("loss", names(regparam), namesgradients)
-        return(list(results = results.table, final = tail(results.table, 1), standarderror = stderror))
+        outputs <- list(nbetas = nbetas, ntotalbetas = length(totalbetas), n = n,
+                        type = "MLEregtf", np = np, names = namesparamvector,
+                        estimates = tail(results.table[, 2:(totalbetas + 1)], 1),
+                        convergence = convergence)
+        result <- list(results = results.table, vcov = diagvarcov, standarderror = stderror,
+                       outputs = outputs)
+        return(result)
 
 
 }
@@ -324,16 +329,16 @@ eagerreg <- function(data, dist, design_matrix, fixparam, initparam, argumdist, 
                 # Conditions
                 if (step != 1) {
                         if (abs(loss[[step]] - loss[[step-1]]) < tolerance$loss){
-                                print(paste("Loss function convergence,", step, "iterations needed."))
+                                convergence <- paste("Loss function convergence,", step, "iterations needed.")
                                 break
                         } else if (step >= maxiter) {
-                                print(paste("Maximum number of iterations reached."))
+                                convergence <- paste("Maximum number of iterations reached.")
                                 break
                         } else if (isTRUE(sapply(1:length(regparam), FUN= function(x) abs(parameters[[step]][[x]]) < tolerance$parameters))) {
-                                print(paste("Parameters convergence,", step, "iterations needed."))
+                                convergence <- paste("Parameters convergence,", step, "iterations needed.")
                                 break
                         } else if (isTRUE(sapply(1:length(regparam), FUN= function(x) abs(gradients[[step]][[x]]) < tolerance$gradients))) {
-                                print(paste("Gradients convergence,", step, "iterations needed."))
+                                convergence <- paste("Gradients convergence,", step, "iterations needed.")
                                 break
                         }
                 }
@@ -356,7 +361,13 @@ eagerreg <- function(data, dist, design_matrix, fixparam, initparam, argumdist, 
         # Table of results
         results.table <- cbind(as.numeric(loss), parametersfinal, gradientsfinal)
         colnames(results.table) <- c("loss", names(regparam), namesgradients)
-        return(list(results = results.table, final = tail(results.table, 1), standarderror = stderror))
+        outputs <- list(nbetas = nbetas, ntotalbetas = length(totalbetas), n = n,
+                        type = "MLEregtf", np = np, names = namesparamvector,
+                        estimates = tail(results.table[, 2:(totalbetas + 1)], 1),
+                        convergence = convergence)
+        result <- list(results = results.table, vcov = diagvarcov, standarderror = stderror,
+                       outputs = outputs)
+        return(result)
 }
 
 #------------------------------------------------------------------------

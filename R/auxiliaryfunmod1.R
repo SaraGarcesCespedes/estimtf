@@ -2,7 +2,7 @@
 # Estimation of distribution parameters (disable eager execution) -------
 #------------------------------------------------------------------------
 
-disableagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, maxiter, tolerance, np, distnotf) {
+disableagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, maxiter, tolerance, np, distnotf, xdist) {
 
         # Disable eager execution
         tf$compat$v1$disable_eager_execution()
@@ -34,7 +34,7 @@ disableagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, 
 
         n <- length(x)
         # Define loss function depending on the distribution
-        if (dist %in% distnotf) {
+        if (xdist %in% distnotf) {
                 loss_value <- lossfun(dist, vartotal, X)
         } else {
                 density <- do.call(what = dist, vartotal)
@@ -78,16 +78,16 @@ disableagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, 
                 # Conditions
                 if (step != 1) {
                         if (abs(loss[[step]] - loss[[step-1]]) < tolerance$loss){
-                                print(paste("Loss function convergence,", step, "iterations needed."))
+                                convergence <- paste("Loss function convergence,", step, "iterations needed.")
                                 break
                         } else if (step >= maxiter) {
-                                print(paste("Maximum number of iterations reached."))
+                                convergence <- paste("Maximum number of iterations reached.")
                                 break
                         } else if (isTRUE(sapply(1:np, FUN= function(x) abs(parameters[[step]][[x]]) < tolerance$parameters))) {
-                                print(paste("Parameters convergence,", step, "iterations needed."))
+                                convergence <- paste("Parameters convergence,", step, "iterations needed.")
                                 break
                         } else if (isTRUE(sapply(1:np, FUN= function(x) abs(gradients[[step]][[x]]) < tolerance$gradients))) {
-                                print(paste("Gradients convergence,", step, "iterations needed."))
+                                convergence <- paste("Gradients convergence,", step, "iterations needed.")
                                 break
                         }
                 }
@@ -116,14 +116,19 @@ disableagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, 
         # Table of results
         results.table <- cbind(as.numeric(loss), parametersfinal, gradientsfinal)
         colnames(results.table) <- c("loss", names(var_list), namesgradients)
-        return(list(results = results.table, final = tail(results.table, 1), standarderror = stderror))
+        outputs <- list(n = n, type = "MLEdistf", parnames = names(initparam),
+                        estimates = tail(results.table[, 2:(np + 1)], 1),
+                        convergence = convergence)
+        result <- list(results = results.table, vcov = diagvarcov, standarderror = stderror,
+                       outputs = outputs)
+        return(result)
 }
 
 #------------------------------------------------------------------------
 # Estimation of distribution parameters (with eager execution) ----------
 #------------------------------------------------------------------------
 
-eagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, maxiter, tolerance, np, distnotf) {
+eagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, maxiter, tolerance, np, distnotf, xdist) {
 
         # Create list to store the parameters to be estimated
         var_list <- vector(mode = "list", length = np)
@@ -159,7 +164,7 @@ eagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, maxite
                         # Define loss function depending on the distribution
                         X <- x
                         n <- length(x)
-                        if (dist %in% distnotf) {
+                        if (xdist %in% distnotf) {
                                 loss_value <- lossfun(dist, vartotal, X)
                         } else {
                                 density <- do.call(what = dist, vartotal)
@@ -189,16 +194,16 @@ eagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, maxite
                 # Conditions
                 if (step != 1) {
                         if (abs(loss[[step]] - loss[[step-1]]) < tolerance$loss){
-                                print(paste("Loss function convergence,", step, "iterations needed."))
+                                convergence <- paste("Loss function convergence,", step, "iterations needed.")
                                 break
                         } else if (step >= maxiter) {
-                                print(paste("Maximum number of iterations reached."))
+                                convergence <- paste("Maximum number of iterations reached.")
                                 break
                         } else if (isTRUE(sapply(1:np, FUN= function(x) abs(parameters[[step]][[x]]) < tolerance$parameters))) {
-                                print(paste("Parameters convergence,", step, "iterations needed."))
+                                convergence <- paste("Parameters convergence,", step, "iterations needed.")
                                 break
                         } else if (isTRUE(sapply(1:np, FUN= function(x) abs(gradients[[step]][[x]]) < tolerance$gradients))) {
-                                print(paste("Gradients convergence,", step, "iterations needed."))
+                                convergence <- paste("Gradients convergence,", step, "iterations needed.")
                                 break
                         }
                 }
@@ -221,7 +226,12 @@ eagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, maxite
         # Table of results
         results.table <- cbind(as.numeric(loss), parametersfinal, gradientsfinal)
         colnames(results.table) <- c("loss", names(var_list), namesgradients)
-        return(list(results = results.table, final = tail(results.table, 1), standarderror = stderror))
+        outputs <- list(n = n, type = "MLEdistf", parnames = names(initparam),
+                        estimates= tail(results.table[, 2:(np + 1)], 1),
+                        convergence = convergence)
+        result <- list(results = results.table, vcov = diagvarcov, standarderror = stderror,
+                       outputs = outputs)
+        return(result)
 }
 
 #------------------------------------------------------------------------
