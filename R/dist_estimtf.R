@@ -47,9 +47,11 @@
 dist_estimtf <- function(x, xdist = "Normal", fixparam = NULL, initparam = NULL, optimizer = "AdamOptimizer", hyperparameters = NULL,
                    maxiter = 10000, eager = TRUE) {
 
-        library(EstimationTools) ; library(RelDists) ; library(tensorflow) ; library(reticulate)
-        library(dplyr) ; library(stringr) ; library(ggplot2)
+        suppressMessages(library(EstimationTools)) ; suppressMessages(library(RelDists)) ;
+        suppressMessages(library(tensorflow)) ; suppressMessages(library(reticulate))
+        suppressMessages(library(dplyr)) ; suppressMessages(library(stringr))
 
+        call <- match.call()
 
         # Errors in arguments
 
@@ -180,12 +182,15 @@ dist_estimtf <- function(x, xdist = "Normal", fixparam = NULL, initparam = NULL,
 
         # With eager execution or disable eager execution
         if (eager == TRUE) {
-                res <- eagerdist(x, dist, fixparam, initparam, opt, hyperparameters, maxiter, tolerance, np, distnotf)
+                res <- eagerdist(x, dist, fixparam, initparam, opt, hyperparameters, maxiter, tolerance, np, distnotf, xdist)
         } else {
-                res <- disableagerdist(x, dist, fixparam, initparam, opt, hyperparameters, maxiter, tolerance, np, distnotf)
+                res <- disableagerdist(x, dist, fixparam, initparam, opt, hyperparameters, maxiter, tolerance, np, distnotf, xdist)
         }
 
-        return(list(tf = res$final, stderrtf = res$standarderror))
+        result <- list(tf = res$results, vvoc = res$vcov, stderrtf = res$standarderror,
+                       outputs = res$outputs, distribution = xdist, optimizer = optimizer, call = call)
+        class(result) <- "MLEtf"
+        return(result)
 
 }
 

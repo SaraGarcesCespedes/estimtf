@@ -64,8 +64,11 @@
 reg_estimtf <- function(ydist = y ~ Normal, formulas, data = NULL, fixparam = NULL, initparam = NULL, link_function = NULL,
                         optimizer = "AdamOptimizer", hyperparameters = NULL, maxiter = 10000, eager = TRUE) {
 
-        library(EstimationTools) ; library(RelDists) ; library(tensorflow) ; library(reticulate)
-        library(dplyr) ; library(stringr) ; library(ggplot2)
+        suppressMessages(library(EstimationTools)) ; suppressMessages(library(RelDists)) ;
+        suppressMessages(library(tensorflow)) ; suppressMessages(library(reticulate))
+        suppressMessages(library(dplyr)) ; suppressMessages(library(stringr))
+
+        call <- match.call()
 
         # Errors in arguments
         # Formulas
@@ -160,15 +163,15 @@ reg_estimtf <- function(ydist = y ~ Normal, formulas, data = NULL, fixparam = NU
         # Errors in link_function
         lfunctions <- c("logit", "log")
         if (!is.null(link_function)) {
-                if (length(match(gsub("\\..*","",names(link_function)), names(argumdist))) == 0) {
+                if (length(match(names(link_function), names(argumdist))) == 0) {
                         stop(paste0("Names of parameters included in the 'link_function' list do not match with the parameters of the ",
                                     dist, " distribution"))
-                } else if (length(match(gsub("\\..*","",names(link_function)), names(argumdist))) > np) {
+                } else if (length(match(names(link_function), names(argumdist))) > np) {
                         stop(paste0("Only include in 'link_function' the parameters that are not fixed"))
                 }
                 verifylink <- lapply(1:length(link_function), FUN = function(x) {
                         if (!(link_function[[x]] %in% lfunctions)) {
-                                stop(paste0("Unidentified link function Select one of the link functions included in the \n",
+                                stop(paste0("Unidentified link function. Select one of the link functions included in the \n",
                                             " following list: ", paste0(lfunctions, collapse = ", ")))
                         }
                 })
@@ -225,7 +228,10 @@ reg_estimtf <- function(ydist = y ~ Normal, formulas, data = NULL, fixparam = NU
                 res <- disableagerreg(data, dist, design_matrix, fixparam, initparam, argumdist, opt, hyperparameters, maxiter, tolerance, np, link_function, ydist, distnotf)
         }
 
-        return(list(tf = res$final, stderrtf = res$standarderror))
+        result <- list(tf = res$results, vvoc = res$vcov, stderrtf = res$standarderror, dsgmatrix = design_matrix,
+                       outputs = res$outputs, call = call, optimizer = optimizer, distribution = all.vars(ydist)[2])
+        class(result) <- "MLEtf"
+        return(result)
 }
 
 
