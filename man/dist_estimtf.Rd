@@ -11,8 +11,7 @@ dist_estimtf(
   initparam = NULL,
   optimizer = "AdamOptimizer",
   hyperparameters = NULL,
-  maxiter = 10000,
-  eager = TRUE
+  maxiter = 10000
 )
 }
 \arguments{
@@ -24,16 +23,16 @@ dist_estimtf(
 
 \item{initparam}{a list with initial values of the parameters to be estimated. The list must contain the parameters values and names.}
 
-\item{optimizer}{a character indicating the name of the TensorFlow optimizer to be used in the estimation process The default value is \code{'AdamOptimizer'}.}
+\item{optimizer}{a character indicating the name of the TensorFlow optimizer to be used in the estimation process The default value is \code{'AdamOptimizer'}. The available optimizers are:
+\code{"AdadeltaOptimizer"}, \code{"AdagradDAOptimizer"}, \code{"AdagradOptimizer"}, \code{"AdamOptimizer"}, \code{"GradientDescentOptimizer"},
+\code{"MomentumOptimizer"} and \code{"RMSPropOptimizer"}.}
 
 \item{hyperparameters}{a list with the hyperparameters values of the TensorFlow optimizer. FALTA DETALLES}
 
 \item{maxiter}{a positive integer indicating the maximum number of iterations for the optimization algorithm.}
-
-\item{eager}{logical. If \code{TRUE}, the estimation process is performed in the eager execution environment. The default value is \code{TRUE}.}
 }
 \value{
-This function returns the estimates and standard errors of distributional parameters as well as
+This function returns the estimates and standard errors of parameters from statistical distributions as well as
 some information of the optimization process like the number of iterations needed for convergence.
 }
 \description{
@@ -46,7 +45,7 @@ Function to compute the Maximum Likelihood Estimators of distributional paramete
 \examples{
 #-------------------------------------------------------------
 # Estimation of both normal distrubution parameters
-x <- rnorm(n = 1000, mean = 10, sigma = 3)
+x <- rnorm(n = 1000, mean = 10, sd = 3)
 
 estimation_1 <- dist_estimtf(x, xdist = "Normal", optimizer = "AdamOptimizer",
                            hyperparameters = list(learning_rate = 0.1))
@@ -55,7 +54,7 @@ summary(estimation_1)
 
 #-------------------------------------------------------------
 # Estimation with one fixed parameter
-x <- rnorm(n = 1000, mean = 10, sigma = 3)
+x <- rnorm(n = 1000, mean = 10, sd = 3)
 
 estimation_2 <- dist_estimtf(x, xdist = "Normal", optimizer = "AdamOptimizer",
                            hyperparameters = list(learning_rate = 0.1),
