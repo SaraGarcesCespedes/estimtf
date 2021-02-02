@@ -26,5 +26,6 @@ This is a basic example which shows you how to solve a common problem:
 
 ``` r
 library(estimtf)
+#> Loading required package: ggplot2
 ## basic example code
 ```
