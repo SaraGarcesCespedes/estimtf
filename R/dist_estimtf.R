@@ -8,24 +8,36 @@
 #' @param xdist a character indicating the name of the distribution of interest. The default value is \code{'Normal'}.
 #' @param fixparam a list of the fixed parameters of the distribution of interest. The list must contain the parameters values and names.
 #' @param initparam a list with initial values of the parameters to be estimated. The list must contain the parameters values and names.
-#' @param optimizer a character indicating the name of the TensorFlow optimizer to be used in the estimation process The default value is \code{'AdamOptimizer'}.
+#' @param optimizer a character indicating the name of the TensorFlow optimizer to be used in the estimation process The default value is \code{'AdamOptimizer'}. The available optimizers are:
+#' \code{"AdadeltaOptimizer"}, \code{"AdagradDAOptimizer"}, \code{"AdagradOptimizer"}, \code{"AdamOptimizer"}, \code{"GradientDescentOptimizer"},
+#' \code{"MomentumOptimizer"} and \code{"RMSPropOptimizer"}.
 #' @param hyperparameters a list with the hyperparameters values of the TensorFlow optimizer. FALTA DETALLES
 #' @param maxiter a positive integer indicating the maximum number of iterations for the optimization algorithm.
-#' @param eager logical. If \code{TRUE}, the estimation process is performed in the eager execution environment. The default value is \code{TRUE}.
 #'
-#' @return This function returns the estimates and standard errors of distributional parameters as well as
+#' @return This function returns the estimates and standard errors of parameters from statistical distributions as well as
 #' some information of the optimization process like the number of iterations needed for convergence.
 #'
 #' @details \code{dist_estimtf} computes the log-likelihood function of the distribution specified in
 #' \code{xdist} and finds the distributional parameters that maximizes it using TensorFlow.
 #'
 #' @importFrom stringr str_split
+#' @importFrom dplyr %>%
+#' @importFrom dplyr select
+#' @importFrom dplyr all_of
+#' @importFrom stats na.omit
+#' @importFrom stats terms
+#' @importFrom stats model.matrix
+#' @importFrom stats delete.response
+#' @importFrom stats printCoefmat
+#' @importFrom stats pnorm
+#' @import tensorflow
+#' @import tfprobability
 #'
 #'
 #' @examples
 #' #-------------------------------------------------------------
 #' # Estimation of both normal distrubution parameters
-#' x <- rnorm(n = 1000, mean = 10, sigma = 3)
+#' x <- rnorm(n = 1000, mean = 10, sd = 3)
 #'
 #' estimation_1 <- dist_estimtf(x, xdist = "Normal", optimizer = "AdamOptimizer",
 #'                            hyperparameters = list(learning_rate = 0.1))
@@ -34,7 +46,7 @@
 #'
 #' #-------------------------------------------------------------
 #' # Estimation with one fixed parameter
-#' x <- rnorm(n = 1000, mean = 10, sigma = 3)
+#' x <- rnorm(n = 1000, mean = 10, sd = 3)
 #'
 #' estimation_2 <- dist_estimtf(x, xdist = "Normal", optimizer = "AdamOptimizer",
 #'                            hyperparameters = list(learning_rate = 0.1),
@@ -45,11 +57,16 @@
 #'
 #' @export
 dist_estimtf <- function(x, xdist = "Normal", fixparam = NULL, initparam = NULL, optimizer = "AdamOptimizer", hyperparameters = NULL,
-                   maxiter = 10000, eager = TRUE) {
+                         maxiter = 10000) {
 
-        suppressMessages(library(EstimationTools)) ; suppressMessages(library(RelDists)) ;
-        suppressMessages(library(tensorflow)) ; suppressMessages(library(reticulate))
-        suppressMessages(library(dplyr)) ; suppressMessages(library(stringr))
+        #suppressMessages(library(EstimationTools)) ; suppressMessages(library(RelDists)) ;
+        #library(tensorflow)
+        #library(reticulate)
+        #library(dplyr)
+        #library(stringr)
+        #library(ggplot2)
+        #library(tfprobability)
+        #library(purrr)
 
         call <- match.call()
 
@@ -71,10 +88,18 @@ dist_estimtf <- function(x, xdist = "Normal", fixparam = NULL, initparam = NULL,
 
 
         # Defining loss function depending on xdist
-        distnotf <- c("Poisson", "FWE", "InstantaneousFailures", "Weibull", "Cauchy",
-                      "DoubleExponential", "Geometric", "LogNormal")
+        distdisponibles <- c("Normal", "Poisson", "Uniform", "Gamma", "LogNormal", "Weibull", "Exponential",
+                             "Beta", "Cauchy", "StudentT", "Chi2", "Logistic","FWE", "InstantaneousFailures",
+                             "DoubleExponential")
+        distnotf <- c("FWE", "InstantaneousFailures", "DoubleExponential")
+
+        if (!(xdist %in% distdisponibles)) {
+                stop(paste0("The distribution is not available. The following are the \n",
+                            " available distributions: ", paste0(distdisponibles, collapse = ", ")))
+        }
+
         if (!(xdist %in% distnotf)) {
-                dist <- eval(parse(text = paste("tf$compat$v1$distributions$", xdist, sep = "")))
+                dist <- eval(parse(text = paste("tfprobability::tfp$distributions$", xdist, sep = "")))
         } else {
                 dist <- xdist
         }
@@ -84,7 +109,7 @@ dist_estimtf <- function(x, xdist = "Normal", fixparam = NULL, initparam = NULL,
                 argumdist <- arguments(dist)
         } else {
                 # Arguments names of tf function
-                inspect <- import("inspect")
+                inspect <- reticulate::import("inspect")
                 argumdist <- inspect$signature(dist)
                 argumdist <- argumdist$parameters$copy()
         }
@@ -92,10 +117,10 @@ dist_estimtf <- function(x, xdist = "Normal", fixparam = NULL, initparam = NULL,
         # Errors in list fixparam
         # Update argumdist. Leaves all the arguments of the TF distribution except the ones that are fixed
         if (!is.null(fixparam)) {
-                if (length(match(names(fixparam), names(argumdist))) == 0) {
-                        stop(paste0("Names of fixed parameters do not match with the arguments of \n",
-                                    dist, " function."))
-                } else if (length(match(names(fixparam), names(argumdist))) > 0) {
+                if (length(na.omit(match(names(fixparam), names(argumdist)))) == 0) {
+                        stop(paste0("Names of parameters included in the 'fixparam' list do not match with the parameters of the \n",
+                                    dist, " distribution"))
+                } else if (length(na.omit(match(names(fixparam), names(argumdist)))) > 0) {
                         fixed <- match(names(fixparam), names(argumdist))
                         argumdist <- argumdist[-fixed]
                 }
@@ -107,7 +132,9 @@ dist_estimtf <- function(x, xdist = "Normal", fixparam = NULL, initparam = NULL,
                 np <- length(argumdist) # number of parameters to be estimated
         } else {
                 arg <- sapply(1:length(argumdist),
-                              FUN = function(x) names(argumdist)[x] != "validate_args" & names(argumdist)[x] != "allow_nan_stats" & names(argumdist)[x] != "name" & names(argumdist)[x] != "dtype")
+                              FUN = function(x) names(argumdist)[x] != "validate_args" & names(argumdist)[x] != "allow_nan_stats" &
+                                      names(argumdist)[x] != "name" & names(argumdist)[x] != "dtype" &
+                                      names(argumdist)[x] != "interpolate_nondiscrete" & names(argumdist)[x] != "log_rate")
                 np <- sum(arg)
                 argumdist <- argumdist[arg]
         }
@@ -115,21 +142,22 @@ dist_estimtf <- function(x, xdist = "Normal", fixparam = NULL, initparam = NULL,
 
         # Errors in list initparam
         if (!is.null(initparam)) {
-                if (length(match(names(initparam), names(argumdist))) == 0) {
-                        stop(paste0("Names of parameters included in the 'initparam' list do not match with the parameters of the ",
-                                    dist, " distribution"))
-                } else if (length(match(names(initparam), names(argumdist))) > np) {
+                if (all(names(initparam) %in% names(argumdist)) == FALSE) {
+                        stop(paste0("Some or all of the parameters included in the 'initparam' list do not match with the arguments of ",
+                                    all.vars(ydist)[2], " distribution."))
+                } else if (length(na.omit(match(names(initparam), names(argumdist)))) > np) {
                         stop(paste0("Only include in 'initparam' the names of parameters that are not fixed"))
-                } else if (length(match(names(initparam), names(argumdist))) > 0 & length(match(names(initparam), names(argumdist))) < np) {
+                } else {
                         providedvalues <- match(names(initparam), names(argumdist))
                         namesprovidedvalues <- names(initparam)
                         missingvalues <- argumdist[-providedvalues]
-                        initparam <- append(initparam, rep(1.0, length(missingvalues)))
+                        initparam <- append(initparam, rep(1.0, length(missingvalues))) #valor de 1 a los parametros que no me dieron initparam
                         names(initparam) <- c(namesprovidedvalues, names(missingvalues))
                 }
         }
 
-        # If the user do not provide initial values for the parameters to be estimated, by default the values will be 0 or 2
+
+        # If the user do not provide initial values for the parameters to be estimated, by default the values will be 1 or 2
         if (is.null(initparam)) {
                 initparam <- vector(mode = "list", length = np)
                 initparam <- lapply(1:np,
@@ -145,8 +173,8 @@ dist_estimtf <- function(x, xdist = "Normal", fixparam = NULL, initparam = NULL,
                         "MomentumOptimizer", "RMSPropOptimizer")
         # Error in character for optimizer
         if (!(optimizer %in% optimizers)) {
-                stop(paste0("Unidentified optimizer. Select one of the optimizers included in the \n",
-                            " following list: ", paste0(optimizers, collapse = ", ")))
+                stop(paste0("Unidentified optimizer. Select one of the following optimizers: \n",
+                             paste0(optimizers, collapse = ", ")))
         }
 
 
@@ -155,10 +183,10 @@ dist_estimtf <- function(x, xdist = "Normal", fixparam = NULL, initparam = NULL,
 
 
         # Define the TF optimizer depending on the user selection
-        opt <- eval(parse(text=paste("tf$compat$v1$train$", optimizer, sep="")))
+        opt <- eval(parse(text=paste("tensorflow::tf$compat$v1$train$", optimizer, sep="")))
 
         # List of arguments of TensorFlow optimizer
-        inspect <- import("inspect")
+        inspect <- reticulate::import("inspect")
         argumopt <- inspect$signature(opt)
         argumopt <- argumopt$parameters$copy()
         argumopt <- within(argumopt, rm(name)) #remove name argument
@@ -166,8 +194,9 @@ dist_estimtf <- function(x, xdist = "Normal", fixparam = NULL, initparam = NULL,
 
         # If the user do not provide values for the hyperparameters, they will take the default values of tensorflow
         if (!is.null(hyperparameters)) {
-                if (length(match(names(hyperparameters), names(argumopt))) == 0) {
-                        stop(paste0("Names hyperparameters do not match with the hyperparameters of ","TensorFlow ", optimizer, "."))
+                if (length(na.omit(match(names(hyperparameters), names(argumopt)))) == 0) {
+                        stop(paste0("The hyperparameters included in the list do not match with the hyperparameters of ", optimizer, ": \n",
+                                    paste0(argumopt, collapse = ", ")))
                 }
         } else if (is.null(hyperparameters)) {
                 hyperparameters <- vector(mode = "list", length = length(argumopt))
@@ -180,12 +209,9 @@ dist_estimtf <- function(x, xdist = "Normal", fixparam = NULL, initparam = NULL,
 
         # Estimation process starts
 
-        # With eager execution or disable eager execution
-        if (eager == TRUE) {
-                res <- eagerdist(x, dist, fixparam, initparam, opt, hyperparameters, maxiter, tolerance, np, distnotf, xdist, optimizer)
-        } else {
-                res <- disableagerdist(x, dist, fixparam, initparam, opt, hyperparameters, maxiter, tolerance, np, distnotf, xdist, optimizer)
-        }
+        # With disable eager execution
+        res <- disableagerdist(x, dist, fixparam, initparam, opt, hyperparameters, maxiter, tolerance, np, distnotf, xdist, optimizer)
+
 
         result <- list(tf = res$results, vvoc = res$vcov, stderrtf = res$standarderror,
                        outputs = res$outputs, distribution = xdist, optimizer = optimizer, call = call)
@@ -200,12 +226,9 @@ dist_estimtf <- function(x, xdist = "Normal", fixparam = NULL, initparam = NULL,
 
 arguments <- function(dist) {
 
-        listarguments <- list(Poisson = list(lambda = NULL), FWE = list(mu = NULL, sigma = NULL),
-                              InstantaneousFailures = list(lambda = NULL),
+        listarguments <- list(InstantaneousFailures = list(lambda = NULL),
                               Weibull = list(shape = NULL, scale = NULL),
-                              Cauchy = list(loc = NULL, scale = NULL), Geometric = list(prob = NULL),
-                              DoubleExponential = list(loc = NULL, scale = NULL),
-                              LogNormal = list(meanlog = NULL, sdlog = NULL))
+                              DoubleExponential = list(loc = NULL, scale = NULL))
 
         return(listarguments[[dist]])
 

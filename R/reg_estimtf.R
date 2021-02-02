@@ -15,60 +15,80 @@
 #' name of the distributional parameter and the value.
 #' @param link_function a list with names of parameters to be linked and the corresponding link function name. The link functions available are:
 #' \code{log} and \code{logit}.
-#' @param optimizer a character indicating the name of the TensorFlow optimizer to be used in the estimation process The default value is \code{'AdamOptimizer'}.
+#' @param optimizer a character indicating the name of the TensorFlow optimizer to be used in the estimation process The default value is \code{'AdamOptimizer'}. The available optimizers are:
+#' \code{"AdadeltaOptimizer"}, \code{"AdagradDAOptimizer"}, \code{"AdagradOptimizer"}, \code{"AdamOptimizer"}, \code{"GradientDescentOptimizer"},
+#' \code{"MomentumOptimizer"} and \code{"RMSPropOptimizer"}.
 #' @param hyperparameters a list with the hyperparameters values of the TensorFlow optimizer. FALTA DETALLES
 #' @param maxiter a positive integer indicating the maximum number of iterations for the optimization algorithm. The default value is \code{10000}.
-#' @param eager If \code{TRUE}, the estimation process is performed in the eager execution environment. The default value is \code{TRUE}.
 #'
-#' @return This function returns the estimates, standard errors, z scores and p-values of significance tests
-#' for the regression parameters as well as some information of the optimization process like the number of
+#' @return This function returns the estimates, standard errors, z values and p-values of significance tests
+#' for parameters of regression models as well as some information of the optimization process like the number of
 #' iterations needed for convergence.
 #'
 #' @details \code{reg_estimtf} computes the log-likelihood function of the distribution specified in
 #' \code{ydist} with linear predictors specified in \code{formulas}. Then, it finds the regression parameters
 #' that maximizes it using TensorFlow.
 #'
-#' #' @examples
+#' @importFrom stringr str_split
+#' @importFrom dplyr %>%
+#' @importFrom dplyr select
+#' @importFrom dplyr all_of
+#' @importFrom stats na.omit
+#' @importFrom stats terms
+#' @importFrom stats model.matrix
+#' @importFrom stats delete.response
+#' @importFrom stats printCoefmat
+#' @importFrom stats pnorm
+#' @importFrom fastDummies dummy_cols
+#' @import tensorflow
+#' @import tfprobability
+#'
+#' @examples
 #' #-------------------------------------------------------------
-#' # Estimation of parameters of a linear regression model
-#' n <- 1000
-#' x <- runif(n = 1000, 0, 10)
-#' x1 <- runif(n = n, 0, 6)
-#' y <- rnorm(n = n, mean = -2 + 3 * x + 9 * x1, sd = exp(3 + 3 * x))
-#' data <- data.frame(y = y, x = x, x1 = x1)
+#' # Estimation of parameters of a Poisson regression model
+#' counts <- c(18,17,15,20,10,20,25,13,12)
+#' outcome <- gl(3,1,9)
+#' treatment <- gl(3,3)
+#' data <- data.frame(treatment, outcome, counts)
 #'
-#' formulas <- list(loc.fo = ~ x + x1, scale.fo = ~ x)
-#'
-#' estimation_1 <- reg_estimtf(ydist = "Normal", formulas = formulas, data = data,
-#'                             initparam <- list(loc = 1.0, scale = 1.0),
-#'                             link_function <- list(scale = "log"), optimizer = "AdamOptimizer",
+#' formulas <- list(rate.fo = ~ outcome + treatment)
+#' estimation_1 <- reg_estimtf(ydist =  counts ~ Poisson, formulas = formulas, data = data,
+#'                             initparam = list(rate = 1.0), optimizer = "AdamOptimizer",
+#'                             link_function = list(rate = "log"),
 #'                             hyperparameters = list(learning_rate = 0.1))
-#'
 #' summary(estimation_1)
 #'
 #' #-------------------------------------------------------------
 #' # Estimation of parameters of a linear regression model with one fixed parameter
 #' x <- runif(n = 1000, -3, 3)
-#' y <- rnorm(n = 1000, mean = 5 - 2 * x, sigma = 3)
+#' y <- rnorm(n = 1000, mean = 5 - 2 * x, sd = 3)
 #' data <- data.frame(y = y, x = x)
 #'
 #' formulas <- list(loc.fo = ~ x)
 #' initparam <- list(loc = list(Intercept = 1.0, x = 0.0))
 #'
-#' estimation_2 <- reg_estimtf(ydist = "Normal", formulas = formulas, data = data,
-#'                             fixparam = list(scale = 3), initparam = initparam
-#'                             link_function <- list(scale = "log"), optimizer = "AdamOptimizer",
+#' estimation_2 <- reg_estimtf(ydist = y ~ Normal, formulas = formulas, data = data,
+#'                             fixparam = list(scale = 3), initparam = initparam,
+#'                             optimizer = "AdamOptimizer",
 #'                             hyperparameters = list(learning_rate = 0.1))
 #'
 #' summary(estimation_2)
 #'
+#' #-------------------------------------------------------------
+#' # Estimation of parameters using cars dataset
+#' data <- data.frame(dist = cars$dist, speed = cars$speed)
+#' formulas <- list(loc.fo = ~ speed, scale.fo = ~ 1)
+#'
+#' estimation_3 <- reg_estimtf(ydist = dist ~ Normal, formulas = formulas, data = data,
+#'                             initparam = list(loc = 1.0, scale = 1.0), optimizer = "AdamOptimizer",
+#'                             hyperparameters = list(learning_rate = 0.1))
+#'
+#' summary(estimation_3)
+#'
 #' @export
 reg_estimtf <- function(ydist = y ~ Normal, formulas, data = NULL, fixparam = NULL, initparam = NULL, link_function = NULL,
-                        optimizer = "AdamOptimizer", hyperparameters = NULL, maxiter = 10000, eager = TRUE) {
+                        optimizer = "AdamOptimizer", hyperparameters = NULL, maxiter = 10000) {
 
-        suppressMessages(library(EstimationTools)) ; suppressMessages(library(RelDists)) ;
-        suppressMessages(library(tensorflow)) ; suppressMessages(library(reticulate))
-        suppressMessages(library(dplyr)) ; suppressMessages(library(stringr))
 
         call <- match.call()
 
@@ -83,16 +103,24 @@ reg_estimtf <- function(ydist = y ~ Normal, formulas, data = NULL, fixparam = NU
                 stop("Distribution of response variable y must be specified \n \n")
         }
         if (!inherits(ydist, "formula")) {
-                stop(paste0("'ydist' argument must be ", "a formula specifying ", "the distribution of ",
+                stop(paste0("'ydist' argument must be a formula specifying the distribution of ",
                                                         "the response variable \n \n"))
         }
 
 
         # Defining loss function depending on xdist
-        distnotf <- c("Poisson", "FWE", "InstantaneousFailures", "Weibull", "Cauchy",
-                      "DoubleExponential", "Geometric", "LogNormal")
+        distdisponibles <- c("Normal", "Poisson", "Uniform", "Gamma", "LogNormal", "Weibull", "Exponential",
+                             "Beta", "Cauchy", "StudentT", "Chi2", "Logistic","FWE", "InstantaneousFailures",
+                             "DoubleExponential", "Binomial")
+        distnotf <- c("FWE", "InstantaneousFailures", "DoubleExponential", "Logistic")
+
+        if (!(all.vars(ydist)[2] %in% distdisponibles)) {
+                stop(paste0("The distribution is not available. The following are the \n",
+                            " available distributions: ", paste0(distdisponibles, collapse = ", ")))
+        }
+
         if (!(all.vars(ydist)[2] %in% distnotf)) {
-                dist <- eval(parse(text = paste("tf$compat$v1$distributions$", all.vars(ydist)[2], sep = "")))
+                dist <- eval(parse(text = paste("tfprobability::tfp$distributions$", all.vars(ydist)[2], sep = "")))
         } else {
                 dist <- all.vars(ydist)[2]
         }
@@ -102,18 +130,28 @@ reg_estimtf <- function(ydist = y ~ Normal, formulas, data = NULL, fixparam = NU
                 argumdist <- arguments(dist)
         } else {
                 # Arguments names of tf function
-                inspect <- import("inspect")
+                inspect <- reticulate::import("inspect")
                 argumdist <- inspect$signature(dist)
                 argumdist <- argumdist$parameters$copy()
+        }
+
+
+        # Errors in data
+        # Check that all variables in formula are included in data
+        if (!is.null(data)) {
+                if (length(na.omit(match(colnames(data), all.vars(ydist)[1]))) < 1) {
+                        stop(paste0("Data for response variable ", all.vars(ydist)[1], " is missing. \n",
+                                    "Please include it in the dataframe provided in the 'data' argument."))
+                }
         }
 
         # Errors in list fixparam
         # Update argumdist. Leaves all the arguments of the TF distribution except the ones that are fixed
         if (!is.null(fixparam)) {
-                if (length(match(names(fixparam), names(argumdist))) == 0) {
+                if (length(na.omit(match(names(argumdist), names(fixparam)))) == 0) {
                         stop(paste0("Names of fixed parameters do not match with the arguments of \n",
-                                    dist, " function."))
-                } else if (length(match(names(fixparam), names(argumdist))) > 0) {
+                                    all.vars(ydist)[2], " distribution"))
+                } else if (length(na.omit(match(names(fixparam), names(argumdist)))) > 0) {
                         fixed <- match(names(fixparam), names(argumdist))
                         argumdist <- argumdist[-fixed]
                 }
@@ -125,7 +163,9 @@ reg_estimtf <- function(ydist = y ~ Normal, formulas, data = NULL, fixparam = NU
                 np <- length(argumdist) # number of parameters to be estimated
         } else {
                 arg <- sapply(1:length(argumdist),
-                              FUN = function(x) names(argumdist)[x] != "validate_args" & names(argumdist)[x] != "allow_nan_stats" & names(argumdist)[x] != "name" & names(argumdist)[x] != "dtype")
+                              FUN = function(x) names(argumdist)[x] != "validate_args" & names(argumdist)[x] != "allow_nan_stats" &
+                                      names(argumdist)[x] != "name" & names(argumdist)[x] != "dtype" &
+                                      names(argumdist)[x] != "interpolate_nondiscrete" & names(argumdist)[x] != "log_rate")
                 np <- sum(arg)
                 argumdist <- argumdist[arg]
         }
@@ -135,12 +175,13 @@ reg_estimtf <- function(ydist = y ~ Normal, formulas, data = NULL, fixparam = NU
 
         # Errors in list initparam
         if (!is.null(initparam)) {
-                if (length(match(names(initparam), names(argumdist))) == 0) {
-                        stop(paste0("Names of parameters included in the 'initparam' list do not match with the arguments of ",
-                                    dist, " function."))
-                } else if (length(match(names(initparam), names(argumdist))) > np) {
+                if (all(names(initparam) %in% names(argumdist)) == FALSE) {
+                        stop(paste0("Some or all of the parameters included in the 'initparam' list do not match with the arguments of ",
+                                    all.vars(ydist)[2], " distribution."))
+                } else if (length(na.omit(match(names(initparam), names(argumdist)))) > np) {
                         stop(paste0("Only include in 'initparam' the parameters that are not fixed"))
-                } else if (length(match(names(initparam), names(argumdist))) > 0 & length(match(names(initparam), names(argumdist))) < np) {
+                } else {
+
                         providedvalues <- match(names(initparam), names(argumdist))
                         namesprovidedvalues <- names(initparam)
                         missingvalues <- argumdist[-providedvalues]
@@ -165,10 +206,10 @@ reg_estimtf <- function(ydist = y ~ Normal, formulas, data = NULL, fixparam = NU
         # Errors in link_function
         lfunctions <- c("logit", "log")
         if (!is.null(link_function)) {
-                if (length(match(names(link_function), names(argumdist))) == 0) {
+                if (all(names(link_function) %in% names(argumdist)) == FALSE) {
                         stop(paste0("Names of parameters included in the 'link_function' list do not match with the parameters of the ",
-                                    dist, " distribution"))
-                } else if (length(match(names(link_function), names(argumdist))) > np) {
+                                    all.vars(ydist)[2], " distribution"))
+                } else if (length(na.omit(match(names(link_function), names(argumdist)))) > np) {
                         stop(paste0("Only include in 'link_function' the parameters that are not fixed"))
                 }
                 verifylink <- lapply(1:length(link_function), FUN = function(x) {
@@ -185,8 +226,8 @@ reg_estimtf <- function(ydist = y ~ Normal, formulas, data = NULL, fixparam = NU
                         "MomentumOptimizer", "RMSPropOptimizer")
         # Error in character for optimizer
         if (!(optimizer %in% optimizers)) {
-                stop(paste0("Unidentified optimizer. Select one of the optimizers included in the \n",
-                            " following list: ", paste0(optimizers, collapse = ", ")))
+                stop(paste0("Unidentified optimizer. Select one of the following optimizers: \n",
+                            paste0(optimizers, collapse = ", ")))
         }
 
         # Value for tolerance
@@ -194,10 +235,10 @@ reg_estimtf <- function(ydist = y ~ Normal, formulas, data = NULL, fixparam = NU
 
 
         # Define the TF optimizer depending on the user selection
-        opt <- eval(parse(text=paste("tf$compat$v1$train$", optimizer, sep="")))
+        opt <- eval(parse(text=paste("tensorflow::tf$compat$v1$train$", optimizer, sep="")))
 
         # List of arguments of TensorFlow optimizer
-        inspect <- import("inspect")
+        inspect <- reticulate::import("inspect")
         argumopt <- inspect$signature(opt)
         argumopt <- argumopt$parameters$copy()
         argumopt <- within(argumopt, rm(name)) #remove name argument
@@ -205,13 +246,13 @@ reg_estimtf <- function(ydist = y ~ Normal, formulas, data = NULL, fixparam = NU
 
         # If the user do not provide values for the hyperparameters, they will take the default values of tensorflow
         if (!is.null(hyperparameters)) {
-                if (length(match(names(hyperparameters), names(argumopt))) == 0) {
-                        stop(paste0("Names hyperparameters do not match with the hyperparameters of ","TensorFlow ", optimizer, "."))
+                if (length(na.omit(match(names(hyperparameters), names(argumopt)))) == 0) {
+                        stop(paste0("The hyperparameters provided do not match with the hyperparameters of ","TensorFlow ", optimizer, "."))
                 }
         } else if (is.null(hyperparameters)) {
                 hyperparameters <- vector(mode = "list", length = length(argumopt))
                 names(hyperparameters) <- names(argumopt)
-                splitarg <- sapply(1:length(argumopt), FUN = function(x) argumopt[[x]] %>% str_split("\\="))
+                splitarg <- sapply(1:length(argumopt), FUN = function(x) argumopt[[x]] %>% stringr::str_split("\\="))
                 hyperparameters <- lapply(1:length(hyperparameters),
                                           FUN = function(i) hyperparameters[[i]] <- ifelse(splitarg[[i]][2] == "True" | splitarg[[i]][2] == "False",
                                                                                            splitarg[[i]][2], as.numeric(splitarg[[i]][2])))
@@ -219,16 +260,12 @@ reg_estimtf <- function(ydist = y ~ Normal, formulas, data = NULL, fixparam = NU
 
 
         # Create the design matrix
-        design_matrix <- model.matrix.MLreg(formulas, data, ydist, np, par_names)
+        design_matrix <- model_matrix_MLreg(formulas, data, ydist, np, par_names)
 
         # Estimation process starts
 
-        # With eager execution or disable eager execution
-        if (eager == TRUE) {
-                res <- eagerreg(data, dist, design_matrix, fixparam, initparam, argumdist, opt, hyperparameters, maxiter, tolerance, np, link_function, ydist, distnotf, optimizer)
-        } else {
-                res <- disableagerreg(data, dist, design_matrix, fixparam, initparam, argumdist, opt, hyperparameters, maxiter, tolerance, np, link_function, ydist, distnotf, optimizer)
-        }
+        # With disable eager execution
+        res <- disableagerreg(data, dist, design_matrix, fixparam, initparam, argumdist, opt, hyperparameters, maxiter, tolerance, np, link_function, ydist, distnotf, optimizer)
 
         result <- list(tf = res$results, vvoc = res$vcov, stderrtf = res$standarderror, dsgmatrix = design_matrix,
                        outputs = res$outputs, call = call, optimizer = optimizer, distribution = all.vars(ydist)[2])
@@ -251,7 +288,7 @@ fos_bind <- function(formula, response){
 }
 
 
-model.matrix.MLreg <- function(formulas, data, ydist, np, par_names){
+model_matrix_MLreg <- function(formulas, data, ydist, np, par_names){
 
         # Errors in formulas
         if (!any(lapply(formulas, class) == "formula")){
@@ -279,11 +316,25 @@ model.matrix.MLreg <- function(formulas, data, ydist, np, par_names){
         formulas_tmp <- as.list(formulas_corrector)
         names(formulas_tmp) <- par_names
 
+        # check that all explanatory variables are included in data
+        split_form <- sapply(1:length(formulas_tmp), FUN = function(x) formulas_tmp[[x]] %>% stringr::str_remove("\\~"))
+        split_form <- sapply(1:length(split_form), FUN = function(x) split_form[[x]] %>% stringr::str_split("\\+"))
+
+        dep_variables <- unlist(split_form)
+        dep_variables <- sapply(1:length(dep_variables), FUN = function(x) dep_variables[x] = trimws(dep_variables[x]))
+        dep_variables <- dep_variables[!dep_variables == 1]
+
+
+        if ((ncol(data) - 1) < length(dep_variables)) {
+                stop(paste0("Data for some explanatory variables is missing. Please include it\n",
+                            "in the dataframe provided in the 'data' argument."))
+        }
+
         # Variables
         fos_mat_char <- lapply(formulas_tmp, fos_bind, response = Y)
         fos_mat <- lapply(fos_mat_char, as.formula)
         list_mfs <- lapply(fos_mat, model.frame, data = data)
-        if ( is.null(data) ){
+        if (is.null(data)){
                 data_reg <- as.data.frame(list_mfs)
                 var_names <- as.character(unlist(sapply(list_mfs, names)))
                 names(data_reg) <- var_names
@@ -309,12 +360,10 @@ model.matrix.MLreg <- function(formulas, data, ydist, np, par_names){
 #------------------------------------------------------------------------
 arguments <- function(dist) {
 
-        listarguments <- list(Poisson = list(lambda = NULL), FWE = list(mu = NULL, sigma = NULL),
-                              InstantaneousFailures = list(lambda = NULL),
-                              Weibull = list(shape = NULL, scale = NULL),
-                              Cauchy = list(loc = NULL, scale = NULL), Geometric = list(prob = NULL),
+        listarguments <- list(InstantaneousFailures = list(lambda = NULL),
+                              #Weibull = list(shape = NULL, scale = NULL),
                               DoubleExponential = list(loc = NULL, scale = NULL),
-                              LogNormal = list(meanlog = NULL, sdlog = NULL))
+                              Logistic = list(logits = NULL))
 
         return(listarguments[[dist]])
 
