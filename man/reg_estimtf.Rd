@@ -13,8 +13,7 @@ reg_estimtf(
   link_function = NULL,
   optimizer = "AdamOptimizer",
   hyperparameters = NULL,
-  maxiter = 10000,
-  eager = TRUE
+  maxiter = 10000
 )
 }
 \arguments{
@@ -35,17 +34,17 @@ name of the distributional parameter and the value.}
 \item{link_function}{a list with names of parameters to be linked and the corresponding link function name. The link functions available are:
 \code{log} and \code{logit}.}
 
-\item{optimizer}{a character indicating the name of the TensorFlow optimizer to be used in the estimation process The default value is \code{'AdamOptimizer'}.}
+\item{optimizer}{a character indicating the name of the TensorFlow optimizer to be used in the estimation process The default value is \code{'AdamOptimizer'}. The available optimizers are:
+\code{"AdadeltaOptimizer"}, \code{"AdagradDAOptimizer"}, \code{"AdagradOptimizer"}, \code{"AdamOptimizer"}, \code{"GradientDescentOptimizer"},
+\code{"MomentumOptimizer"} and \code{"RMSPropOptimizer"}.}
 
 \item{hyperparameters}{a list with the hyperparameters values of the TensorFlow optimizer. FALTA DETALLES}
 
 \item{maxiter}{a positive integer indicating the maximum number of iterations for the optimization algorithm. The default value is \code{10000}.}
-
-\item{eager}{If \code{TRUE}, the estimation process is performed in the eager execution environment. The default value is \code{TRUE}.}
 }
 \value{
-This function returns the estimates, standard errors, z scores and p-values of significance tests
-for the regression parameters as well as some information of the optimization process like the number of
+This function returns the estimates, standard errors, z values and p-values of significance tests
+for parameters of regression models as well as some information of the optimization process like the number of
 iterations needed for convergence.
 }
 \description{
@@ -55,40 +54,49 @@ Function to compute the Maximum Likelihood Estimators of regression parameters u
 \code{reg_estimtf} computes the log-likelihood function of the distribution specified in
 \code{ydist} with linear predictors specified in \code{formulas}. Then, it finds the regression parameters
 that maximizes it using TensorFlow.
-
-#' @examples
+}
+\examples{
 #-------------------------------------------------------------
-# Estimation of parameters of a linear regression model
-n <- 1000
-x <- runif(n = 1000, 0, 10)
-x1 <- runif(n = n, 0, 6)
-y <- rnorm(n = n, mean = -2 + 3 * x + 9 * x1, sd = exp(3 + 3 * x))
-data <- data.frame(y = y, x = x, x1 = x1)
+# Estimation of parameters of a Poisson regression model
+counts <- c(18,17,15,20,10,20,25,13,12)
+outcome <- gl(3,1,9)
+treatment <- gl(3,3)
+data <- data.frame(treatment, outcome, counts)
 
-formulas <- list(loc.fo = ~ x + x1, scale.fo = ~ x)
-
-estimation_1 <- reg_estimtf(ydist = "Normal", formulas = formulas, data = data,
-                            initparam <- list(loc = 1.0, scale = 1.0),
-                            link_function <- list(scale = "log"), optimizer = "AdamOptimizer",
+formulas <- list(rate.fo = ~ outcome + treatment)
+estimation_1 <- reg_estimtf(ydist =  counts ~ Poisson, formulas = formulas, data = data,
+                            initparam = list(rate = 1.0), optimizer = "AdamOptimizer",
+                            link_function = list(rate = "log"),
                             hyperparameters = list(learning_rate = 0.1))
-
 summary(estimation_1)
 
 #-------------------------------------------------------------
 # Estimation of parameters of a linear regression model with one fixed parameter
 x <- runif(n = 1000, -3, 3)
-y <- rnorm(n = 1000, mean = 5 - 2 * x, sigma = 3)
+y <- rnorm(n = 1000, mean = 5 - 2 * x, sd = 3)
 data <- data.frame(y = y, x = x)
 
 formulas <- list(loc.fo = ~ x)
 initparam <- list(loc = list(Intercept = 1.0, x = 0.0))
 
-estimation_2 <- reg_estimtf(ydist = "Normal", formulas = formulas, data = data,
-                            fixparam = list(scale = 3), initparam = initparam
-                            link_function <- list(scale = "log"), optimizer = "AdamOptimizer",
+estimation_2 <- reg_estimtf(ydist = y ~ Normal, formulas = formulas, data = data,
+                            fixparam = list(scale = 3), initparam = initparam,
+                            optimizer = "AdamOptimizer",
                             hyperparameters = list(learning_rate = 0.1))
 
 summary(estimation_2)
+
+#-------------------------------------------------------------
+# Estimation of parameters using cars dataset
+data <- data.frame(dist = cars$dist, speed = cars$speed)
+formulas <- list(loc.fo = ~ speed, scale.fo = ~ 1)
+
+estimation_3 <- reg_estimtf(ydist = dist ~ Normal, formulas = formulas, data = data,
+                            initparam = list(loc = 1.0, scale = 1.0), optimizer = "AdamOptimizer",
+                            hyperparameters = list(learning_rate = 0.1))
+
+summary(estimation_3)
+
 }
 \author{
 Sara Garces Cespedes
