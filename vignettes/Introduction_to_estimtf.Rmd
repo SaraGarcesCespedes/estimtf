@@ -1,0 +1,86 @@
+---
+title: "Introduction to estimtf"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Introduction_to_estimtf}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+
+The estimtf package provides functions to find the Maximum Likelihood estimates of parameters from parametric distributions and linear regression models using TensorFlow optimizers.
+
+This document introduces you to estimtf’s set of tools, and shows you how to apply them to estimate these parameters.
+
+## Load estimtf package
+```{r, eval=FALSE}
+library(devtools)
+load_all()
+```
+
+## dist_estimtf function
+
+This function is used to compute the Maximum Likelihood Estimators of distributional parameters using TensorFlow. Use `?dist_estimtf` for more details.
+
+```{r, eval=FALSE}
+# Estimation of both normal distrubution parameters
+x <- rnorm(n = 1000, mean = 10, sd = 3)
+estimation1 <- dist_estimtf(x, xdist = "Normal", optimizer = "AdamOptimizer", hyperparameters =   list(learning_rate = 0.1))
+summary(estimation1)
+```
+
+As the `dist_estimtf` uses the TensorFlow distributions, the `mean` parameter from the Normal distribution is known as `loc` and the `sd` parameter is known as `scale`. 
+
+
+## reg_estimtf function
+
+This function is used to compute the Maximum Likelihood Estimators of regression parameters using TensorFlow. Use `?reg_estimtf` for more details.
+
+```{r, eval=FALSE}
+# Estimation of parameters of a Poisson regression model
+counts <- c(18,17,15,20,10,20,25,13,12)
+outcome <- gl(3,1,9)
+treatment <- gl(3,3)
+
+data <- data.frame(treatment, outcome, counts)
+formulas <- list(rate.fo = ~ outcome + treatment)
+formulas <- list(rate.fo = ~ outcome + treatment)
+estimation_1 <- reg_estimtf(ydist =  counts ~ Poisson, formulas = formulas, data = data,
+                            initparam = list(rate = 1.0), optimizer = "AdamOptimizer",
+                            link_function = list(rate = "log"),
+                            hyperparameters = list(learning_rate = 0.1))
+summary(estimation_1)
+```
+
+As the `reg_estimtf` uses the TensorFlow distributions, the `lambda` parameter from the Poisson distribution is known as `rate`.
+
+
+## glm_estimtf function
+
+This function is used to compute the Maximum Likelihood Estimators of regression parameters from Generalized Linear Models using TensorFlow. Use `?glm_estimtf` for more details.
+
+```{r, eval=FALSE}
+# Estimation of parameters from a simple linear regression model
+ctl <- c(4.17,5.58,5.18,6.11,4.50,4.61,5.17,4.53,5.33,5.14)
+trt <- c(4.81,4.17,4.41,3.59,5.87,3.83,6.03,4.89,4.32,4.69)
+group <- gl(2, 10, 20, labels = c("Ctl","Trt"))
+weight <- c(ctl, trt)
+
+family <- "Normal"
+link_function <- "identity"
+formula <- weight ~ group
+data <- data.frame(weight = weight, group = group)
+estimation <- glm_estimtf(formula = formula, family = family,
+                         link_function = link_function, data = data)
+
+print(estimation)
+```
+
+The `summary` function cannot be used yet with `glm_estimtf`.
