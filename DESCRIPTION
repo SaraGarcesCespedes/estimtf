@@ -15,9 +15,15 @@ BugReports: https://github.com/SaraGarcesCespedes/estimtf/issues
 RoxygenNote: 7.1.0
 Imports:
     tensorflow,
-    EstimationTools,
-    RelDists,
     reticulate,
     dplyr,
+    stringr,
+    tfprobability,
+    purrr,
+    stats
+Suggests: 
+    knitr,
+    rmarkdown
+Depends:
     ggplot2,
-    stringr
+VignetteBuilder: knitr
