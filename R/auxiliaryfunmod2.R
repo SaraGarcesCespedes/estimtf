@@ -16,12 +16,12 @@ disableagerreg <- function(data, dist, design_matrix, fixparam, initparam, argum
                 y_data <- fastDummies::dummy_cols(design_matrix$y, remove_first_dummy = TRUE)
                 y_data <- y_data[2]
                 Y <- tensorflow::tf$compat$v1$placeholder(tf$float32, shape(nrow(y_data), 1L), name = "y_data")
+                n <- nrow(y_data)
         } else {
                 Y <- tensorflow::tf$compat$v1$placeholder(dtype = tf$float32, name = "y_data")
                 y_data <- design_matrix$y
+                n <- length(y_data)
         }
-
-
 
         nbetas <- initparamvector <- param <- sum <- sumlink <- namesparam <- vector(mode = "list", length = np)
         totalbetas <- sum(as.numeric(unlist(sapply(design_matrix[1:np], ncol))))
@@ -105,7 +105,8 @@ disableagerreg <- function(data, dist, design_matrix, fixparam, initparam, argum
         # Create vectors to store parameters, gradientes and loss values of each iteration
         loss <- new_list <- parameters <- gradients <- itergrads <- objvariables <- vector(mode = "list")
 
-        n <- nrow(y_data)
+
+
         X <- Y
 
         # Define loss function depending on the distribution
