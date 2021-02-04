@@ -36,9 +36,11 @@ summary.MLEtf <- function(object, ...) {
         estimates <- as.numeric(object$outputs$estimates)
         stderror <- unlist(object$stderrt, use.names = FALSE)
         zvalue <- as.numeric(estimates / stderror)
-        pvalue <- as.numeric(2 * pnorm(abs(zvalue), lower.tail = FALSE))
-
-
+        #pvalue <- as.numeric(2 * pnorm(abs(zvalue), lower.tail = FALSE))
+        n <- object$outputs$n
+        p <-length(estimates)
+        df <- n - (p)
+        pvalue <- as.numeric(2 * pt(abs(zvalue), df, lower.tail = FALSE))
 
         if (object$outputs$type == "MLEdistf") {
                 cat(paste0('Distribution: ', object$distribution),'\n')
@@ -68,7 +70,7 @@ summary.MLEtf <- function(object, ...) {
                 restable <- cbind(estimate = estimates, stderror = stderror, zvalue = zvalue,
                                   pvalue = pvalue)
                 restable <- data.frame(restable)
-                colnames(restable) <- c('Estimate ', 'Std. Error', 'z value', 'Pr(>|z|)')
+                colnames(restable) <- c('Estimate ', 'Std. Error', 't value', 'Pr(>|t|)')
                 for (i in 1:object$outputs$np) {
                         cat(paste0('Distributional parameter: ',
                                    names(object$dsgmatrix)[i],'\n'))
