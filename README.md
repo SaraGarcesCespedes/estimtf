@@ -13,11 +13,10 @@ linear regression models using TensorFlow optimizers.
 
 ## Installation
 
-You can install the released version of estimtf from
-[CRAN](https://CRAN.R-project.org) with:
+You can install the released version of estimtf from GitHub with:
 
 ``` r
-install.packages("estimtf")
+devtools::install_github('SaraGarcesCespedes/estimtf', force=TRUE) 
 ```
 
 ## Example
