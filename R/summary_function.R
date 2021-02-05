@@ -34,7 +34,24 @@
 summary.MLEtf <- function(object, ...) {
 
         estimates <- as.numeric(object$outputs$estimates)
-        stderror <- unlist(object$stderrt, use.names = FALSE)
+
+        dist <- object$distribution
+        if (dist == "Logistic") {
+                dsg_matrix <- object$dsgmatrix
+                X <- dsg_matrix$logits
+                print(X)
+                fitted_values <- X %*% estimates
+                fitted_values <- exp(fitted_values) / (1 + exp(fitted_values))
+                diagonal <- c(fitted_values * (1 - fitted_values))
+                V <- diag(diagonal)
+                cov_matrix <- solve(t(X) %*% V %*% X)
+                print(cov_matrix)
+                stderror <- diag(sqrt(cov_matrix))
+        } else {
+                stderror <- unlist(object$stderrt, use.names = FALSE)
+        }
+
+
         zvalue <- as.numeric(estimates / stderror)
         #pvalue <- as.numeric(2 * pnorm(abs(zvalue), lower.tail = FALSE))
         n <- object$outputs$n
