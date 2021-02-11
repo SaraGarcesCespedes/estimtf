@@ -20,7 +20,8 @@ Imports:
     stringr,
     tfprobability,
     purrr,
-    stats
+    stats,
+    fastDummies
 Suggests: 
     knitr,
     rmarkdown
