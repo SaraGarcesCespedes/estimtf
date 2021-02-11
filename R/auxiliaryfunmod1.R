@@ -33,7 +33,9 @@ disableagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, 
         new_list <- lapply(1:np, FUN = function(i) new_list[[i]] <- var_list[[i]])
 
         n <- length(x)
-
+        print(X)
+        print(vartotal)
+        print(density)
         # Define loss function depending on the distribution
         if (xdist %in% distnotf) {
                 loss_value <- lossfun(dist, vartotal, X)

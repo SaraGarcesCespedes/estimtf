@@ -128,7 +128,8 @@ estimglm <- function(formula, family = "Normal", link_function = "identity", dat
                 arg <- sapply(1:length(argumdist),
                               FUN = function(x) names(argumdist)[x] != "validate_args" & names(argumdist)[x] != "allow_nan_stats" &
                                       names(argumdist)[x] != "name" & names(argumdist)[x] != "dtype" &
-                                      names(argumdist)[x] != "interpolate_nondiscrete" & names(argumdist)[x] != "log_rate")
+                                      names(argumdist)[x] != "interpolate_nondiscrete" & names(argumdist)[x] != "log_rate" &
+                                      names(argumdist)[x] != "force_probs_to_zero_outside_support")
                 np <- sum(arg)
                 argumdist <- argumdist[arg]
         }
