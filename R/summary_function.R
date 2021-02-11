@@ -17,6 +17,7 @@
 #'
 #' @importFrom stats printCoefmat
 #' @importFrom stats pnorm
+#' @importFrom stats pt
 #'
 #' @examples
 #' #-------------------------------------------------------------
@@ -66,6 +67,23 @@ summary.MLEtf <- function(object, ...) {
                 colnames(restable) <- c('Estimate ', 'Std. Error')
                 rownames(restable) <- object$outputs$parnames
                 printCoefmat(restable, digits = 4)
+        } else if (object$outputs$type == "MLEglmtf") {
+                t <- vector(mode = "list")
+                t[[1]] <- 0
+                cat(paste0('Family: ', object$distribution),'\n')
+                cat(paste0('Number of observations: ', object$outputs$n),'\n')
+                cat(paste0('TensorFlow optimizer: ', object$optimizer),'\n')
+                cat("----------------------------------------------------------------\n")
+                restable <- cbind(estimate = estimates, stderror = stderror, zvalue = zvalue,
+                                  pvalue = pvalue)
+                restable <- data.frame(restable)
+                colnames(restable) <- c('Estimate ', 'Std. Error', 't value', 'Pr(>|t|)')
+
+                resparam <- restable[(1 + t[[1]]):(t[[1]] + object$outputs$nbetas[[1]]), ]
+                resparam <- data.frame(resparam)
+                rownames(resparam) <- object$output$names[(1 + t[[1]]):(t[[1]] + object$outputs$nbetas[[1]])]
+                printCoefmat(resparam, digits = 4, P.values = TRUE, has.Pvalue = TRUE)
+                cat("----------------------------------------------------------------\n")
 
         } else {
                 t <- vector(mode = "list")
@@ -172,6 +190,22 @@ print.MLEtf <- function(x, ...) {
                 }
 
 
+        } else if (object$outputs$type == "MLEglmtf"){
+                t <- vector(mode = "list")
+                t[[1]] <- 0
+
+                cat(paste0(object$outputs$convergence),'\n')
+                cat("---------------------------------------------------\n")
+                restable <- data.frame(t(estimates))
+                resparam <- restable[, (1 + t[[1]]):(t[[1]] + object$outputs$nbetas[[1]])]
+                resparam <- as.data.frame(resparam)
+                colnames(resparam) <- object$output$names[(1 + t[[1]]):(t[[1]] + object$outputs$nbetas[[1]])]
+                rownames(resparam) <- ""
+                printCoefmat(resparam, digits = 4)
+                cat("---------------------------------------------------\n")
+
+
+
         } else if (object$outputs$type == "MLEglm") {
                 cat(paste0('Estimates:','\n'))
                 estimates <- object$coeff_estim
@@ -225,10 +259,10 @@ plot_loss <- function(object, ...) {
         loss_values$loss <- as.numeric(loss_values$loss)
 
         ggplot2::ggplot(data = loss_values, aes(x = Iteration, y = loss)) +
-                 geom_line() +
-                 geom_point() +
-                 theme(plot.title = element_text(face = "bold", size =16, hjust = 0.5)) +
-                 labs(y = "Loss value", x = "Iteration", title = "Loss value in each iteration of the estimation process")
+                geom_line() +
+                geom_point() +
+                theme(plot.title = element_text(face = "bold", size =16, hjust = 0.5)) +
+                labs(y = "Loss value", x = "Iteration", title = "Loss value in each iteration of the estimation process")
 
 
 
