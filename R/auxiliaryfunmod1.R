@@ -94,7 +94,8 @@ disableagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, 
                                     "2. Check your input data as it is possible that some of the values are neither \n",
                                     "integer nor float. \n",
                                     "3. Try different optimizers. \n",
-                                    "4. Scale your data differently as this problem may happen because your input values \n",
+                                    "4. Change the initial values provided for the parameters. \n",
+                                    "5. Scale your data differently as this problem may happen because your input values \n",
                                     "are too high."))
                 }
 

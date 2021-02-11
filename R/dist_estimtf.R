@@ -59,15 +59,6 @@
 dist_estimtf <- function(x, xdist = "Normal", fixparam = NULL, initparam = NULL, optimizer = "AdamOptimizer", hyperparameters = NULL,
                          maxiter = 10000) {
 
-        #suppressMessages(library(EstimationTools)) ; suppressMessages(library(RelDists)) ;
-        #library(tensorflow)
-        #library(reticulate)
-        #library(dplyr)
-        #library(stringr)
-        #library(ggplot2)
-        #library(tfprobability)
-        #library(purrr)
-
         call <- match.call()
 
         # Errors in arguments
@@ -119,7 +110,7 @@ dist_estimtf <- function(x, xdist = "Normal", fixparam = NULL, initparam = NULL,
         if (!is.null(fixparam)) {
                 if (length(na.omit(match(names(fixparam), names(argumdist)))) == 0) {
                         stop(paste0("Names of parameters included in the 'fixparam' list do not match with the parameters of the \n",
-                                    dist, " distribution"))
+                                    xdist, " distribution"))
                 } else if (length(na.omit(match(names(fixparam), names(argumdist)))) > 0) {
                         fixed <- match(names(fixparam), names(argumdist))
                         argumdist <- argumdist[-fixed]
@@ -134,7 +125,8 @@ dist_estimtf <- function(x, xdist = "Normal", fixparam = NULL, initparam = NULL,
                 arg <- sapply(1:length(argumdist),
                               FUN = function(x) names(argumdist)[x] != "validate_args" & names(argumdist)[x] != "allow_nan_stats" &
                                       names(argumdist)[x] != "name" & names(argumdist)[x] != "dtype" &
-                                      names(argumdist)[x] != "interpolate_nondiscrete" & names(argumdist)[x] != "log_rate")
+                                      names(argumdist)[x] != "interpolate_nondiscrete" & names(argumdist)[x] != "log_rate" &
+                                      names(argumdist)[x] != "force_probs_to_zero_outside_support")
                 np <- sum(arg)
                 argumdist <- argumdist[arg]
         }
