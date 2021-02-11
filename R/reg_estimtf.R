@@ -300,7 +300,7 @@ model_matrix_MLreg <- function(formulas, data, ydist, np, par_names){
         nfos <- length(formulas)
 
         if (nfos != np) stop(paste0("Distribution defined for response ",
-                                      "variable has ", npar, " parameters to be estimated. ",
+                                      "variable has ", np, " parameters to be estimated. ",
                                       "Each parameter must have its own formula"))
 
         # Response variable
