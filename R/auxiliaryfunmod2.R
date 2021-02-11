@@ -170,8 +170,9 @@ disableagerreg <- function(data, dist, design_matrix, fixparam, initparam, argum
                                     "1. Reduce the learning rate. \n",
                                     "2. Check your input data as it is possible that some of the values are neither \n",
                                     "integer nor float. \n",
-                                    "3. Try different optimizers. \n",
-                                    "4. Scale your data differently as this problem may happen because your input values \n",
+                                    "3. Change the initial values provided for the parameters. \n",
+                                    "4. Try different optimizers. \n",
+                                    "5. Scale your data differently as this problem may happen because your input values \n",
                                     "are too high."))
                 }
 
@@ -281,6 +282,10 @@ link <- function(link_function, sum, parameter, ydist) {
                                 sum <- tensorflow::tf$exp(sum)
                         }else if (link_function[[parameter]] == "logit") {
                                 sum <- tensorflow::tf$exp(sum) / (1 + tensorflow::tf$exp(sum))
+                        }else if (link_function[[parameter]] == "logit") {
+                                sum <- 1 / sum
+                        }else if (link_function[[parameter]] == "identity") {
+                                sum <- sum
                         }
                 } else {
                         sum <- sum

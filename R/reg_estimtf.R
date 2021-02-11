@@ -204,7 +204,7 @@ reg_estimtf <- function(ydist = y ~ Normal, formulas, data = NULL, fixparam = NU
 
 
         # Errors in link_function
-        lfunctions <- c("logit", "log")
+        lfunctions <- c("logit", "log", "inverse", "identity")
         if (!is.null(link_function)) {
                 if (all(names(link_function) %in% names(argumdist)) == FALSE) {
                         stop(paste0("Names of parameters included in the 'link_function' list do not match with the parameters of the ",
