@@ -324,7 +324,8 @@ model_matrix_MLreg <- function(formulas, data, ydist, np, par_names){
         dep_variables <- unlist(split_form)
         dep_variables <- sapply(1:length(dep_variables), FUN = function(x) dep_variables[x] = trimws(dep_variables[x]))
         dep_variables <- dep_variables[!dep_variables == 1]
-
+        dep_variables <- dep_variables[!dep_variables == -1]
+        dep_variables <- unique(dep_variables)
 
         if ((ncol(data) - 1) < length(dep_variables)) {
                 stop(paste0("Data for some explanatory variables is missing. Please include it\n",
