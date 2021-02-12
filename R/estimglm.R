@@ -299,7 +299,7 @@ model_matrix_MLglm <- function(formulas, data, ydist, np, par_names){
 #------------------------------------------------------------------------
 arguments <- function(dist) {
 
-        listarguments <- list(Logistic = list(logits = NULL))
+        listarguments <- list(Binomial = list(logits = NULL))
 
         return(listarguments[[dist]])
 
