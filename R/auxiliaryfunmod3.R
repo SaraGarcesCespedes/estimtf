@@ -238,6 +238,8 @@ lossfun <- function(dist, vartotal, X, n) {
         logits <- tf$reshape(logits, shape(n, 1))
         entropy <- tf$nn$sigmoid_cross_entropy_with_logits(labels = X, logits = logits)
         loss <- tf$reduce_mean(entropy)
+        #loss <- tensorflow::tf$reduce_sum(-X * vartotal[["logits"]] + tensorflow::tf$math$log(1 + tensorflow::tf$exp(vartotal[["logits"]])))
+
 
         return(loss)
 }
