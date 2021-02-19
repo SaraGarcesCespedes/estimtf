@@ -13,11 +13,11 @@
 }
 \description{
 Function to display the estimates of parameters from statistical
-distributions using \code{\link{dist_estimtf}} or parameters from regression models using
+distributions using \code{\link{dist_estimtf2}} or parameters from regression models using
 \code{\link{reg_estimtf}}.
 }
 \details{
-\code{pint.MLEtf} function displays estimates of parameters from statistical distributions
+\code{print.MLEtf} function displays estimates of parameters from statistical distributions
 and regression models.
 }
 \examples{

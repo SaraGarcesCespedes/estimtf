@@ -13,7 +13,7 @@ plot_loss(object, ...)
 }
 \description{
 Function to display a graph that contains the loss value in each iteration of
-the estimation process using \code{\link{dist_estimtf}} function or using \code{\link{reg_estimtf}} function.
+the estimation process using \code{\link{dist_estimtf2}} function or using \code{\link{reg_estimtf}} function.
 }
 \details{
 \code{plot_loss.MLEtf} function displays a graph with the loss values in each iteration of the
