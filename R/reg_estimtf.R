@@ -1,33 +1,38 @@
 #' @title reg_estimtf function
 #'
-#' @description Function to compute the Maximum Likelihood Estimators of regression parameters using TensorFlow
+#' @description Function to compute the Maximum Likelihood Estimators of regression parameters with linear predictors using TensorFlow.
 #'
 #' @author Sara Garces Cespedes
 #'
-#' @param ydist an object of class "formula" that specifies the distribution of the response variable. FALTA
-#' @param formulas a list containing objects of class "formula". Each element of the list specifies the
-#' linear predictor for each of the parameters of the distribution of interest. FALTA
-#' @param data an optional data frame containing the variables in the model. If these variables are
-#' not found in \code{data}, they ara taken from the environment from which \code{reg_estimtf} is called.
-#' @param fixparam a list of the fixed parameters of the distribution of interest. The list must contain the parameters values and names.
-#' @param initparam a list with initial values of the regression parameters to be estimated. The list must contain the regression parameters values and names.
-#' If you want to use the same initial values for all regression parameters associated with a distributional parameter, you can write the
-#' name of the distributional parameter and the value.
-#' @param link_function a list with names of parameters to be linked and the corresponding link function name. The link functions available are:
-#' \code{log} and \code{logit}.
-#' @param optimizer a character indicating the name of the TensorFlow optimizer to be used in the estimation process The default value is \code{'AdamOptimizer'}. The available optimizers are:
+#' @param ydist an object of class "formula" that specifies the distribution of the response variable. The available distributions are:
+#' \code{"Normal"}, \code{"Poisson"}, \code{"Weibull"}, \code{"Exponential"}, \code{"LogNormal"},
+#' \code{"Beta"}, \code{"Gamma"} and \code{"Binomial}.
+#' @param formulas a list containing objects of class "formula". Each element of the list represents the
+#' linear predictor for each of the parameters of the regression model. The linear predictor is specified with
+#' the name of the parameter followed by \code{.fo} and it must contain an \code{~} and the terms on the right side
+#' separated by \code{+}.
+#' @param data a data frame containing the variables in the regression model.
+#' @param fixparam a list containing the fixed parameters of the model. The parameters values and names must be specified in the list.
+#' @param initparam a list with initial values of the regression coefficients to be estimated. The list must contain the regression coefficients values and names.
+#' If you want to use the same initial values for all regression coefficients associated with a specific parameter, you can specify the
+#' name of the parameter and the value.
+#' @param link_function a list with names of parameters to be linked and the corresponding link function name. The available link functions are:
+#' \code{log}, \code{logit}, \code{inverse} and \code{identity}.
+#' @param optimizer a character indicating the name of the TensorFlow optimizer to be used in the estimation process. The default value is \code{'AdamOptimizer'}. The available optimizers are:
 #' \code{"AdadeltaOptimizer"}, \code{"AdagradDAOptimizer"}, \code{"AdagradOptimizer"}, \code{"AdamOptimizer"}, \code{"GradientDescentOptimizer"},
 #' \code{"MomentumOptimizer"} and \code{"RMSPropOptimizer"}.
-#' @param hyperparameters a list with the hyperparameters values of the TensorFlow optimizer. FALTA DETALLES
+#' @param hyperparameters a list with the hyperparameters values of the TensorFlow optimizer. (See \url{https://en.wikipedia.org/wiki/Empty_sum} for details of hyperparameters.)
 #' @param maxiter a positive integer indicating the maximum number of iterations for the optimization algorithm. The default value is \code{10000}.
 #'
-#' @return This function returns the estimates, standard errors, z values and p-values of significance tests
-#' for parameters of regression models as well as some information of the optimization process like the number of
+#' @return This function returns the estimates, standard errors, t values and p-values of significance tests
+#' for the regression model coefficients as well as some information of the optimization process like the number of
 #' iterations needed for convergence.
 #'
-#' @details \code{reg_estimtf} computes the log-likelihood function of the distribution specified in
-#' \code{ydist} with linear predictors specified in \code{formulas}. Then, it finds the regression parameters
+#' @details \code{reg_estimtf} computes the log-likelihood function based on the distribution specified in
+#' \code{ydist} and linear predictors specified in \code{formulas}. Then, it finds the regression coefficients
 #' that maximizes it using TensorFlow.
+#'
+#' @note The \code{summary, print} functions can be used with a \code{reg_estimtf} object.
 #'
 #' @importFrom stringr str_split
 #' @importFrom dplyr %>%
@@ -109,10 +114,9 @@ reg_estimtf <- function(ydist = y ~ Normal, formulas, data = NULL, fixparam = NU
 
 
         # Defining loss function depending on xdist
-        distdisponibles <- c("Normal", "Poisson", "Uniform", "Gamma", "LogNormal", "Weibull", "Exponential",
-                             "Beta", "Cauchy", "StudentT", "Chi2", "Logistic","FWE", "InstantaneousFailures",
-                             "DoubleExponential", "Binomial")
-        distnotf <- c("FWE", "InstantaneousFailures", "DoubleExponential", "Logistic")
+        distdisponibles <- c("Normal", "Poisson", "Gamma", "LogNormal", "Weibull", "Exponential",
+                             "Beta", "Binomial")
+        distnotf <- c("FWE", "InstantaneousFailures", "DoubleExponential")
 
         if (!(all.vars(ydist)[2] %in% distdisponibles)) {
                 stop(paste0("The distribution is not available. The following are the \n",
@@ -166,13 +170,10 @@ reg_estimtf <- function(ydist = y ~ Normal, formulas, data = NULL, fixparam = NU
                               FUN = function(x) names(argumdist)[x] != "validate_args" & names(argumdist)[x] != "allow_nan_stats" &
                                       names(argumdist)[x] != "name" & names(argumdist)[x] != "dtype" &
                                       names(argumdist)[x] != "interpolate_nondiscrete" & names(argumdist)[x] != "log_rate"&
-                                      names(argumdist)[x] != "force_probs_to_zero_outside_support")
+                                      names(argumdist)[x] != "force_probs_to_zero_outside_support" & names(argumdist)[x] != "logits")
                 np <- sum(arg)
                 argumdist <- argumdist[arg]
         }
-
-        # Names of parameters to be estimated
-        #par_names <- names(argumdist)
 
         # Errors in list initparam
         if (!is.null(initparam)) {
@@ -336,6 +337,7 @@ model_matrix_MLreg <- function(formulas, data, ydist, np, par_names){
         fos_mat_char <- lapply(formulas_tmp, fos_bind, response = Y)
         fos_mat <- lapply(fos_mat_char, as.formula)
         list_mfs <- lapply(fos_mat, model.frame, data = data)
+
         if (is.null(data)){
                 data_reg <- as.data.frame(list_mfs)
                 var_names <- as.character(unlist(sapply(list_mfs, names)))
@@ -352,8 +354,8 @@ model_matrix_MLreg <- function(formulas, data, ydist, np, par_names){
 
         names(mtrxs) <- names(fos_mat)
         mtrxs$y <- response
-        # mtrxs$status <- cens[,2:ncol(cens)]
         mtrxs$data_reg <- data
+
         return(mtrxs)
 }
 
@@ -365,7 +367,7 @@ arguments <- function(dist) {
         listarguments <- list(InstantaneousFailures = list(lambda = NULL),
                               #Weibull = list(shape = NULL, scale = NULL),
                               DoubleExponential = list(loc = NULL, scale = NULL),
-                              Logistic = list(logits = NULL))
+                              Binomial = list(logits = NULL))
 
         return(listarguments[[dist]])
 

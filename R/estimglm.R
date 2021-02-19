@@ -5,21 +5,26 @@
 #' @author Sara Garces Cespedes
 #'
 #' @param formula an object of class "formula" that specifies the model to be fitted.
-#' @param family a description of the error distribution to be used in the model.
-#' @param link_function a string that specifies the model link function.
-#' @param data an optional data frame containing the variables in the model. If these variables are
-#' not found in \code{data}, they ara taken from the environment from which \code{reg_estimtf} is called.
+#' @param family a description of the error distribution to be used in the model. The available families are:
+#' \code{Normal}, \code{Binomial} and \code{Poisson}.
+#' @param link_function a string that specifies the model link function. The available link functions are:
+#' \code{log}, \code{logit}, \code{inverse} and \code{identity}.
+#' @param data a data frame containing the variables in the model.
 #' @param initcoeff Optional a list with the initial values for model coefficients. Default value: Zeros.
 #' @param optimizer a character indicating the name of the TensorFlow optimizer to be used in the estimation process The default value is \code{'AdamOptimizer'}. The available optimizers are:
 #' \code{"AdadeltaOptimizer"}, \code{"AdagradDAOptimizer"}, \code{"AdagradOptimizer"}, \code{"AdamOptimizer"}, \code{"GradientDescentOptimizer"},
 #' \code{"MomentumOptimizer"} and \code{"RMSPropOptimizer"}.
-#' @param hyperparameters a list with the hyperparameters values of the TensorFlow optimizer. FALTA DETALLES
+#' @param hyperparameters a list with the hyperparameters values of the TensorFlow optimizer. (See \url{https://en.wikipedia.org/wiki/Empty_sum} for details of hyperparameters.)
 #' @param maxiter a positive integer indicating the maximum number of iterations for the optimization algorithm. The default value is \code{10000}.
 #'
-#' @return This function returns the estimates for coefficients of Generalized Linear Models. ESTA MAL
+#' @return This function returns the estimates, standard errors, t values and p-values of significance tests
+#' for the Generalized Linear Model coefficients as well as some information of the optimization process like the number of
+#' iterations needed for convergence.
 #'
-#' @details \code{estimglm} computes the log-likelihood function depending on the provided family. Then, it finds the regression coefficients
-#' that maximizes it using TensorFlow. ESTA MAL
+#' @details \code{estimglm} computes the log-likelihood function depending on the provided family and the description of the linear predictor. Then, it finds the coefficients
+#' that maximizes it using TensorFlow.
+#'
+#' @note The \code{summary, print, predict} functions can be used with a \code{estimglm} object.
 #'
 #' @importFrom stringr str_split
 #' @importFrom dplyr %>%
@@ -220,14 +225,23 @@ estimglm <- function(formula, family = "Normal", link_function = "identity", dat
         ydist <- formula
         fixparam <- NULL
         design_matrix <- model_matrix_MLglm(formulas, data, ydist, np, par_names)
-
         # Estimation process starts
 
         # With disable eager execution
         res <- disableagerglm(data,family, dist, design_matrix, fixparam, initparam, argumdist, opt, hyperparameters, maxiter, tolerance, np, link_function, ydist, optimizer)
 
-        result <- list(tf = res$results, vvoc = res$vcov, stderrtf = res$standarderror, dsgmatrix = design_matrix,
-                       outputs = res$outputs, call = call, optimizer = optimizer, distribution = family)
+
+        terms_formula <- terms(formula)
+        dep_variable <- all.vars(formula)[1]
+        data_ind_variables <- data %>% select(-all_of(dep_variable))
+        num_ind_variables <- length(all.vars(formula)) - 1
+        levels_variables <- vector(mode = "list", length = num_ind_variables)
+        levels_variables <- lapply(1:num_ind_variables, FUN = function(x) levels_variables[[x]] = levels(data_ind_variables[,1]))
+        names(levels_variables) <- colnames(data_ind_variables)
+
+        result <- list(data = data, tf = res$results, vvoc = res$vcov, stderrtf = res$standarderror, dsgmatrix = design_matrix,
+                       outputs = res$outputs, call = call, optimizer = optimizer, distribution = family,
+                       tt = terms_formula, xlevels = levels_variables, formula = formula)
         class(result) <- "MLEtf"
         return(result)
 }
