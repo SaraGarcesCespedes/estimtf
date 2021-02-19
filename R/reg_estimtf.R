@@ -5,8 +5,6 @@
 #' @author Sara Garces Cespedes
 #'
 #' @param ydist an object of class "formula" that specifies the distribution of the response variable. The available distributions are:
-#' \code{"Normal"}, \code{"Poisson"}, \code{"Weibull"}, \code{"Exponential"}, \code{"LogNormal"},
-#' \code{"Beta"}, \code{"Gamma"} and \code{"Binomial}.
 #' @param formulas a list containing objects of class "formula". Each element of the list represents the
 #' linear predictor for each of the parameters of the regression model. The linear predictor is specified with
 #' the name of the parameter followed by \code{.fo} and it must contain an \code{~} and the terms on the right side
@@ -21,7 +19,7 @@
 #' @param optimizer a character indicating the name of the TensorFlow optimizer to be used in the estimation process. The default value is \code{'AdamOptimizer'}. The available optimizers are:
 #' \code{"AdadeltaOptimizer"}, \code{"AdagradDAOptimizer"}, \code{"AdagradOptimizer"}, \code{"AdamOptimizer"}, \code{"GradientDescentOptimizer"},
 #' \code{"MomentumOptimizer"} and \code{"RMSPropOptimizer"}.
-#' @param hyperparameters a list with the hyperparameters values of the TensorFlow optimizer. (See \url{https://en.wikipedia.org/wiki/Empty_sum} for details of hyperparameters.)
+#' @param hyperparameters a list with the hyperparameters values of the TensorFlow optimizer. (See URL for details of hyperparameters.)
 #' @param maxiter a positive integer indicating the maximum number of iterations for the optimization algorithm. The default value is \code{10000}.
 #'
 #' @return This function returns the estimates, standard errors, t values and p-values of significance tests

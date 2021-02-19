@@ -14,7 +14,7 @@
 #' @param optimizer a character indicating the name of the TensorFlow optimizer to be used in the estimation process The default value is \code{'AdamOptimizer'}. The available optimizers are:
 #' \code{"AdadeltaOptimizer"}, \code{"AdagradDAOptimizer"}, \code{"AdagradOptimizer"}, \code{"AdamOptimizer"}, \code{"GradientDescentOptimizer"},
 #' \code{"MomentumOptimizer"} and \code{"RMSPropOptimizer"}.
-#' @param hyperparameters a list with the hyperparameters values of the TensorFlow optimizer. (See \url{https://en.wikipedia.org/wiki/Empty_sum} for details of hyperparameters.)
+#' @param hyperparameters a list with the hyperparameters values of the TensorFlow optimizer. (See URL for details of hyperparameters.)
 #' @param maxiter a positive integer indicating the maximum number of iterations for the optimization algorithm. The default value is \code{10000}.
 #'
 #' @return This function returns the estimates, standard errors, t values and p-values of significance tests
