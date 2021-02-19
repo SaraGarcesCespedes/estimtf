@@ -7,21 +7,21 @@ disableagerreg <- function(data, dist, design_matrix, fixparam, initparam, argum
         tensorflow::tf$compat$v1$disable_eager_execution()
 
         # Create placeholders
+        # if (all.vars(ydist)[2] == "Binomial") {
+        #         y_data <- fastDummies::dummy_cols(design_matrix$y, remove_first_dummy = TRUE)
+        #         y_data <- y_data[2]
+        #         Y <- tensorflow::tf$compat$v1$placeholder(tf$float32, shape(nrow(y_data), 1L), name = "y_data")
+        #         n <- nrow(y_data)
+        # } else {
+        #         Y <- tensorflow::tf$compat$v1$placeholder(dtype = tf$float32, name = "y_data")
+        #         y_data <- design_matrix$y
+        #         n <- length(y_data)
+        # }
 
-        if (all.vars(ydist)[2] == "Logistic") {
-                #y_data <- with(data, model.matrix(~ mort + 0))
-                #Y <- tensorflow::tf$compat$v1$placeholder(tf$float32, shape(NULL, 1L), name = "Y")
-                #y_data <- eval(parse(text = paste("with(data, model.matrix(~ ", all.vars(ydist)[1], " + 0))", sep = "")))
-                #y_data <- eval(parse(text = paste("fastDummies::dummy_cols(data$", all.vars(ydist)[1], ", remove_first_dummy = TRUE)")))
-                y_data <- fastDummies::dummy_cols(design_matrix$y, remove_first_dummy = TRUE)
-                y_data <- y_data[2]
-                Y <- tensorflow::tf$compat$v1$placeholder(tf$float32, shape(nrow(y_data), 1L), name = "y_data")
-                n <- nrow(y_data)
-        } else {
-                Y <- tensorflow::tf$compat$v1$placeholder(dtype = tf$float32, name = "y_data")
-                y_data <- design_matrix$y
-                n <- length(y_data)
-        }
+        Y <- tensorflow::tf$compat$v1$placeholder(dtype = tf$float32, name = "y_data")
+        y_data <- design_matrix$y
+        n <- length(y_data)
+
 
         nbetas <- initparamvector <- param <- sum <- sumlink <- namesparam <- vector(mode = "list", length = np)
         totalbetas <- sum(as.numeric(unlist(sapply(design_matrix[1:np], ncol))))
@@ -104,8 +104,6 @@ disableagerreg <- function(data, dist, design_matrix, fixparam, initparam, argum
 
         # Create vectors to store parameters, gradientes and loss values of each iteration
         loss <- new_list <- parameters <- gradients <- itergrads <- objvariables <- vector(mode = "list")
-
-
 
         X <- Y
 
@@ -270,12 +268,9 @@ lossfun <- function(dist, vartotal, X, n) {
 link <- function(link_function, sum, parameter, ydist) {
 
         if (is.null(link_function)) {
-                if (all.vars(ydist)[2] == "Poisson") {
-                        #sum <- tf$exp(sum)
-                        sum <- sum
-                } else {
-                        sum <- sum
-                }
+
+                sum <- sum
+
         } else if (!is.null(link_function)) {
                 if (parameter %in% names(link_function)) {
                         if (link_function[[parameter]] == "log") {
