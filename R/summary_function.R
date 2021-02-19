@@ -35,17 +35,23 @@
 summary.MLEtf <- function(object, ...) {
 
         estimates <- as.numeric(object$outputs$estimates)
-        dist <- object$distribution
+        if (object$outputs$type != "MLEdistf_fdp") {
+                dist <- object$distribution
+        }
 
-        if (dist == "Logistic") {
-                dsg_matrix <- object$dsgmatrix
-                X <- dsg_matrix$logits
-                fitted_values <- X %*% estimates
-                fitted_values <- exp(fitted_values) / (1 + exp(fitted_values))
-                diagonal <- c(fitted_values * (1 - fitted_values))
-                V <- diag(diagonal)
-                cov_matrix <- solve(t(X) %*% V %*% X)
-                stderror <- diag(sqrt(cov_matrix))
+        if (object$outputs$type == "MLEglmtf") {
+                if (dist == "Binomial") {
+                        dsg_matrix <- object$dsgmatrix
+                        X <- dsg_matrix$logits
+                        fitted_values <- X %*% estimates
+                        fitted_values <- exp(fitted_values) / (1 + exp(fitted_values))
+                        diagonal <- c(fitted_values * (1 - fitted_values))
+                        V <- diag(diagonal)
+                        cov_matrix <- solve(t(X) %*% V %*% X)
+                        stderror <- diag(sqrt(cov_matrix))
+                } else {
+                        stderror <- unlist(object$stderrt, use.names = FALSE)
+                }
         } else {
                 stderror <- unlist(object$stderrt, use.names = FALSE)
         }
@@ -57,8 +63,10 @@ summary.MLEtf <- function(object, ...) {
         df <- n - (p)
         pvalue <- as.numeric(2 * pt(abs(zvalue), df, lower.tail = FALSE))
 
-        if (object$outputs$type == "MLEdistf") {
-                cat(paste0('Distribution: ', object$distribution),'\n')
+        if (object$outputs$type == "MLEdistf" | object$outputs$type == "MLEdistf_fdp") {
+                if (object$outputs$type == "MLEdistf") {
+                        cat(paste0('Distribution: ', object$distribution),'\n')
+                }
                 cat(paste0('Number of observations: ', object$outputs$n),'\n')
                 cat(paste0('TensorFlow optimizer: ', object$optimizer),'\n')
                 cat("---------------------------------------------------\n")
@@ -87,6 +95,7 @@ summary.MLEtf <- function(object, ...) {
 
         } else {
                 t <- vector(mode = "list")
+                print(object$outputs$np)
                 if (object$outputs$np > 1) {
                         t <- lapply(1:object$outputs$np,
                                     FUN = function(i) t[[i]] <- ifelse(i == 1, 0,
@@ -156,8 +165,9 @@ print.MLEtf <- function(x, ...) {
         estimates <- as.numeric(object$outputs$estimates)
 
 
-        if (object$outputs$type == "MLEdistf") {
+        if (object$outputs$type == "MLEdistf" | object$outputs$type == "MLEdistf_fdp") {
                 cat(paste0('Estimates:','\n'))
+                estimates <- as.data.frame(estimates)
                 restable <- data.frame(t(estimates))
                 colnames(restable) <- object$outputs$parnames
                 rownames(restable) <- ""
@@ -215,6 +225,16 @@ print.MLEtf <- function(x, ...) {
                 printCoefmat(restable, digits = 4)
                 cat("---------------------------------------------------\n")
                 cat(paste0("Converged: ", object$converged),'\n')
+
+        } else if (object$outputs$type == "estim") {
+                cat(paste0('Estimates:','\n'))
+                estimates <- as.data.frame(estimates)
+                restable <- data.frame(t(estimates))
+                colnames(restable) <- object$outputs$parnames
+                rownames(restable) <- ""
+                printCoefmat(restable, digits = 4)
+                cat("---------------------------------------------------\n")
+                cat(paste0(object$outputs$convergence),'\n')
         }
 
 
