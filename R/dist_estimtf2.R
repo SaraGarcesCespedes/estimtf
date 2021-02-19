@@ -6,15 +6,14 @@
 #'
 #' @param x a vector containing the data to be fitted.
 #' @param xdist a character indicating the name of the distribution of interest or the probability density function (fdp) of the distribution. The default value is \code{'Normal'}.
-#' The available distributions are: \code{"Normal"}, \code{"Poisson"}, \code{"Weibull"}, \code{"Exponential"}, \code{"LogNormal"},
-#' \code{"Beta"}, \code{"Gamma"} and \code{"Binomial}.
+#' The available distributions are:
 #' @param fixparam a list of the fixed parameters of the distribution of interest. The list must contain the parameters values and names. If the fdp is provided, the values for the fixed parameters must be
 #' included in the function.
 #' @param initparam a list with initial values of the parameters to be estimated. The list must contain the parameters values and names.
 #' @param optimizer a character indicating the name of the TensorFlow optimizer to be used in the estimation process The default value is \code{'AdamOptimizer'}. The available optimizers are:
 #' \code{"AdadeltaOptimizer"}, \code{"AdagradDAOptimizer"}, \code{"AdagradOptimizer"}, \code{"AdamOptimizer"}, \code{"GradientDescentOptimizer"},
 #' \code{"MomentumOptimizer"} and \code{"RMSPropOptimizer"}.
-#' @param hyperparameters a list with the hyperparameters values of the TensorFlow optimizer. (See \url{https://en.wikipedia.org/wiki/Empty_sum} for details of hyperparameters.)
+#' @param hyperparameters a list with the hyperparameters values of the TensorFlow optimizer. (See URL for details of hyperparameters.)
 #' @param maxiter a positive integer indicating the maximum number of iterations for the optimization algorithm.
 #'
 #' @return This function returns the estimates and standard errors of parameters from statistical distributions as well as
