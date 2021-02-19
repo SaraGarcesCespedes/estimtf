@@ -24,7 +24,7 @@ estimation process for distributional or regression parameters.
 # Estimation of both normal distrubution parameters
 x <- rnorm(n = 1000, mean = 10, sd = 3)
 
-plot_loss(dist_estimtf(x, xdist = "Normal", optimizer = "AdamOptimizer",
+plot_loss(dist_estimtf2(x, xdist = "Normal", optimizer = "AdamOptimizer",
                            hyperparameters = list(learning_rate = 0.1)))
 
 }

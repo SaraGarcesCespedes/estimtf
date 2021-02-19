@@ -1,7 +1,7 @@
 #' @title summary.MLEtf function
 #'
 #' @description Function to produce result summaries of the estimates of parameters from statistical
-#' distributions using \code{\link{dist_estimtf}} or parameters from regression models using
+#' distributions using \code{\link{dist_estimtf2}} or parameters from regression models using
 #' \code{\link{reg_estimtf}}.
 #'
 #' @author Sara Garces Cespedes
@@ -24,7 +24,7 @@
 #' # Estimation of both normal distrubution parameters
 #' x <- rnorm(n = 1000, mean = 10, sd = 3)
 #'
-#' summary(dist_estimtf(x, xdist = "Normal", optimizer = "AdamOptimizer",
+#' summary(dist_estimtf2(x, xdist = "Normal", optimizer = "AdamOptimizer",
 #'                            hyperparameters = list(learning_rate = 0.1)))
 #'
 #' @rdname summary.MLEtf
@@ -131,7 +131,7 @@ summary.MLEtf <- function(object, ...) {
 #' @title print.MLEtf function
 #'
 #' @description Function to display the estimates of parameters from statistical
-#' distributions using \code{\link{dist_estimtf}} or parameters from regression models using
+#' distributions using \code{\link{dist_estimtf2}} or parameters from regression models using
 #' \code{\link{reg_estimtf}}.
 #'
 #' @author Sara Garces Cespedes
@@ -140,7 +140,7 @@ summary.MLEtf <- function(object, ...) {
 #' @param ... additional arguments affecting the summary produced.
 #'
 #'
-#' @details \code{pint.MLEtf} function displays estimates of parameters from statistical distributions
+#' @details \code{print.MLEtf} function displays estimates of parameters from statistical distributions
 #' and regression models.
 #'
 #' @importFrom stats printCoefmat
@@ -150,7 +150,7 @@ summary.MLEtf <- function(object, ...) {
 #' # Estimation of both normal distrubution parameters
 #' x <- rnorm(n = 1000, mean = 10, sd = 3)
 #'
-#' print(dist_estimtf(x, xdist = "Normal", optimizer = "AdamOptimizer",
+#' print(dist_estimtf2(x, xdist = "Normal", optimizer = "AdamOptimizer",
 #'                            hyperparameters = list(learning_rate = 0.1)))
 #'
 #' @rdname print.MLEtf
@@ -245,7 +245,7 @@ print.MLEtf <- function(x, ...) {
 #' @title plot_loss function
 #'
 #' @description Function to display a graph that contains the loss value in each iteration of
-#' the estimation process using \code{\link{dist_estimtf}} function or using \code{\link{reg_estimtf}} function.
+#' the estimation process using \code{\link{dist_estimtf2}} function or using \code{\link{reg_estimtf}} function.
 #'
 #' @author Sara Garces Cespedes
 #'
@@ -263,7 +263,7 @@ print.MLEtf <- function(x, ...) {
 #' # Estimation of both normal distrubution parameters
 #' x <- rnorm(n = 1000, mean = 10, sd = 3)
 #'
-#' plot_loss(dist_estimtf(x, xdist = "Normal", optimizer = "AdamOptimizer",
+#' plot_loss(dist_estimtf2(x, xdist = "Normal", optimizer = "AdamOptimizer",
 #'                            hyperparameters = list(learning_rate = 0.1)))
 #'
 #' @export
