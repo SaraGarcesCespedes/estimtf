@@ -32,19 +32,25 @@ This function is used to compute the Maximum Likelihood Estimators of distributi
 ```{r, eval=FALSE}
 # Estimation of both normal distrubution parameters
 x <- rnorm(n = 1000, mean = 10, sd = 3)
-estimation1 <- dist_estimtf2(x, xdist = "Normal", 
-                             optimizer = "AdamOptimizer", 
-                             hyperparameters=list(learning_rate                                  =0.1))
+estimation1<-dist_estimtf2(x, xdist = "Normal", 
+                           optimizer = "AdamOptimizer", 
+                           hyperparameters=list(learning_rate=0.1))
 
 summary(estimation1)
 
-# Estimation of parameters from Instantaneous Failures distribution
-pdf <- function(X, lambda) { (1 / ((lambda ^ 2) * (lambda - 1))) *                          (lambda^2 + X - 2*lambda) * exp(-X/lambda) }
-x <-  c(3.4, 0.0, 0.0, 15.8, 232.8, 8.8, 123.2, 47, 154, 103.2, 89.8,  12.2)
+# Estimation of parameter lambda from Instantaneous Failures distribution
+pdf <- function(X, lambda) { 
+(1/((lambda^2)*(lambda-1)))*              (lambda^2+X-2*lambda)*exp(-X/lambda)
+}
 
-estimation_2 <- dist_estimtf2(x = x, xdist = pdf, initparam =                                     list(lambda = rnorm(1, 2, 1)),                                      optimizer = "AdamOptimizer",
-                              hyperparameters = list(learning_rate =                               0.1), maxiter = 10000)
-summary(estimation_2)
+x <-  c(3.4,0.0,0.0,15.8,232.8,8.8,123.2,47,154,103.2,89.8, 12.2)
+
+estimation2<-dist_estimtf2(x = x, xdist = pdf, 
+                          initparam =list(lambda=rnorm(1,2,1)),
+                          optimizer = "AdamOptimizer",
+                          hyperparameters=list(learning_rate=0.1), 
+                          maxiter = 10000)
+summary(estimation2)
 
 ```
 
@@ -64,11 +70,14 @@ treatment <- gl(3,3)
 data <- data.frame(treatment, outcome, counts)
 formulas <- list(rate.fo = ~ outcome + treatment)
 formulas <- list(rate.fo = ~ outcome + treatment)
-estimation_1 <- reg_estimtf(ydist =  counts ~ Poisson, formulas = formulas, data = data,
-                            initparam = list(rate = 1.0), optimizer = "AdamOptimizer",
-                            link_function = list(rate = "log"),
-                            hyperparameters = list(learning_rate = 0.1))
-summary(estimation_1)
+estimation <-reg_estimtf(ydist =  counts ~ Poisson, 
+                         formulas = formulas, data = data,
+                         initparam = list(rate = 1.0), 
+                         optimizer = "AdamOptimizer",
+                         link_function = list(rate = "log"),
+                         hyperparameters=list(learning_rate=0.1))
+
+summary(estimation)
 ```
 
 As the `reg_estimtf` uses the TensorFlow distributions, the `lambda` parameter from the Poisson distribution is known as `rate`.
@@ -82,14 +91,14 @@ This function is used to fit Generalized Linear Models using TensorFlow. Use `?e
 # Estimation of parameters from a simple linear regression model
 data <- data.frame(dist = cars$dist, speed = cars$speed)
 formula <- dist ~ speed
-estimation_1 <- estimglm(formula, family = "Normal", 
-                         link_function =  "identity",
-                         data = data, initcoeff = list(speed = 1),
-                         optimizer = "AdamOptimizer",
-                         hyperparameters = list(learning_rate =0.1),
-                         maxiter = 10000)
+estimation <- estimglm(formula, family = "Normal", 
+                       link_function =  "identity",
+                       data = data, initcoeff = list(speed = 1),
+                       optimizer = "AdamOptimizer",
+                       hyperparameters = list(learning_rate=0.1),
+                       maxiter = 10000)
 
-summary(estimation_1)
-predict(estimation_1, newdata = data.frame(speed = c(10, 40, 50)))
+summary(estimation)
+predict(estimation, newdata = data.frame(speed = c(10, 40, 50)))
 ```
 
