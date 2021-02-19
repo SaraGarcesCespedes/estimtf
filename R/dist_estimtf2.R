@@ -6,7 +6,7 @@
 #'
 #' @param x a vector containing the data to be fitted.
 #' @param xdist a character indicating the name of the distribution of interest or the probability density function (fdp) of the distribution. The default value is \code{'Normal'}.
-#' The available distributions are:
+#' The available distributions are: \code{Normal}, \code{Poisson}, \code{Binomial}, \code{Weibull}, \code{Exponential}, \code{LogNormal}, \code{Beta} and \code{Gamma}.
 #' @param fixparam a list of the fixed parameters of the distribution of interest. The list must contain the parameters values and names. If the fdp is provided, the values for the fixed parameters must be
 #' included in the function.
 #' @param initparam a list with initial values of the parameters to be estimated. The list must contain the parameters values and names.
