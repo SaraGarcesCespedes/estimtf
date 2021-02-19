@@ -18,12 +18,13 @@ estimglm(
 \arguments{
 \item{formula}{an object of class "formula" that specifies the model to be fitted.}
 
-\item{family}{a description of the error distribution to be used in the model.}
+\item{family}{a description of the error distribution to be used in the model. The available families are:
+\code{Normal}, \code{Binomial} and \code{Poisson}.}
 
-\item{link_function}{a string that specifies the model link function.}
+\item{link_function}{a string that specifies the model link function. The available link functions are:
+\code{log}, \code{logit}, \code{inverse} and \code{identity}.}
 
-\item{data}{an optional data frame containing the variables in the model. If these variables are
-not found in \code{data}, they ara taken from the environment from which \code{reg_estimtf} is called.}
+\item{data}{a data frame containing the variables in the model.}
 
 \item{initcoeff}{Optional a list with the initial values for model coefficients. Default value: Zeros.}
 
@@ -31,19 +32,24 @@ not found in \code{data}, they ara taken from the environment from which \code{r
 \code{"AdadeltaOptimizer"}, \code{"AdagradDAOptimizer"}, \code{"AdagradOptimizer"}, \code{"AdamOptimizer"}, \code{"GradientDescentOptimizer"},
 \code{"MomentumOptimizer"} and \code{"RMSPropOptimizer"}.}
 
-\item{hyperparameters}{a list with the hyperparameters values of the TensorFlow optimizer. FALTA DETALLES}
+\item{hyperparameters}{a list with the hyperparameters values of the TensorFlow optimizer. (See URL for details of hyperparameters.)}
 
 \item{maxiter}{a positive integer indicating the maximum number of iterations for the optimization algorithm. The default value is \code{10000}.}
 }
 \value{
-This function returns the estimates for coefficients of Generalized Linear Models. ESTA MAL
+This function returns the estimates, standard errors, t values and p-values of significance tests
+for the Generalized Linear Model coefficients as well as some information of the optimization process like the number of
+iterations needed for convergence.
 }
 \description{
 Function to fit Generalized Linear Models using TensorFlow.
 }
 \details{
-\code{estimglm} computes the log-likelihood function depending on the provided family. Then, it finds the regression coefficients
-that maximizes it using TensorFlow. ESTA MAL
+\code{estimglm} computes the log-likelihood function depending on the provided family and the description of the linear predictor. Then, it finds the coefficients
+that maximizes it using TensorFlow.
+}
+\note{
+The \code{summary, print, predict} functions can be used with a \code{estimglm} object.
 }
 \examples{
 #-------------------------------------------------------------

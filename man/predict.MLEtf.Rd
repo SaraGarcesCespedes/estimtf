@@ -4,7 +4,7 @@
 \alias{predict.MLEtf}
 \title{predict.MLEtf function}
 \usage{
-\method{predict}{MLEtf}(object, newdata, ...)
+\method{predict}{MLEtf}(object, newdata = NULL, ...)
 }
 \arguments{
 \item{object}{an object of class \code{MLEtf} for which a summary is desired.}
@@ -19,7 +19,7 @@ The output from
 }
 \description{
 Function to produce result summaries of the estimates of parameters from statistical
-distributions using \code{\link{dist_estimtf}} or parameters from regression models using
+distributions using \code{\link{dist_estimtf2}} or parameters from regression models using
 \code{\link{reg_estimtf}}.
 }
 \details{
@@ -32,7 +32,7 @@ distributions using \code{\link{dist_estimtf}} or parameters from regression mod
 #CAMBIAR EJEMPLO
 x <- rnorm(n = 1000, mean = 10, sd = 3)
 
-summary(dist_estimtf(x, xdist = "Normal", optimizer = "AdamOptimizer",
+summary(dist_estimtf2(x, xdist = "Normal", optimizer = "AdamOptimizer",
                            hyperparameters = list(learning_rate = 0.1)))
 
 }

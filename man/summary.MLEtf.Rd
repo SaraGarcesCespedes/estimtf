@@ -16,7 +16,7 @@ The output from
 }
 \description{
 Function to produce result summaries of the estimates of parameters from statistical
-distributions using \code{\link{dist_estimtf}} or parameters from regression models using
+distributions using \code{\link{dist_estimtf2}} or parameters from regression models using
 \code{\link{reg_estimtf}}.
 }
 \details{
@@ -29,7 +29,7 @@ the z values and p-values of significance tests for these parameters.
 # Estimation of both normal distrubution parameters
 x <- rnorm(n = 1000, mean = 10, sd = 3)
 
-summary(dist_estimtf(x, xdist = "Normal", optimizer = "AdamOptimizer",
+summary(dist_estimtf2(x, xdist = "Normal", optimizer = "AdamOptimizer",
                            hyperparameters = list(learning_rate = 0.1)))
 
 }

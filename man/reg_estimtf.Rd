@@ -17,43 +17,47 @@ reg_estimtf(
 )
 }
 \arguments{
-\item{ydist}{an object of class "formula" that specifies the distribution of the response variable. FALTA}
+\item{ydist}{an object of class "formula" that specifies the distribution of the response variable. The available distributions are:}
 
-\item{formulas}{a list containing objects of class "formula". Each element of the list specifies the
-linear predictor for each of the parameters of the distribution of interest. FALTA}
+\item{formulas}{a list containing objects of class "formula". Each element of the list represents the
+linear predictor for each of the parameters of the regression model. The linear predictor is specified with
+the name of the parameter followed by \code{.fo} and it must contain an \code{~} and the terms on the right side
+separated by \code{+}.}
 
-\item{data}{an optional data frame containing the variables in the model. If these variables are
-not found in \code{data}, they ara taken from the environment from which \code{reg_estimtf} is called.}
+\item{data}{a data frame containing the variables in the regression model.}
 
-\item{fixparam}{a list of the fixed parameters of the distribution of interest. The list must contain the parameters values and names.}
+\item{fixparam}{a list containing the fixed parameters of the model. The parameters values and names must be specified in the list.}
 
-\item{initparam}{a list with initial values of the regression parameters to be estimated. The list must contain the regression parameters values and names.
-If you want to use the same initial values for all regression parameters associated with a distributional parameter, you can write the
-name of the distributional parameter and the value.}
+\item{initparam}{a list with initial values of the regression coefficients to be estimated. The list must contain the regression coefficients values and names.
+If you want to use the same initial values for all regression coefficients associated with a specific parameter, you can specify the
+name of the parameter and the value.}
 
-\item{link_function}{a list with names of parameters to be linked and the corresponding link function name. The link functions available are:
-\code{log} and \code{logit}.}
+\item{link_function}{a list with names of parameters to be linked and the corresponding link function name. The available link functions are:
+\code{log}, \code{logit}, \code{inverse} and \code{identity}.}
 
-\item{optimizer}{a character indicating the name of the TensorFlow optimizer to be used in the estimation process The default value is \code{'AdamOptimizer'}. The available optimizers are:
+\item{optimizer}{a character indicating the name of the TensorFlow optimizer to be used in the estimation process. The default value is \code{'AdamOptimizer'}. The available optimizers are:
 \code{"AdadeltaOptimizer"}, \code{"AdagradDAOptimizer"}, \code{"AdagradOptimizer"}, \code{"AdamOptimizer"}, \code{"GradientDescentOptimizer"},
 \code{"MomentumOptimizer"} and \code{"RMSPropOptimizer"}.}
 
-\item{hyperparameters}{a list with the hyperparameters values of the TensorFlow optimizer. FALTA DETALLES}
+\item{hyperparameters}{a list with the hyperparameters values of the TensorFlow optimizer. (See URL for details of hyperparameters.)}
 
 \item{maxiter}{a positive integer indicating the maximum number of iterations for the optimization algorithm. The default value is \code{10000}.}
 }
 \value{
-This function returns the estimates, standard errors, z values and p-values of significance tests
-for parameters of regression models as well as some information of the optimization process like the number of
+This function returns the estimates, standard errors, t values and p-values of significance tests
+for the regression model coefficients as well as some information of the optimization process like the number of
 iterations needed for convergence.
 }
 \description{
-Function to compute the Maximum Likelihood Estimators of regression parameters using TensorFlow
+Function to compute the Maximum Likelihood Estimators of regression parameters with linear predictors using TensorFlow.
 }
 \details{
-\code{reg_estimtf} computes the log-likelihood function of the distribution specified in
-\code{ydist} with linear predictors specified in \code{formulas}. Then, it finds the regression parameters
+\code{reg_estimtf} computes the log-likelihood function based on the distribution specified in
+\code{ydist} and linear predictors specified in \code{formulas}. Then, it finds the regression coefficients
 that maximizes it using TensorFlow.
+}
+\note{
+The \code{summary, print} functions can be used with a \code{reg_estimtf} object.
 }
 \examples{
 #-------------------------------------------------------------
