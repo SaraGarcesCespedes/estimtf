@@ -221,7 +221,7 @@ disableagerglm <- function(data, family, dist, design_matrix, fixparam, initpara
         outputs <- list(nbetas = nbetas, ntotalbetas = length(totalbetas), n = n,
                         type = "MLEglmtf", np = np, names = namesparamvector,
                         estimates = tail(results.table[, 2:(totalbetas + 1)], 1),
-                        convergence = convergence)
+                        convergence = convergence, y = y_data)
         result <- list(results = results.table, vcov = diagvarcov, standarderror = stderror,
                        outputs = outputs)
         return(result)
