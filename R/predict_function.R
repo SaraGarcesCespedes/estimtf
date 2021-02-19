@@ -32,7 +32,7 @@
 #------------------------------------------------------------------------
 # Predict function ------------------------------------------------------
 #------------------------------------------------------------------------
-predict.MLEtf <- function(object, newdata, ...) {
+predict.MLEtf <- function(object, newdata = NULL, ...) {
 
         if (!inherits(object, "MLEtf")) {
                 warning("Object is not class MLEtf")
@@ -40,33 +40,36 @@ predict.MLEtf <- function(object, newdata, ...) {
 
         # error con newdata
         if (missing(newdata) | is.null(newdata)) {
-                Y <- object$linear_response
+                data <- object$data
         } else {
                 if (!is.data.frame(newdata)) {
                         stop("newdata must be a data frame")
                 } else {
                         data <- newdata
-
-                        formula <- object$outputs$formula
-
-                        tt <- object$outputs$tt
-
-                        Terms <- delete.response(tt)
-
-                        xlevels <- object$outputs$xlevels
-
-                        data_reg_predict <- model.frame(Terms, data = data, xlev = xlevels)
-
-                        dsg_matrix_predict <- model.matrix(object = Terms, data = data_reg_predict)
-
-                        coeff_values <- object$coeff_estim
-
-
-                        # estimate Y
-                        Y <- dsg_matrix_predict %*% coeff_values
-                        Y <- as.numeric(Y)
                 }
         }
+
+        formula <- object$formula
+
+        tt <- object$tt
+
+        Terms <- delete.response(tt)
+
+        xlevels <- object$xlevels
+
+        data_reg_predict <- model.frame(Terms, data = data, xlev = xlevels)
+
+        dsg_matrix_predict <- model.matrix(object = Terms, data = data_reg_predict)
+
+        coeff_values <- object$outputs$estimates
+
+        if (object$distribution == "Normal") {
+                coeff_values <- coeff_values[, -ncol(coeff_values)]
+        }
+
+        # estimate Y
+        Y <- dsg_matrix_predict %*% coeff_values
+        Y <- as.numeric(Y)
 
 
 
