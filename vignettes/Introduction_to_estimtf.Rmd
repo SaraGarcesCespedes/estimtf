@@ -66,18 +66,33 @@ This function is used to compute the Maximum Likelihood Estimators of regression
 counts <- c(18,17,15,20,10,20,25,13,12)
 outcome <- gl(3,1,9)
 treatment <- gl(3,3)
-
 data <- data.frame(treatment, outcome, counts)
 formulas <- list(rate.fo = ~ outcome + treatment)
-formulas <- list(rate.fo = ~ outcome + treatment)
-estimation <-reg_estimtf(ydist =  counts ~ Poisson, 
+
+estimation1 <-reg_estimtf(ydist =  counts ~ Poisson, 
                          formulas = formulas, data = data,
                          initparam = list(rate = 1.0), 
                          optimizer = "AdamOptimizer",
                          link_function = list(rate = "log"),
                          hyperparameters=list(learning_rate=0.1))
 
-summary(estimation)
+summary(estimation1)
+
+# Estimation of parameters of a linear regression model with one fixed parameter
+x <- runif(n = 1000, -3, 3)
+y <- rnorm(n = 1000, mean = 5 - 2 * x, sd = 3)
+data <- data.frame(y = y, x = x)
+formulas <- list(loc.fo = ~ x)
+initparam <- list(loc = list(Intercept = 1.0, x = 0.0))
+
+estimation2<-reg_estimtf(ydist = y ~ Normal, formulas = formulas,
+                         data = data,
+                         fixparam = list(scale = 3), 
+                         initparam = initparam,
+                         optimizer = "AdamOptimizer",
+                         hyperparameters=list(learning_rate= 0.1))
+
+summary(estimation2)
 ```
 
 As the `reg_estimtf` uses the TensorFlow distributions, the `lambda` parameter from the Poisson distribution is known as `rate`.
