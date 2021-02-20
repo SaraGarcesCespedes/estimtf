@@ -138,6 +138,12 @@ disableagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, 
         parametersfinal <- sapply(1:np, FUN = function(i) parametersfinal <- cbind(parametersfinal, as.numeric(parameters[[i]])))
         namesgradients <- sapply(1:np, FUN = function(i) namesgradients <- cbind(namesgradients, paste0("Gradients ", names(var_list)[i])))
 
+        # change name of parameters to match R parameters
+        names_param <- names(initparam)
+        names_new <- vector(mode = "numeric", length = length(names_param))
+        names_new <- sapply(1:length(names_param), FUN = function(i) names_new[i] <- parameter_name_R(names_param[i], xdist))
+        names(initparam) <- names_new
+
         # Table of results
         results.table <- cbind(as.numeric(loss), parametersfinal, gradientsfinal)
         colnames(results.table) <- c("loss", names(var_list), namesgradients)

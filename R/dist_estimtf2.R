@@ -111,6 +111,13 @@ dist_estimtf2 <- function(x, xdist = "Normal", fixparam = NULL, initparam = NULL
                 # Errors in list fixparam
                 # Update argumdist. Leaves all the arguments of the TF distribution except the ones that are fixed
                 if (!is.null(fixparam)) {
+
+                        # change names of parameters to match TF parameters
+                        names_param <- names(fixparam)
+                        names_new <- vector(mode = "numeric", length = length(names_param))
+                        names_new <- sapply(1:length(names_param), FUN = function(i) names_new[i] <- parameter_name_tf(names_param[i], xdist))
+                        names(fixparam) <- names_new
+
                         if (length(na.omit(match(names(fixparam), names(argumdist)))) == 0) {
                                 stop(paste0("Names of parameters included in the 'fixparam' list do not match with the parameters of the \n",
                                             xdist, " distribution"))
@@ -119,7 +126,6 @@ dist_estimtf2 <- function(x, xdist = "Normal", fixparam = NULL, initparam = NULL
                                 argumdist <- argumdist[-fixed]
                         }
                 }
-
 
                 # Calculate number of parameters to be estimated. Remove from argumdist the arguments that are not related with parameters
                 if (xdist %in% distnotf){
@@ -134,9 +140,15 @@ dist_estimtf2 <- function(x, xdist = "Normal", fixparam = NULL, initparam = NULL
                         argumdist <- argumdist[arg]
                 }
 
-
                 # Errors in list initparam
                 if (!is.null(initparam)) {
+
+                        # change names of parameters to match TF parameters
+                        names_param <- names(initparam)
+                        names_new <- vector(mode = "numeric", length = length(names_param))
+                        names_new <- sapply(1:length(names_param), FUN = function(i) names_new[i] <- parameter_name_tf(names_param[i], xdist))
+                        names(initparam) <- names_new
+
                         if (all(names(initparam) %in% names(argumdist)) == FALSE) {
                                 stop(paste0("Some or all of the parameters included in the 'initparam' list do not match with the arguments of ",
                                             " the provided distribution."))
@@ -150,7 +162,6 @@ dist_estimtf2 <- function(x, xdist = "Normal", fixparam = NULL, initparam = NULL
                                 names(initparam) <- c(namesprovidedvalues, names(missingvalues))
                         }
                 }
-
 
                 # If the user do not provide initial values for the parameters to be estimated, by default the values will be 1 or 2
                 if (is.null(initparam)) {

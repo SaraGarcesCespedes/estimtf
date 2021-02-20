@@ -112,9 +112,10 @@ summary.MLEtf <- function(object, ...) {
                                   pvalue = pvalue)
                 restable <- data.frame(restable)
                 colnames(restable) <- c('Estimate ', 'Std. Error', 't value', 'Pr(>|t|)')
+                names_param <- object$outputs$names_regparam
                 for (i in 1:object$outputs$np) {
                         cat(paste0('Distributional parameter: ',
-                                   names(object$dsgmatrix)[i],'\n'))
+                                   names_param[i],'\n'))
                         cat("----------------------------------------------------------------\n")
                         resparam <- restable[(1 + t[[i]]):(t[[i]] + object$outputs$nbetas[[i]]), ]
                         resparam <- data.frame(resparam)
@@ -188,9 +189,10 @@ print.MLEtf <- function(x, ...) {
                 cat(paste0(object$outputs$convergence),'\n')
                 cat("---------------------------------------------------\n")
                 restable <- data.frame(t(estimates))
+                names_param <- object$outputs$names_regparam
                 for (i in 1:object$outputs$np) {
                         cat(paste0('Distributional parameter: ',
-                                   names(object$dsgmatrix)[i],'\n'))
+                                   names_param[i],'\n'))
                         resparam <- restable[, (1 + t[[i]]):(t[[i]] + object$outputs$nbetas[[i]])]
                         resparam <- as.data.frame(resparam)
                         colnames(resparam) <- object$output$names[(1 + t[[i]]):(t[[i]] + object$outputs$nbetas[[i]])]

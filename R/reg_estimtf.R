@@ -151,6 +151,13 @@ reg_estimtf <- function(ydist = y ~ Normal, formulas, data = NULL, fixparam = NU
         # Errors in list fixparam
         # Update argumdist. Leaves all the arguments of the TF distribution except the ones that are fixed
         if (!is.null(fixparam)) {
+
+                # change names of parameters to match TF parameters
+                names_param <- names(fixparam)
+                names_new <- vector(mode = "numeric", length = length(names_param))
+                names_new <- sapply(1:length(names_param), FUN = function(i) names_new[i] <- parameter_name_tf(names_param[i], all.vars(ydist)[2]))
+                names(fixparam) <- names_new
+
                 if (length(na.omit(match(names(argumdist), names(fixparam)))) == 0) {
                         stop(paste0("Names of fixed parameters do not match with the arguments of \n",
                                     all.vars(ydist)[2], " distribution"))
@@ -159,7 +166,6 @@ reg_estimtf <- function(ydist = y ~ Normal, formulas, data = NULL, fixparam = NU
                         argumdist <- argumdist[-fixed]
                 }
         }
-
 
         # Calculate number of parameters to be estimated. Remove from argumdist the arguments that are not related with parameters
         if (all.vars(ydist)[2] %in% distnotf){
@@ -176,6 +182,13 @@ reg_estimtf <- function(ydist = y ~ Normal, formulas, data = NULL, fixparam = NU
 
         # Errors in list initparam
         if (!is.null(initparam)) {
+
+                # change names of parameters to match TF parameters
+                names_param <- names(initparam)
+                names_new <- vector(mode = "numeric", length = length(names_param))
+                names_new <- sapply(1:length(names_param), FUN = function(i) names_new[i] <- parameter_name_tf(names_param[i], all.vars(ydist)[2]))
+                names(initparam) <- names_new
+
                 if (all(names(initparam) %in% names(argumdist)) == FALSE) {
                         stop(paste0("Some or all of the parameters included in the 'initparam' list do not match with the arguments of ",
                                     all.vars(ydist)[2], " distribution."))

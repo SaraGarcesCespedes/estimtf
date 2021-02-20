@@ -6,18 +6,6 @@ disableagerreg <- function(data, dist, design_matrix, fixparam, initparam, argum
         # Disable eager execution
         tensorflow::tf$compat$v1$disable_eager_execution()
 
-        # Create placeholders
-        # if (all.vars(ydist)[2] == "Binomial") {
-        #         y_data <- fastDummies::dummy_cols(design_matrix$y, remove_first_dummy = TRUE)
-        #         y_data <- y_data[2]
-        #         Y <- tensorflow::tf$compat$v1$placeholder(tf$float32, shape(nrow(y_data), 1L), name = "y_data")
-        #         n <- nrow(y_data)
-        # } else {
-        #         Y <- tensorflow::tf$compat$v1$placeholder(dtype = tf$float32, name = "y_data")
-        #         y_data <- design_matrix$y
-        #         n <- length(y_data)
-        # }
-
         Y <- tensorflow::tf$compat$v1$placeholder(dtype = tf$float32, name = "y_data")
         y_data <- design_matrix$y
         n <- length(y_data)
@@ -215,12 +203,16 @@ disableagerreg <- function(data, dist, design_matrix, fixparam, initparam, argum
         namesgradients <- sapply(1:length(regparam), function(i) namesgradients <- cbind(namesgradients, paste0("Gradients ", names(regparam)[i])))
 
         # Table of results
+        names_param <- names(design_matrix)[1:np]
+        names_new <- vector(mode = "numeric", length = length(names_param))
+        names_new <- sapply(1:length(names_param), FUN = function(i) names_new[i] <- parameter_name_R(names_param[i], all.vars(ydist)[2]))
+
         results.table <- cbind(as.numeric(loss), parametersfinal, gradientsfinal)
         colnames(results.table) <- c("loss", names(regparam), namesgradients)
         outputs <- list(nbetas = nbetas, ntotalbetas = length(totalbetas), n = n,
                         type = "MLEregtf", np = np, names = namesparamvector,
                         estimates = tail(results.table[, 2:(totalbetas + 1)], 1),
-                        convergence = convergence)
+                        convergence = convergence, names_regparam = names_new)
         result <- list(results = results.table, vcov = diagvarcov, standarderror = stderror,
                        outputs = outputs)
         return(result)
