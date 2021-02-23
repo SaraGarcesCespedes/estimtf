@@ -153,7 +153,7 @@ estimglm <- function(formula, family = "Normal", link_function = "identity", dat
         } else {
                 # If the user do not provide initial values for the parameters to be estimated, by default the values will be 0
                 initparam <- vector(mode = "list", length = np)
-                initparam <- lapply(1:np, FUN = function(i) initparam[[i]] <- 0.0)
+                initparam <- lapply(1:np, FUN = function(i) initparam[[i]] <- 1.0)
                 names(initparam) <- names(argumdist)
         }
 
