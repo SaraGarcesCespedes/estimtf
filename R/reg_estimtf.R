@@ -102,15 +102,12 @@ reg_estimtf <- function(ydist = y ~ Normal, formulas, data = NULL, fixparam = NU
                                                     "formulas with the correct ",
                                                     "notation '.fo'"))
 
-        print(formulas)
         # change names of parameters to match TF parameters
         names_param <- names(formulas)
         names_param_final <- stringr::str_remove_all(names_param, ".fo")
         names_new <- vector(mode = "numeric", length = length(names_param_final))
         names_new <- sapply(1:length(names_param), FUN = function(i) names_new[i] <- paste0(parameter_name_tf(names_param_final[i], all.vars(ydist)[2]), ".fo"))
         names(formulas) <- names_new
-
-        print(formulas)
 
         # Error in character xdist
         if (is.null(ydist)) {
@@ -226,7 +223,6 @@ reg_estimtf <- function(ydist = y ~ Normal, formulas, data = NULL, fixparam = NU
         # order of initparam and par_names must be the same
         initparam <- initparam[par_names]
 
-        print(link_function)
         # Errors in link_function
         lfunctions <- c("logit", "log", "inverse", "identity")
         if (!is.null(link_function)) {
@@ -250,7 +246,6 @@ reg_estimtf <- function(ydist = y ~ Normal, formulas, data = NULL, fixparam = NU
                         }
                 })
         }
-        print(link_function)
 
         # List of optimizers
         optimizers <- c("AdadeltaOptimizer", "AdagradDAOptimizer", "AdagradOptimizer", "AdamOptimizer", "GradientDescentOptimizer",

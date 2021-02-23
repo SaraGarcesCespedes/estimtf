@@ -190,7 +190,6 @@ disableagerreg <- function(data, dist, design_matrix, fixparam, initparam, argum
         diagvarcov <- hessian_matrix_try(mhess)
         stderror <- lapply(1:length(regparam), FUN = function(i) stderror[[i]] <- diagvarcov[i])
         names(stderror) <- names(regparam)
-
         # Close tf session
         sess$close()
 
