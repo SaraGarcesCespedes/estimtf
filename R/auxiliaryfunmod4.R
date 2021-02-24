@@ -35,25 +35,32 @@ disableagerestim <- function(x, fdp, arguments, fixparam, initparam, opt, hyperp
 
         n <- length(x)
 
+        print(fdp)
         # Define loss function depending on the distribution
         len_loss <- length(deparse(body(fdp))) - 1
         loss_fn <- deparse(body(fdp))[-1]
         loss_fn <- loss_fn[-len_loss]
-
+        print(loss_fn)
         loss_fn_final <- paste(loss_fn, collapse = "")
         names_arg <- names(arguments)
 
         for (i in 1:length(names_arg)) {
                 loss_fn_final <- stringr::str_replace_all(loss_fn_final, names_arg[i], paste0("vartotal[['", names_arg[i], "']]"))
         }
+
         #loss_fn_final <- sapply(1:length(names_arg), FUN = function(i) loss_fn_final <- str_replace_all(loss_fn_final, names_arg[i], paste0("vartotal[['", names_arg[i], "']]")))
         loss_fn_final <- stringr::str_replace_all(loss_fn_final, "sum", "tensorflow::tf$reduce_sum")
         loss_fn_final <- stringr::str_replace_all(loss_fn_final, "log", "tensorflow::tf$math$log")
         loss_fn_final <- stringr::str_replace_all(loss_fn_final, "exp", "tensorflow::tf$math$exp")
         loss_fn_final <- stringr::str_replace_all(loss_fn_final, "lgamma", "tensorflow::tf$math$lgamma")
 
-        #loss_fn_final <- paste0("-tensorflow::tf$reduce_sum(tensorflow::tf$math$log(", loss_fn_final, ")")
+        if (stringr::str_detect(loss_fn_final, "gamma\\(([^)]+)\\)")) {
+                param_name <- stringr::str_extract_all(loss_fn_final, "gamma\\(([^)]+)\\)")
+                param_name <- stringr::str_remove_all(param_name, "^\\bgamma\\b|\\(|\\)")
+        }
+        loss_fn_final <- stringr::str_replace_all(loss_fn_final, "gamma\\(([^)]+)\\)", paste0("tensorflow::tf$math$exp(tensorflow::tf$math$lgamma(", param_name, "))"))
 
+        #loss_fn_final <- paste0("-tensorflow::tf$reduce_sum(tensorflow::tf$math$log(", loss_fn_final, ")")
         loss_value <- eval(parse(text = loss_fn_final))
         loss_value <- -tensorflow::tf$reduce_sum(tensorflow::tf$math$log(loss_value))
 
