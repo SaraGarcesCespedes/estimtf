@@ -55,10 +55,10 @@
 #' treatment <- gl(3,3)
 #' data <- data.frame(treatment, outcome, counts)
 #'
-#' formulas <- list(rate.fo = ~ outcome + treatment)
+#' formulas <- list(lambda.fo = ~ outcome + treatment)
 #' estimation_1 <- reg_estimtf(ydist =  counts ~ Poisson, formulas = formulas, data = data,
-#'                             initparam = list(rate = 1.0), optimizer = "AdamOptimizer",
-#'                             link_function = list(rate = "log"),
+#'                             initparam = list(lambda = 1.0), optimizer = "AdamOptimizer",
+#'                             link_function = list(lambda = "log"),
 #'                             hyperparameters = list(learning_rate = 0.1))
 #' summary(estimation_1)
 #'
@@ -68,11 +68,11 @@
 #' y <- rnorm(n = 1000, mean = 5 - 2 * x, sd = 3)
 #' data <- data.frame(y = y, x = x)
 #'
-#' formulas <- list(loc.fo = ~ x)
-#' initparam <- list(loc = list(Intercept = 1.0, x = 0.0))
+#' formulas <- list(mean.fo = ~ x)
+#' initparam <- list(mean = list(Intercept = 1.0, x = 0.0))
 #'
 #' estimation_2 <- reg_estimtf(ydist = y ~ Normal, formulas = formulas, data = data,
-#'                             fixparam = list(scale = 3), initparam = initparam,
+#'                             fixparam = list(sd = 3), initparam = initparam,
 #'                             optimizer = "AdamOptimizer",
 #'                             hyperparameters = list(learning_rate = 0.1))
 #'
@@ -81,10 +81,10 @@
 #' #-------------------------------------------------------------
 #' # Estimation of parameters using cars dataset
 #' data <- data.frame(dist = cars$dist, speed = cars$speed)
-#' formulas <- list(loc.fo = ~ speed, scale.fo = ~ 1)
+#' formulas <- list(mean.fo = ~ speed, sd.fo = ~ 1)
 #'
 #' estimation_3 <- reg_estimtf(ydist = dist ~ Normal, formulas = formulas, data = data,
-#'                             initparam = list(loc = 1.0, scale = 1.0), optimizer = "AdamOptimizer",
+#'                             initparam = list(mean = 1.0, sd = 1.0), optimizer = "AdamOptimizer",
 #'                             hyperparameters = list(learning_rate = 0.1))
 #'
 #' summary(estimation_3)
