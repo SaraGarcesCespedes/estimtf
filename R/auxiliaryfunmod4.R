@@ -57,8 +57,9 @@ disableagerestim <- function(x, fdp, arguments, fixparam, initparam, opt, hyperp
         if (stringr::str_detect(loss_fn_final, "gamma\\(([^)]+)\\)")) {
                 param_name <- stringr::str_extract_all(loss_fn_final, "gamma\\(([^)]+)\\)")
                 param_name <- stringr::str_remove_all(param_name, "^\\bgamma\\b|\\(|\\)")
+                loss_fn_final <- stringr::str_replace_all(loss_fn_final, "gamma\\(([^)]+)\\)", paste0("tensorflow::tf$math$exp(tensorflow::tf$math$lgamma(", param_name, "))"))
+
         }
-        loss_fn_final <- stringr::str_replace_all(loss_fn_final, "gamma\\(([^)]+)\\)", paste0("tensorflow::tf$math$exp(tensorflow::tf$math$lgamma(", param_name, "))"))
 
         #loss_fn_final <- paste0("-tensorflow::tf$reduce_sum(tensorflow::tf$math$log(", loss_fn_final, ")")
         loss_value <- eval(parse(text = loss_fn_final))
