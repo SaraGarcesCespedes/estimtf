@@ -37,8 +37,14 @@ disableagerestim <- function(x, fdp, arguments, fixparam, initparam, opt, hyperp
 
         # Define loss function depending on the distribution
         len_loss <- length(deparse(body(fdp))) - 1
-        loss_fn <- deparse(body(fdp))[-1]
-        loss_fn <- loss_fn[-len_loss]
+        if (deparse(body(fdp))[1] == "{" & deparse(body(fdp))[len_loss + 1] == "}") {
+                loss_fn <- deparse(body(fdp))[-1]
+                loss_fn <- loss_fn[-len_loss]
+        } else {
+                loss_fn <- deparse(body(fdp))
+        }
+
+        #loss_fn <- loss_fn[-len_loss]
         loss_fn_final <- paste(loss_fn, collapse = "")
         names_arg <- names(arguments)
 
