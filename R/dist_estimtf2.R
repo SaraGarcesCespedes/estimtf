@@ -193,7 +193,6 @@ dist_estimtf2 <- function(x, xdist = "Normal", fixparam = NULL, initparam = NULL
                 } else {
                         message('Caught an error!')
                         message('Argument "x" is missing.')
-
                 }
 
                 # remove fixed parameters
