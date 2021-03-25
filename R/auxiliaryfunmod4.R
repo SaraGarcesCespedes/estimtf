@@ -48,9 +48,6 @@ disableagerestim <- function(x, fdp, arguments, fixparam, initparam, opt, hyperp
         loss_fn_final <- paste(loss_fn, collapse = "")
         names_arg <- names(arguments)
 
-        for (i in 1:length(names_arg)) {
-                loss_fn_final <- stringr::str_replace_all(loss_fn_final, names_arg[i], paste0("vartotal[['", names_arg[i], "']]"))
-        }
 
         #loss_fn_final <- sapply(1:length(names_arg), FUN = function(i) loss_fn_final <- str_replace_all(loss_fn_final, names_arg[i], paste0("vartotal[['", names_arg[i], "']]")))
         loss_fn_final <- stringr::str_replace_all(loss_fn_final, "sum", "tensorflow::tf$reduce_sum")
@@ -64,6 +61,12 @@ disableagerestim <- function(x, fdp, arguments, fixparam, initparam, opt, hyperp
                 loss_fn_final <- stringr::str_replace_all(loss_fn_final, "gamma\\(([^)]+)\\)", paste0("tensorflow::tf$math$exp(tensorflow::tf$math$lgamma(", param_name, "))"))
 
         }
+
+        for (i in 1:length(names_arg)) {
+                loss_fn_final <- stringr::str_replace_all(loss_fn_final, names_arg[i], paste0("vartotal[['", names_arg[i], "']]"))
+        }
+
+
 
         #loss_fn_final <- paste0("-tensorflow::tf$reduce_sum(tensorflow::tf$math$log(", loss_fn_final, ")")
         loss_value <- eval(parse(text = loss_fn_final))
