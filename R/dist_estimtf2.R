@@ -181,7 +181,20 @@ dist_estimtf2 <- function(x, xdist = "Normal", fixparam = NULL, initparam = NULL
                 arguments <- as.list(arguments)
 
                 # eliminar x de lista vartotal
-                arguments$X <- NULL
+                #arguments$X <- NULL
+                arguments <- as.list(arguments)
+                if ("X" %in% names(arguments)) {
+                        print("e")
+                        arguments$X <- NULL
+                } else if ("x" %in% names(arguments)) {
+                        print("ee")
+                        arguments$x <- NULL
+
+                } else {
+                        message('Caught an error!')
+                        message('Argument "x" is missing.')
+
+                }
 
                 # remove fixed parameters
                 arguments_fixed <- vector(mode = "list", length = length(arguments))
