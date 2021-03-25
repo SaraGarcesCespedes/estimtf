@@ -184,10 +184,8 @@ dist_estimtf2 <- function(x, xdist = "Normal", fixparam = NULL, initparam = NULL
                 #arguments$X <- NULL
                 arguments <- as.list(arguments)
                 if ("X" %in% names(arguments)) {
-                        print("e")
                         arguments$X <- NULL
                 } else if ("x" %in% names(arguments)) {
-                        print("ee")
                         arguments$x <- NULL
 
                 } else {
