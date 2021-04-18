@@ -23,6 +23,8 @@ disableagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, 
 
         names(var_list) <- names(initparam)
 
+
+
         # Create a list with all parameters, fixed and not fixed
         vartotal <- append(fixparam, var_list)
 
