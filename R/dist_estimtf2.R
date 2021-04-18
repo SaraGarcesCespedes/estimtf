@@ -7,20 +7,26 @@
 #' @param x a vector containing the data to be fitted.
 #' @param xdist a character indicating the name of the distribution of interest or the probability density function (fdp) of the distribution. The default value is \code{'Normal'}.
 #' The available distributions are: \code{Normal}, \code{Poisson}, \code{Binomial}, \code{Weibull}, \code{Exponential}, \code{LogNormal}, \code{Beta} and \code{Gamma}.
-#' @param fixparam a list of the fixed parameters of the distribution of interest. The list must contain the parameters values and names. If the fdp is provided, the values for the fixed parameters must be
-#' included in the function.
+#' If you want to estimate parameters from a distribution not included in the package, you must provide the
+#' name of an \code{R} function that contains its probability mass/density function.
+#' @param fixparam a list of the fixed parameters of the distribution of interest. The list must contain the parameters values and names. If you want to work with a distribution
+#' different to the ones available in the package, the values for the fixed parameters must be included in the probability mass/density function.
 #' @param initparam a list with initial values of the parameters to be estimated. The list must contain the parameters values and names.
+#' @param link_function a list with names of parameters to be linked and the corresponding link function name. The available link functions are:
+#' \code{log}, \code{logit}, \code{inverse} and \code{identity}.
 #' @param optimizer a character indicating the name of the TensorFlow optimizer to be used in the estimation process The default value is \code{'AdamOptimizer'}. The available optimizers are:
 #' \code{"AdadeltaOptimizer"}, \code{"AdagradDAOptimizer"}, \code{"AdagradOptimizer"}, \code{"AdamOptimizer"}, \code{"GradientDescentOptimizer"},
 #' \code{"MomentumOptimizer"} and \code{"RMSPropOptimizer"}.
-#' @param hyperparameters a list with the hyperparameters values of the TensorFlow optimizer. (See URL for details of hyperparameters.)
+#' @param hyperparameters a list with the hyperparameters values of the selected TensorFlow optimizer. If the hyperparameters are not specified, their default values
+#' will be used in the oprimization process (See URL for details of hyperparameters.)
 #' @param maxiter a positive integer indicating the maximum number of iterations for the optimization algorithm.
 #'
-#' @return This function returns the estimates and standard errors of parameters from statistical distributions as well as
+#' @return This function returns the estimates, standard errors, Z-score and p-values of significance tests of the parameters from the distribution of interest as well as
 #' some information of the optimization process like the number of iterations needed for convergence.
 #'
 #' @details \code{dist_estimtf2} computes the log-likelihood function of the distribution specified in
-#' \code{xdist} and finds the distributional parameters that maximizes it using TensorFlow.
+#' \code{xdist} and finds the values of the parameters that maximizes this function using the TensorFlow optimizer
+#' specified in \code{optimizer}.
 #'
 #' @note The \code{summary, print} functions can be used with a \code{dist_estimtf2} object.
 #'
@@ -43,28 +49,40 @@
 #' # Estimation of both normal distrubution parameters
 #' x <- rnorm(n = 1000, mean = 10, sd = 3)
 #'
-#' estimation_1 <- dist_estimtf2(x, xdist = "Normal", optimizer = "AdamOptimizer",
-#'                            hyperparameters = list(learning_rate = 0.1))
+#' estimation_1 <- dist_estimtf2(x, xdist = "Normal",
+#'                               optimizer = "AdamOptimizer",
+#'                               initparam = list(mean = 1.0, sd = 1.0),
+#'                               hyperparameters = list(learning_rate = 0.1))
 #'
 #' summary(estimation_1)
 #'
 #' #-------------------------------------------------------------
 #' # Estimation of parameters from Instantaneous Failures distribution
-#' pdf <- function(X, lambda) { (1 / ((lambda ^ 2) * (lambda - 1))) * (lambda^2 + X - 2*lambda) * exp(-X/lambda) }
+#' pdf <- function(X, lambda) { (1 / ((lambda ^ 2) * (lambda - 1))) *
+#'                              (lambda^2 + X - 2*lambda) * exp(-X/lambda) }
 #' x <-  c(3.4, 0.0, 0.0, 15.8, 232.8, 8.8, 123.2, 47, 154, 103.2, 89.8,  12.2)
 #'
-#' estimation_2 <- dist_estimtf2(x = x, xdist = pdf, initparam = list(lambda = rnorm(1, 2, 1)), optimizer = "AdamOptimizer",
+#' estimation_2 <- dist_estimtf2(x = x, xdist = pdf,
+#'                               initparam = list(lambda = rnorm(1, 5, 1)),
+#'                               optimizer = "AdamOptimizer",
 #'                               hyperparameters = list(learning_rate = 0.1),
 #'                               maxiter = 10000)
 #' summary(estimation_2)
 #'
 #' @export
-dist_estimtf2 <- function(x, xdist = "Normal", fixparam = NULL, initparam = NULL, optimizer = "AdamOptimizer", hyperparameters = NULL,
+dist_estimtf2 <- function(x, xdist = "Normal", fixparam = NULL, initparam, link_function = NULL, optimizer = "AdamOptimizer", hyperparameters = NULL,
                          maxiter = 10000) {
 
         call <- match.call()
 
         # Errors in arguments
+
+        # missing arguments
+        if (missing(x)) {
+                stop(paste0("Argument 'x' is missing, with no default"))
+        } else if (missing(initparam)) {
+                stop(paste0("Argument 'initparam' is missing, with no default"))
+        }
 
         # Error in vector of data x
         if (is.null(x) | length(x) == 0) {
@@ -79,6 +97,11 @@ dist_estimtf2 <- function(x, xdist = "Normal", fixparam = NULL, initparam = NULL
 
         if (!is.character(xdist) & !is.function(xdist)) {
                 stop("'xdist' must be a character or a function. \n \n")
+        }
+
+        if (!inherits(initparam, "list")) {
+                stop(paste0("'initparam' must be a nonempty list containing the initial values, \n",
+                            "of the parameters to be estimated. \n \n"))
         }
 
         if (is.character(xdist)) {
@@ -164,12 +187,12 @@ dist_estimtf2 <- function(x, xdist = "Normal", fixparam = NULL, initparam = NULL
                 }
 
                 # If the user do not provide initial values for the parameters to be estimated, by default the values will be 1 or 2
-                if (is.null(initparam)) {
-                        initparam <- vector(mode = "list", length = np)
-                        initparam <- lapply(1:np,
-                                            FUN = function(i) initparam[[i]] <- ifelse(dist == "InstantaneousFailures" | dist == "Poisson", 2.0, 1.0))
-                        names(initparam) <- names(argumdist)
-                }
+                # if (is.null(initparam)) {
+                #         initparam <- vector(mode = "list", length = np)
+                #         initparam <- lapply(1:np,
+                #                             FUN = function(i) initparam[[i]] <- ifelse(dist == "InstantaneousFailures" | dist == "Poisson", 2.0, 1.0))
+                #         names(initparam) <- names(argumdist)
+                # }
 
                 # order of initparam and par_names(names argumdist) must be the same
                 initparam <- initparam[names(argumdist)]
@@ -190,7 +213,7 @@ dist_estimtf2 <- function(x, xdist = "Normal", fixparam = NULL, initparam = NULL
 
                 } else {
                         message('Caught an error!')
-                        message('Argument "x" is missing.')
+                        stop(paste0('Argument "x" is missing in the probability mass/density function.'))
                 }
 
                 # remove fixed parameters
@@ -222,15 +245,44 @@ dist_estimtf2 <- function(x, xdist = "Normal", fixparam = NULL, initparam = NULL
 
 
                 # If the user do not provide initial values for the parameters to be estimated, by default the values will be 1 or 2
-                if (is.null(initparam)) {
-                        initparam <- vector(mode = "list", length = np)
-                        initparam <- lapply(1:np,
-                                            FUN = function(i) initparam[[i]] <- 0.0)
-                        names(initparam) <- names(argumdist)
-                }
+                # if (is.null(initparam)) {
+                #         initparam <- vector(mode = "list", length = np)
+                #         initparam <- lapply(1:np,
+                #                             FUN = function(i) initparam[[i]] <- 0.0)
+                #         names(initparam) <- names(argumdist)
+                # }
 
                 # order of initparam and par_names(names argumdist) must be the same
                 initparam <- initparam[names(argumdist)]
+
+        }
+
+        lfunctions <- c("logit", "log", "inverse", "identity")
+
+        if (!is.null(link_function)) {
+
+                verifylink <- lapply(1:length(link_function), FUN = function(x) {
+                        if (!(link_function[[x]] %in% lfunctions)) {
+                                stop(paste0("Unidentified link function. Select one of the link functions included in the \n",
+                                            " following list: ", paste0(lfunctions, collapse = ", ")))
+                        }
+                })
+
+                # change names of parameters to match TF parameters
+                if (is.character(xdist)) {
+                        names_param <- names(link_function)
+                        names_new <- vector(mode = "numeric", length = length(names_param))
+                        names_new <- sapply(1:length(names_param), FUN = function(i) names_new[i] <- parameter_name_tf(names_param[i], all.vars(ydist)[2]))
+                        names(link_function) <- names_new
+
+                }
+
+                if (all(names(link_function) %in% names(argumdist)) == FALSE) {
+                        stop(paste0("Names of parameters included in the 'link_function' list do not match with the parameters of the ",
+                                    all.vars(ydist)[2], " distribution"))
+                } else if (length(na.omit(match(names(link_function), names(argumdist)))) > np) {
+                        stop(paste0("Only include in 'link_function' the parameters that are not fixed"))
+                }
 
         }
 
@@ -279,7 +331,7 @@ dist_estimtf2 <- function(x, xdist = "Normal", fixparam = NULL, initparam = NULL
         if (is.character(xdist)) {
                 res <- disableagerdist(x, dist, fixparam, initparam, opt, hyperparameters, maxiter, tolerance, np, distnotf, xdist, optimizer)
         } else {
-                res <- disableagerestim(x, fdp, arguments, fixparam, initparam, opt, hyperparameters, maxiter, tolerance, np, optimizer)
+                res <- disableagerestim(x, fdp, arguments, fixparam, initparam, opt, hyperparameters, maxiter, tolerance, np, optimizer, link_function)
         }
 
         result <- list(tf = res$results, vvoc = res$vcov, stderrtf = res$standarderror,
