@@ -12,8 +12,8 @@
 #' @return The output from
 #'
 #' @details \code{summary.MLEtf} function displays estimates and standard errors of parameters from statistical
-#' distributions and regression models. Also, for regression parameters, this function computes and displays
-#' the z values and p-values of significance tests for these parameters.
+#' distributions and regression models. Also, this function computes and displays the Z-score and p-values of significance
+#' tests for these parameters.
 #'
 #' @importFrom stats printCoefmat
 #' @importFrom stats pnorm
@@ -24,8 +24,10 @@
 #' # Estimation of both normal distrubution parameters
 #' x <- rnorm(n = 1000, mean = 10, sd = 3)
 #'
-#' summary(dist_estimtf2(x, xdist = "Normal", optimizer = "AdamOptimizer",
-#'                            hyperparameters = list(learning_rate = 0.1)))
+#' summary(dist_estimtf2(x, xdist = "Normal",
+#'                       optimizer = "AdamOptimizer",
+#'                       initparam = list(mean = 1.0, sd = 1.0),
+#'                       hyperparameters = list(learning_rate = 0.1)))
 #'
 #' @rdname summary.MLEtf
 #' @export
@@ -35,7 +37,7 @@
 summary.MLEtf <- function(object, ...) {
 
         estimates <- as.numeric(object$outputs$estimates)
-        if (object$outputs$type != "MLEdistf_fdp") {
+        if (object$outputs$type != "MLEdistf_fdp" & object$outputs$type != "MLEreg_fdp") {
                 dist <- object$distribution
         }
 
@@ -57,11 +59,11 @@ summary.MLEtf <- function(object, ...) {
         }
 
         zvalue <- as.numeric(estimates / stderror)
-        #pvalue <- as.numeric(2 * pnorm(abs(zvalue), lower.tail = FALSE))
+        pvalue <- as.numeric(2 * pnorm(abs(zvalue), lower.tail = FALSE))
         n <- object$outputs$n
         p <-length(estimates)
         df <- n - (p)
-        pvalue <- as.numeric(2 * pt(abs(zvalue), df, lower.tail = FALSE))
+        #pvalue <- as.numeric(2 * pt(abs(zvalue), df, lower.tail = FALSE))
 
         if (object$outputs$type == "MLEdistf" | object$outputs$type == "MLEdistf_fdp") {
                 if (object$outputs$type == "MLEdistf") {
@@ -70,11 +72,12 @@ summary.MLEtf <- function(object, ...) {
                 cat(paste0('Number of observations: ', object$outputs$n),'\n')
                 cat(paste0('TensorFlow optimizer: ', object$optimizer),'\n')
                 cat("---------------------------------------------------\n")
-                restable <- cbind(estimate = estimates, stderror = stderror)
+                restable <- cbind(estimate = estimates, stderror = stderror, zvalue = zvalue,
+                                  pvalue = pvalue)
                 restable <- data.frame(restable)
-                colnames(restable) <- c('Estimate ', 'Std. Error')
+                colnames(restable) <- c('Estimate ', 'Std. Error', 'Z value', 'Pr(>|z|)')
                 rownames(restable) <- object$outputs$parnames
-                printCoefmat(restable, digits = 4)
+                printCoefmat(restable, digits = 4, P.values = TRUE, has.Pvalue = TRUE)
         } else if (object$outputs$type == "MLEglmtf") {
                 t <- vector(mode = "list")
                 t[[1]] <- 0
@@ -85,7 +88,7 @@ summary.MLEtf <- function(object, ...) {
                 restable <- cbind(estimate = estimates, stderror = stderror, zvalue = zvalue,
                                   pvalue = pvalue)
                 restable <- data.frame(restable)
-                colnames(restable) <- c('Estimate ', 'Std. Error', 't value', 'Pr(>|t|)')
+                colnames(restable) <- c('Estimate ', 'Std. Error', 'Z value', 'Pr(>|z|)')
 
                 resparam <- restable[(1 + t[[1]]):(t[[1]] + object$outputs$nbetas[[1]]), ]
                 resparam <- data.frame(resparam)
@@ -95,7 +98,6 @@ summary.MLEtf <- function(object, ...) {
 
         } else {
                 t <- vector(mode = "list")
-                print(object$outputs$np)
                 if (object$outputs$np > 1) {
                         t <- lapply(1:object$outputs$np,
                                     FUN = function(i) t[[i]] <- ifelse(i == 1, 0,
@@ -104,14 +106,16 @@ summary.MLEtf <- function(object, ...) {
                 } else {
                         t[[1]] <- 0
                 }
-                cat(paste0('Distribution of response variable: ', object$distribution),'\n')
+                if (object$outputs$type == "MLEregtf") {
+                        cat(paste0('Distribution: ', object$distribution),'\n')
+                }
                 cat(paste0('Number of observations: ', object$outputs$n),'\n')
                 cat(paste0('TensorFlow optimizer: ', object$optimizer),'\n')
                 cat("----------------------------------------------------------------\n")
                 restable <- cbind(estimate = estimates, stderror = stderror, zvalue = zvalue,
                                   pvalue = pvalue)
                 restable <- data.frame(restable)
-                colnames(restable) <- c('Estimate ', 'Std. Error', 't value', 'Pr(>|t|)')
+                colnames(restable) <- c('Estimate ', 'Std. Error', 'Z value', 'Pr(>|z|)')
                 names_param <- object$outputs$names_regparam
                 for (i in 1:object$outputs$np) {
                         cat(paste0('Distributional parameter: ',
@@ -151,8 +155,10 @@ summary.MLEtf <- function(object, ...) {
 #' # Estimation of both normal distrubution parameters
 #' x <- rnorm(n = 1000, mean = 10, sd = 3)
 #'
-#' print(dist_estimtf2(x, xdist = "Normal", optimizer = "AdamOptimizer",
-#'                            hyperparameters = list(learning_rate = 0.1)))
+#' print(dist_estimtf2(x, xdist = "Normal",
+#'                     initparam = list(mean = 1.0, sd = 1.0),
+#'                     optimizer = "AdamOptimizer",
+#'                     hyperparameters = list(learning_rate = 0.1)))
 #'
 #' @rdname print.MLEtf
 #' @export
@@ -176,7 +182,7 @@ print.MLEtf <- function(x, ...) {
                 cat("---------------------------------------------------\n")
                 cat(paste0(object$outputs$convergence),'\n')
 
-        } else if (object$outputs$type == "MLEregtf") {
+        } else if (object$outputs$type == "MLEregtf" | object$outputs$type == "MLEregtf_fdp") {
                 t <- vector(mode = "list")
                 if (object$outputs$np > 1) {
                         t <- lapply(1:object$outputs$np,
@@ -255,18 +261,19 @@ print.MLEtf <- function(x, ...) {
 #' @param ... additional arguments affecting the summary produced.
 #'
 #'
-#' @details \code{plot_loss.MLEtf} function displays a graph with the loss values in each iteration of the
-#' estimation process for distributional or regression parameters.
+#' @details \code{plot_loss.MLEtf} function displays a graph with the loss values, which corresponds to the
+#' negative log-likelihood in each iteration of the estimation process for distributional or regression parameters.
 #'
-#' @import ggplot2
 #'
 #' @examples
 #' #-------------------------------------------------------------
 #' # Estimation of both normal distrubution parameters
 #' x <- rnorm(n = 1000, mean = 10, sd = 3)
 #'
-#' plot_loss(dist_estimtf2(x, xdist = "Normal", optimizer = "AdamOptimizer",
-#'                            hyperparameters = list(learning_rate = 0.1)))
+#' plot_loss(dist_estimtf2(x, xdist = "Normal",
+#'                         optimizer = "AdamOptimizer",
+#'                         initparam = list(mean = 1.0, sd = 1.0),
+#'                         hyperparameters = list(learning_rate = 0.1)))
 #'
 #' @export
 #------------------------------------------------------------------------
@@ -280,12 +287,8 @@ plot_loss <- function(object, ...) {
         loss_values <- loss_values %>% select(loss, Iteration)
         loss_values$loss <- as.numeric(loss_values$loss)
 
-        ggplot2::ggplot(data = loss_values, aes(x = Iteration, y = loss)) +
-                geom_line() +
-                geom_point() +
-                theme(plot.title = element_text(face = "bold", size =16, hjust = 0.5)) +
-                labs(y = "Loss value", x = "Iteration", title = "Loss value in each iteration of the estimation process")
-
+        plot(loss_values$loss, type = "o", col = "red", xlab = "Iteration", ylab = "Loss",
+             main = "Loss value obtained in each iteration")
 
 
 }

@@ -25,6 +25,4 @@ Imports:
 Suggests: 
     knitr,
     rmarkdown
-Depends:
-    ggplot2,
 VignetteBuilder: knitr
