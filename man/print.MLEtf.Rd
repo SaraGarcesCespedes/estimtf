@@ -25,8 +25,10 @@ and regression models.
 # Estimation of both normal distrubution parameters
 x <- rnorm(n = 1000, mean = 10, sd = 3)
 
-print(dist_estimtf2(x, xdist = "Normal", optimizer = "AdamOptimizer",
-                           hyperparameters = list(learning_rate = 0.1)))
+print(dist_estimtf2(x, xdist = "Normal",
+                    initparam = list(mean = 1.0, sd = 1.0),
+                    optimizer = "AdamOptimizer",
+                    hyperparameters = list(learning_rate = 0.1)))
 
 }
 \author{

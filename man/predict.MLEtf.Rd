@@ -25,17 +25,6 @@ distributions using \code{\link{dist_estimtf2}} or parameters from regression mo
 \details{
 \code{predict.MLEtf} COMPLETAR
 }
-\examples{
-#-------------------------------------------------------------
-# Estimation of both normal distrubution parameters
-
-#CAMBIAR EJEMPLO
-x <- rnorm(n = 1000, mean = 10, sd = 3)
-
-summary(dist_estimtf2(x, xdist = "Normal", optimizer = "AdamOptimizer",
-                           hyperparameters = list(learning_rate = 0.1)))
-
-}
 \author{
 Sara Garces Cespedes
 }

@@ -8,7 +8,8 @@ dist_estimtf2(
   x,
   xdist = "Normal",
   fixparam = NULL,
-  initparam = NULL,
+  initparam,
+  link_function = NULL,
   optimizer = "AdamOptimizer",
   hyperparameters = NULL,
   maxiter = 10000
@@ -18,23 +19,29 @@ dist_estimtf2(
 \item{x}{a vector containing the data to be fitted.}
 
 \item{xdist}{a character indicating the name of the distribution of interest or the probability density function (fdp) of the distribution. The default value is \code{'Normal'}.
-The available distributions are: \code{Normal}, \code{Poisson}, \code{Binomial}, \code{Weibull}, \code{Exponential}, \code{LogNormal}, \code{Beta} and \code{Gamma}.}
+The available distributions are: \code{Normal}, \code{Poisson}, \code{Binomial}, \code{Weibull}, \code{Exponential}, \code{LogNormal}, \code{Beta} and \code{Gamma}.
+If you want to estimate parameters from a distribution not included in the package, you must provide the
+name of an \code{R} function that contains its probability mass/density function.}
 
-\item{fixparam}{a list of the fixed parameters of the distribution of interest. The list must contain the parameters values and names. If the fdp is provided, the values for the fixed parameters must be
-included in the function.}
+\item{fixparam}{a list of the fixed parameters of the distribution of interest. The list must contain the parameters values and names. If you want to work with a distribution
+different to the ones available in the package, the values for the fixed parameters must be included in the probability mass/density function.}
 
 \item{initparam}{a list with initial values of the parameters to be estimated. The list must contain the parameters values and names.}
+
+\item{link_function}{a list with names of parameters to be linked and the corresponding link function name. The available link functions are:
+\code{log}, \code{logit}, \code{inverse} and \code{identity}.}
 
 \item{optimizer}{a character indicating the name of the TensorFlow optimizer to be used in the estimation process The default value is \code{'AdamOptimizer'}. The available optimizers are:
 \code{"AdadeltaOptimizer"}, \code{"AdagradDAOptimizer"}, \code{"AdagradOptimizer"}, \code{"AdamOptimizer"}, \code{"GradientDescentOptimizer"},
 \code{"MomentumOptimizer"} and \code{"RMSPropOptimizer"}.}
 
-\item{hyperparameters}{a list with the hyperparameters values of the TensorFlow optimizer. (See URL for details of hyperparameters.)}
+\item{hyperparameters}{a list with the hyperparameters values of the selected TensorFlow optimizer. If the hyperparameters are not specified, their default values
+will be used in the oprimization process (See URL for details of hyperparameters.)}
 
 \item{maxiter}{a positive integer indicating the maximum number of iterations for the optimization algorithm.}
 }
 \value{
-This function returns the estimates and standard errors of parameters from statistical distributions as well as
+This function returns the estimates, standard errors, Z-score and p-values of significance tests of the parameters from the distribution of interest as well as
 some information of the optimization process like the number of iterations needed for convergence.
 }
 \description{
@@ -42,7 +49,8 @@ Function to compute the Maximum Likelihood Estimators of distributional paramete
 }
 \details{
 \code{dist_estimtf2} computes the log-likelihood function of the distribution specified in
-\code{xdist} and finds the distributional parameters that maximizes it using TensorFlow.
+\code{xdist} and finds the values of the parameters that maximizes this function using the TensorFlow optimizer
+specified in \code{optimizer}.
 }
 \note{
 The \code{summary, print} functions can be used with a \code{dist_estimtf2} object.
@@ -52,17 +60,22 @@ The \code{summary, print} functions can be used with a \code{dist_estimtf2} obje
 # Estimation of both normal distrubution parameters
 x <- rnorm(n = 1000, mean = 10, sd = 3)
 
-estimation_1 <- dist_estimtf2(x, xdist = "Normal", optimizer = "AdamOptimizer",
-                           hyperparameters = list(learning_rate = 0.1))
+estimation_1 <- dist_estimtf2(x, xdist = "Normal",
+                              optimizer = "AdamOptimizer",
+                              initparam = list(mean = 1.0, sd = 1.0),
+                              hyperparameters = list(learning_rate = 0.1))
 
 summary(estimation_1)
 
 #-------------------------------------------------------------
 # Estimation of parameters from Instantaneous Failures distribution
-pdf <- function(X, lambda) { (1 / ((lambda ^ 2) * (lambda - 1))) * (lambda^2 + X - 2*lambda) * exp(-X/lambda) }
+pdf <- function(X, lambda) { (1 / ((lambda ^ 2) * (lambda - 1))) *
+                             (lambda^2 + X - 2*lambda) * exp(-X/lambda) }
 x <-  c(3.4, 0.0, 0.0, 15.8, 232.8, 8.8, 123.2, 47, 154, 103.2, 89.8,  12.2)
 
-estimation_2 <- dist_estimtf2(x = x, xdist = pdf, initparam = list(lambda = rnorm(1, 2, 1)), optimizer = "AdamOptimizer",
+estimation_2 <- dist_estimtf2(x = x, xdist = pdf,
+                              initparam = list(lambda = rnorm(1, 5, 1)),
+                              optimizer = "AdamOptimizer",
                               hyperparameters = list(learning_rate = 0.1),
                               maxiter = 10000)
 summary(estimation_2)

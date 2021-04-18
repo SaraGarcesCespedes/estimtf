@@ -21,16 +21,18 @@ distributions using \code{\link{dist_estimtf2}} or parameters from regression mo
 }
 \details{
 \code{summary.MLEtf} function displays estimates and standard errors of parameters from statistical
-distributions and regression models. Also, for regression parameters, this function computes and displays
-the z values and p-values of significance tests for these parameters.
+distributions and regression models. Also, this function computes and displays the Z-score and p-values of significance
+tests for these parameters.
 }
 \examples{
 #-------------------------------------------------------------
 # Estimation of both normal distrubution parameters
 x <- rnorm(n = 1000, mean = 10, sd = 3)
 
-summary(dist_estimtf2(x, xdist = "Normal", optimizer = "AdamOptimizer",
-                           hyperparameters = list(learning_rate = 0.1)))
+summary(dist_estimtf2(x, xdist = "Normal",
+                      optimizer = "AdamOptimizer",
+                      initparam = list(mean = 1.0, sd = 1.0),
+                      hyperparameters = list(learning_rate = 0.1)))
 
 }
 \author{

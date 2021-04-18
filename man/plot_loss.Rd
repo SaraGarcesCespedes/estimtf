@@ -16,16 +16,18 @@ Function to display a graph that contains the loss value in each iteration of
 the estimation process using \code{\link{dist_estimtf2}} function or using \code{\link{reg_estimtf}} function.
 }
 \details{
-\code{plot_loss.MLEtf} function displays a graph with the loss values in each iteration of the
-estimation process for distributional or regression parameters.
+\code{plot_loss.MLEtf} function displays a graph with the loss values, which corresponds to the
+negative log-likelihood in each iteration of the estimation process for distributional or regression parameters.
 }
 \examples{
 #-------------------------------------------------------------
 # Estimation of both normal distrubution parameters
 x <- rnorm(n = 1000, mean = 10, sd = 3)
 
-plot_loss(dist_estimtf2(x, xdist = "Normal", optimizer = "AdamOptimizer",
-                           hyperparameters = list(learning_rate = 0.1)))
+plot_loss(dist_estimtf2(x, xdist = "Normal",
+                        optimizer = "AdamOptimizer",
+                        initparam = list(mean = 1.0, sd = 1.0),
+                        hyperparameters = list(learning_rate = 0.1)))
 
 }
 \author{
