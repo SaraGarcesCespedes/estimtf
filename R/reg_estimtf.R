@@ -5,7 +5,8 @@
 #' @author Sara Garces Cespedes
 #'
 #' @param ydist an object of class "formula" that specifies the distribution of the response variable.
-#' The available distributions are: The available distributions are: \code{Normal}, \code{Poisson}, \code{Binomial}, \code{Weibull}, \code{Exponential}, \code{LogNormal}, \code{Beta} and \code{Gamma}.
+#' The available distributions are: \code{Normal}, \code{Poisson}, \code{Binomial}, \code{Weibull}, \code{Exponential},
+#' \code{LogNormal}, \code{Beta} and \code{Gamma}.
 #' @param formulas a list containing objects of class "formula". Each element of the list represents the
 #' linear predictor for each of the parameters of the regression model. The linear predictor is specified with
 #' the name of the parameter followed by \code{.fo} and it must contain an \code{~} and the terms on the right side
