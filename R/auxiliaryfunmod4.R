@@ -2,7 +2,7 @@
 # Estimation of distribution parameters (disable eager execution) -------
 #------------------------------------------------------------------------
 
-disableagerestim <- function(x, fdp, arguments, fixparam, initparam, opt, hyperparameters, maxiter, tolerance, np, optimizer) {
+disableagerestim <- function(x, fdp, arguments, fixparam, initparam, opt, hyperparameters, maxiter, tolerance, np, optimizer, link_function) {
 
         # Disable eager execution
         tensorflow::tf$compat$v1$disable_eager_execution()
@@ -23,9 +23,15 @@ disableagerestim <- function(x, fdp, arguments, fixparam, initparam, opt, hyperp
 
         names(var_list) <- names(initparam)
 
+        # link function
+        param_link <- param_final <- vector(mode = "list", length = np)
+        param_link <- lapply(1:np, FUN = function(i) param_link[[i]] <- link(link_function, var_list[[i]], names(var_list)[i]))
+
+        param_final <- lapply(1:np, FUN = function(i) param_final[[i]] <- assign(names(var_list)[i], param_link[[i]], envir = .GlobalEnv))
+        names(param_final) <- names(var_list)
 
         # Create a list with all parameters, fixed and not fixed
-        vartotal <- append(fixparam, var_list)
+        vartotal <- append(fixparam, param_final)
 
         # Create vectors to store parameters, gradientes and loss values of each iteration
         loss <- new_list <- parameters <- gradients <- itergrads <- objvariables <- vector(mode = "list")
@@ -35,7 +41,7 @@ disableagerestim <- function(x, fdp, arguments, fixparam, initparam, opt, hyperp
 
         n <- length(x)
 
-        # Define loss function depending on the distribution
+        # Define loss function depending on the fdp
         len_loss <- length(deparse(body(fdp))) - 1
         if (deparse(body(fdp))[1] == "{" & deparse(body(fdp))[len_loss + 1] == "}") {
                 loss_fn <- deparse(body(fdp))[-1]
@@ -55,11 +61,13 @@ disableagerestim <- function(x, fdp, arguments, fixparam, initparam, opt, hyperp
         loss_fn_final <- stringr::str_replace_all(loss_fn_final, "exp", "tensorflow::tf$math$exp")
         loss_fn_final <- stringr::str_replace_all(loss_fn_final, "lgamma", "tensorflow::tf$math$lgamma")
 
-        if (stringr::str_detect(loss_fn_final, "gamma\\(([^)]+)\\)")) {
-                param_name <- stringr::str_extract_all(loss_fn_final, "gamma\\(([^)]+)\\)")
-                param_name <- stringr::str_remove_all(param_name, "^\\bgamma\\b|\\(|\\)")
-                loss_fn_final <- stringr::str_replace_all(loss_fn_final, "gamma\\(([^)]+)\\)", paste0("tensorflow::tf$math$exp(tensorflow::tf$math$lgamma(", param_name, "))"))
+        if (!stringr::str_detect(loss_fn_final, "lgamma")) {
+                if (stringr::str_detect(loss_fn_final, "gamma\\(([^)]+)\\)")) {
+                        param_name <- stringr::str_extract_all(loss_fn_final, "gamma\\(([^)]+)\\)")
+                        param_name <- stringr::str_remove_all(param_name, "^\\bgamma\\b|\\(|\\)")
+                        loss_fn_final <- stringr::str_replace_all(loss_fn_final, "gamma\\(([^)]+)\\)", paste0("tensorflow::tf$math$exp(tensorflow::tf$math$lgamma(", param_name, "))"))
 
+                }
         }
 
         for (i in 1:length(names_arg)) {
@@ -201,6 +209,33 @@ lossfun <- function(dist, vartotal, X) {
         }
 
         return(loss)
+}
+
+#------------------------------------------------------------------------
+# Link function ---------------------------------------------------------
+#------------------------------------------------------------------------
+link <- function(link_function, var, parameter) {
+
+        if (is.null(link_function)) {
+
+                var <- var
+
+        } else if (!is.null(link_function)) {
+                if (parameter %in% names(link_function)) {
+                        if (link_function[[parameter]] == "log") {
+                                var <- tensorflow::tf$exp(var)
+                        }else if (link_function[[parameter]] == "logit") {
+                                var <- tensorflow::tf$exp(var) / (1 + tensorflow::tf$exp(var))
+                        }else if (link_function[[parameter]] == "logit") {
+                                var <- 1 / var
+                        }else if (link_function[[parameter]] == "identity") {
+                                var <- var
+                        }
+                } else {
+                        var <- var
+                }
+        }
+        return(var)
 }
 
 
