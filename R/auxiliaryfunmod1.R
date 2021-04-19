@@ -152,7 +152,7 @@ disableagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, 
         outputs <- list(n = n, type = "MLEdistf", parnames = names(initparam),
                         estimates = tail(results.table[, 2:(np + 1)], 1),
                         convergence = convergence)
-        result <- list(results = results.table, vcov = diagvarcov, standarderror = stderror,
+        result <- list(results = results.table, vcov = mhess, standarderror = stderror,
                        outputs = outputs)
         return(result)
 }

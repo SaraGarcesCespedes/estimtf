@@ -253,7 +253,7 @@ disableagerregpdf <- function(data, fdp, design_matrix, fixparam, initparam, arg
                         type = "MLEreg_fdp", np = np, names = namesparamvector,
                         estimates = tail(results.table[, 2:(totalbetas + 1)], 1),
                         convergence = convergence, names_regparam = names(design_matrix)[1:np])
-        result <- list(results = results.table, vcov = diagvarcov, standarderror = stderror,
+        result <- list(results = results.table, vcov = mhess, standarderror = stderror,
                        outputs = outputs)
         return(result)
 

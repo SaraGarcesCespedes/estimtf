@@ -181,7 +181,7 @@ disableagerestim <- function(x, fdp, arguments, fixparam, initparam, opt, hyperp
         outputs <- list(n = n, type = "MLEdistf_fdp", parnames = names(initparam),
                         estimates = tail(results.table[, 2:(np + 1)], 1),
                         convergence = convergence)
-        result <- list(results = results.table, vcov = diagvarcov, standarderror = stderror,
+        result <- list(results = results.table, vcov = mhess, standarderror = stderror,
                        outputs = outputs)
         return(result)
 }
