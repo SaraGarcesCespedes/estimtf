@@ -2,7 +2,7 @@
 #'
 #' @description Function to produce result summaries of the estimates of parameters from statistical
 #' distributions using \code{\link{dist_estimtf2}} or parameters from regression models using
-#' \code{\link{reg_estimtf}}.
+#' \code{\link{mleregtf}}.
 #'
 #' @author Sara Garces Cespedes
 #'
@@ -137,7 +137,7 @@ summary.MLEtf <- function(object, ...) {
 #'
 #' @description Function to display the estimates of parameters from statistical
 #' distributions using \code{\link{dist_estimtf2}} or parameters from regression models using
-#' \code{\link{reg_estimtf}}.
+#' \code{\link{mleregtf}}.
 #'
 #' @author Sara Garces Cespedes
 #'
@@ -253,7 +253,7 @@ print.MLEtf <- function(x, ...) {
 #' @title plot_loss function
 #'
 #' @description Function to display a graph that contains the loss value in each iteration of
-#' the estimation process using \code{\link{dist_estimtf2}} function or using \code{\link{reg_estimtf}} function.
+#' the estimation process using \code{\link{dist_estimtf2}} function or using \code{\link{mleregtf}} function.
 #'
 #' @author Sara Garces Cespedes
 #'
