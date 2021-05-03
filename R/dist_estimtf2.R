@@ -20,6 +20,7 @@
 #' @param hyperparameters a list with the hyperparameters values of the selected TensorFlow optimizer. If the hyperparameters are not specified, their default values
 #' will be used in the oprimization process (See URL for details of hyperparameters.)
 #' @param maxiter a positive integer indicating the maximum number of iterations for the optimization algorithm.
+#' @param tolerance
 #'
 #' @return This function returns the estimates, standard errors, Z-score and p-values of significance tests of the parameters from the distribution of interest as well as
 #' some information of the optimization process like the number of iterations needed for convergence.
@@ -71,7 +72,7 @@
 #'
 #' @export
 dist_estimtf2 <- function(x, xdist = "Normal", fixparam = NULL, initparam, link_function = NULL, optimizer = "AdamOptimizer", hyperparameters = NULL,
-                         maxiter = 10000) {
+                         maxiter = 10000, tolerance = .Machine$double.eps) {
 
         call <- match.call()
 
@@ -297,7 +298,7 @@ dist_estimtf2 <- function(x, xdist = "Normal", fixparam = NULL, initparam, link_
 
 
         # Value for tolerance
-        tolerance <- list(parameters = .Machine$double.eps, loss = .Machine$double.eps, gradients = .Machine$double.eps)
+        tolerance <- list(parameters = tolerance, loss = tolerance, gradients = tolerance)
 
 
         # Define the TF optimizer depending on the user selection
