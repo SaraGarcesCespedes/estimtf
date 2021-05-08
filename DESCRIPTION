@@ -2,7 +2,18 @@ Package: estimtf
 Type: Package
 Title: Estimation of Distributional and Regression Parameters using TensorFlow
 Version: 0.1.0
-Author: Sara Garces Cespedes <sgarcesc@unal.edu.co>
+Authors@R: c(
+      person(given = "Sara", 
+             family = "Garces", 
+             email = "sgarcesc@unal.edu.co", 
+             role = c("aut", "cre"),
+             comment = c(ORCID = "0000-0002-1092-0703")),
+      person(given = "Freddy", 
+             family = "Hernandez", 
+             email = "fhernanb@unal.edu.co", 
+             role = c("ctb"), 
+             comment = c(ORCID = "0000-0001-7459-3329"))
+      )
 Maintainer: Sara Garces Cespedes <sgarcesc@unal.edu.co>
 Description: This package provides functions to find the Maximum Likelihood estimates 
     of parameters from parametric distributions and linear regression models using 
