@@ -9,36 +9,36 @@ dist_estimtf2(
   xdist = "Normal",
   fixparam = NULL,
   initparam,
-  link_function = NULL,
   optimizer = "AdamOptimizer",
   hyperparameters = NULL,
-  maxiter = 10000
+  maxiter = 10000,
+  tolerance = .Machine$double.eps
 )
 }
 \arguments{
 \item{x}{a vector containing the data to be fitted.}
 
-\item{xdist}{a character indicating the name of the distribution of interest or the probability density function (fdp) of the distribution. The default value is \code{'Normal'}.
+\item{xdist}{a character indicating the name of the distribution of interest. The default value is \code{'Normal'}.
 The available distributions are: \code{Normal}, \code{Poisson}, \code{Binomial}, \code{Weibull}, \code{Exponential}, \code{LogNormal}, \code{Beta} and \code{Gamma}.
-If you want to estimate parameters from a distribution not included in the package, you must provide the
-name of an \code{R} function that contains its probability mass/density function.}
+If you want to estimate parameters from a distribution different to the ones mentioned above, you must provide the
+name of an object of class function that contains its probability mass/density function.}
 
 \item{fixparam}{a list of the fixed parameters of the distribution of interest. The list must contain the parameters values and names. If you want to work with a distribution
 different to the ones available in the package, the values for the fixed parameters must be included in the probability mass/density function.}
 
 \item{initparam}{a list with initial values of the parameters to be estimated. The list must contain the parameters values and names.}
 
-\item{link_function}{a list with names of parameters to be linked and the corresponding link function name. The available link functions are:
-\code{log}, \code{logit}, \code{inverse} and \code{identity}.}
-
 \item{optimizer}{a character indicating the name of the TensorFlow optimizer to be used in the estimation process The default value is \code{'AdamOptimizer'}. The available optimizers are:
 \code{"AdadeltaOptimizer"}, \code{"AdagradDAOptimizer"}, \code{"AdagradOptimizer"}, \code{"AdamOptimizer"}, \code{"GradientDescentOptimizer"},
 \code{"MomentumOptimizer"} and \code{"RMSPropOptimizer"}.}
 
 \item{hyperparameters}{a list with the hyperparameters values of the selected TensorFlow optimizer. If the hyperparameters are not specified, their default values
-will be used in the oprimization process (See URL for details of hyperparameters.)}
+will be used in the oprimization process (For more details of the hyperparameters go to this URL: FALTA URL.)}
 
 \item{maxiter}{a positive integer indicating the maximum number of iterations for the optimization algorithm.}
+
+\item{tolerance}{a small positive number. When the difference between the loss value or the parameters values from one iteration to another is lower
+than this value, the optimization process stops.}
 }
 \value{
 This function returns the estimates, standard errors, Z-score and p-values of significance tests of the parameters from the distribution of interest as well as
@@ -58,26 +58,37 @@ The \code{summary, print} functions can be used with a \code{dist_estimtf2} obje
 \examples{
 #-------------------------------------------------------------
 # Estimation of both normal distrubution parameters
+
+# Vector with the data to be fitted
 x <- rnorm(n = 1000, mean = 10, sd = 3)
 
+# Use dist_estimtf2 function
 estimation_1 <- dist_estimtf2(x, xdist = "Normal",
                               optimizer = "AdamOptimizer",
                               initparam = list(mean = 1.0, sd = 1.0),
                               hyperparameters = list(learning_rate = 0.1))
 
+# Get the summary of estimates
 summary(estimation_1)
 
 #-------------------------------------------------------------
 # Estimation of parameters from Instantaneous Failures distribution
+
+# Create an R function that represents the probability density function
 pdf <- function(X, lambda) { (1 / ((lambda ^ 2) * (lambda - 1))) *
                              (lambda^2 + X - 2*lambda) * exp(-X/lambda) }
+
+# Vector with the data to be fitted
 x <-  c(3.4, 0.0, 0.0, 15.8, 232.8, 8.8, 123.2, 47, 154, 103.2, 89.8,  12.2)
 
+# Use dist_estimtf2 function
 estimation_2 <- dist_estimtf2(x = x, xdist = pdf,
                               initparam = list(lambda = rnorm(1, 5, 1)),
                               optimizer = "AdamOptimizer",
                               hyperparameters = list(learning_rate = 0.1),
                               maxiter = 10000)
+
+# Get the summary of estimates
 summary(estimation_2)
 
 }
