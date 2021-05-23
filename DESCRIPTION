@@ -30,8 +30,7 @@ Imports:
     stringr,
     tfprobability,
     purrr,
-    stats,
-    fastDummies
+    stats
 Suggests: 
     knitr,
     rmarkdown
