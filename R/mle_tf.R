@@ -1,4 +1,4 @@
-#' @title dist_estimtf2 function
+#' @title mle_tf function
 #'
 #' @description Function to compute the Maximum Likelihood Estimators of distributional parameters using TensorFlow.
 #'
@@ -24,11 +24,11 @@
 #' @return This function returns the estimates, standard errors, Z-score and p-values of significance tests of the parameters from the distribution of interest as well as
 #' some information of the optimization process like the number of iterations needed for convergence.
 #'
-#' @details \code{dist_estimtf2} computes the log-likelihood function of the distribution specified in
+#' @details \code{mle_tf} computes the log-likelihood function of the distribution specified in
 #' \code{xdist} and finds the values of the parameters that maximizes this function using the TensorFlow optimizer
 #' specified in \code{optimizer}.
 #'
-#' @note The \code{summary, print} functions can be used with a \code{dist_estimtf2} object.
+#' @note The \code{summary, print} functions can be used with a \code{mle_tf} object.
 #'
 #' @importFrom stringr str_split
 #' @importFrom dplyr %>%
@@ -51,8 +51,8 @@
 #' # Vector with the data to be fitted
 #' x <- rnorm(n = 1000, mean = 10, sd = 3)
 #'
-#' # Use dist_estimtf2 function
-#' estimation_1 <- dist_estimtf2(x, xdist = "Normal",
+#' # Use mle_tf function
+#' estimation_1 <- mle_tf(x, xdist = "Normal",
 #'                               optimizer = "AdamOptimizer",
 #'                               initparam = list(mean = 1.0, sd = 1.0),
 #'                               hyperparameters = list(learning_rate = 0.1))
@@ -70,8 +70,8 @@
 #' # Vector with the data to be fitted
 #' x <-  c(3.4, 0.0, 0.0, 15.8, 232.8, 8.8, 123.2, 47, 154, 103.2, 89.8,  12.2)
 #'
-#' # Use dist_estimtf2 function
-#' estimation_2 <- dist_estimtf2(x = x, xdist = pdf,
+#' # Use mle_tf function
+#' estimation_2 <- mle_tf(x = x, xdist = pdf,
 #'                               initparam = list(lambda = rnorm(1, 5, 1)),
 #'                               optimizer = "AdamOptimizer",
 #'                               hyperparameters = list(learning_rate = 0.1),
@@ -81,7 +81,7 @@
 #' summary(estimation_2)
 #'
 #' @export
-dist_estimtf2 <- function(x, xdist = "Normal", fixparam = NULL, initparam, optimizer = "AdamOptimizer", hyperparameters = NULL,
+mle_tf <- function(x, xdist = "Normal", fixparam = NULL, initparam, optimizer = "AdamOptimizer", hyperparameters = NULL,
                          maxiter = 10000, tolerance = .Machine$double.eps) {
 
         call <- match.call()

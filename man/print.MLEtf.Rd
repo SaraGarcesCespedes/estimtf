@@ -13,8 +13,8 @@
 }
 \description{
 Function to display the estimates of parameters from statistical
-distributions using \code{\link{dist_estimtf2}} or parameters from regression models using
-\code{\link{mleregtf}}.
+distributions using \code{\link{mle_tf}} or parameters from regression models using
+\code{\link{mlereg_tf}}.
 }
 \details{
 \code{print.MLEtf} function displays estimates of parameters from statistical distributions
@@ -25,7 +25,7 @@ and regression models.
 # Estimation of both normal distrubution parameters
 x <- rnorm(n = 1000, mean = 10, sd = 3)
 
-print(dist_estimtf2(x, xdist = "Normal",
+print(mle_tf(x, xdist = "Normal",
                     initparam = list(mean = 1.0, sd = 1.0),
                     optimizer = "AdamOptimizer",
                     hyperparameters = list(learning_rate = 0.1)))

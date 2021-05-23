@@ -1,4 +1,4 @@
-#' @title mleregtf function
+#' @title mlereg_tf function
 #'
 #' @description Function to compute the Maximum Likelihood Estimators of regression parameters using TensorFlow.
 #'
@@ -33,11 +33,11 @@
 #' of the regression model coefficients as well as some information of the optimization process like the number of
 #' iterations needed for convergence.
 #'
-#' @details \code{mleregtf} computes the log-likelihood function based on the distribution specified in
+#' @details \code{mlereg_tf} computes the log-likelihood function based on the distribution specified in
 #' \code{ydist} and linear predictors specified in \code{formulas}. Then, it finds the values of the regression coefficients
 #' that maximizes this function using the TensorFlow opimizer specified in \code{optimizer}.
 #'
-#' @note The \code{summary, print} functions can be used with a \code{mleregtf} object.
+#' @note The \code{summary, print} functions can be used with a \code{mlereg_tf} object.
 #'
 #' @importFrom stringr str_split
 #' @importFrom dplyr %>%
@@ -66,8 +66,8 @@
 #' # Define the linear predictors for each parameter
 #' formulas <- list(lambda = ~ outcome + treatment)
 #'
-#' # Use the mleregtf function
-#' estimation_1 <- mleregtf(ydist =  counts ~ Poisson,
+#' # Use the mlereg_tf function
+#' estimation_1 <- mlereg_tf(ydist =  counts ~ Poisson,
 #'                             formulas = formulas,
 #'                             data = data,
 #'                             initparam = list(lambda = 1.0),
@@ -90,8 +90,8 @@
 #' formulas <- list(mean = ~ x)
 #' initparam <- list(mean = list(Intercept = 1.0, x = 0.0))
 #'
-#' # Use the mleregtf function
-#' estimation_2 <- mleregtf(ydist = y ~ Normal,
+#' # Use the mlereg_tf function
+#' estimation_2 <- mlereg_tf(ydist = y ~ Normal,
 #'                             formulas = formulas,
 #'                             data = data,
 #'                             fixparam = list(sd = 3),
@@ -113,8 +113,8 @@
 #' y <-  c(3.4, 0.0, 0.0, 15.8, 232.8, 8.8, 123.2, 47, 154, 103.2, 89.8,  12.2)
 #' data <- data.frame(y)
 #'
-#' # Use the mleregtf function
-#' estimation_3 <- mleregtf(ydist = y ~ pdf,
+#' # Use the mlereg_tf function
+#' estimation_3 <- mlereg_tf(ydist = y ~ pdf,
 #'                              formulas = list(lambda = ~1),
 #'                              data = data,
 #'                              initparam = list(lambda = rnorm(1, 5, 1)),
@@ -128,7 +128,7 @@
 #'
 #'
 #' @export
-mleregtf <- function(ydist = y ~ Normal, formulas, data, available_distribution = TRUE, fixparam = NULL, initparam = NULL, link_function = NULL,
+mlereg_tf <- function(ydist = y ~ Normal, formulas, data, available_distribution = TRUE, fixparam = NULL, initparam = NULL, link_function = NULL,
                       optimizer = "AdamOptimizer", hyperparameters = NULL, maxiter = 10000, tolerance = .Machine$double.eps) {
 
 
