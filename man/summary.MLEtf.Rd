@@ -17,7 +17,7 @@ The output from
 \description{
 Function to produce result summaries of the estimates of parameters from statistical
 distributions using \code{\link{dist_estimtf2}} or parameters from regression models using
-\code{\link{reg_estimtf}}.
+\code{\link{mleregtf}}.
 }
 \details{
 \code{summary.MLEtf} function displays estimates and standard errors of parameters from statistical
