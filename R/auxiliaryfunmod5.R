@@ -1,7 +1,7 @@
 #------------------------------------------------------------------------
 # Estimation of regression parameters (disable eager execution) ---------
 #------------------------------------------------------------------------
-disableagerregpdf2 <- function(data, fdp, design_matrix, fixparam, initparam, argumdist, opt, hyperparameters, maxiter, tolerance, np, link_function, ydist, distnotf, optimizer, arguments, response_var) {
+disableagerregpdf <- function(data, fdp, design_matrix, fixparam, initparam, argumdist, opt, hyperparameters, maxiter, tolerance, np, link_function, ydist, distnotf, optimizer, arguments, response_var) {
 
         # Disable eager execution
         tensorflow::tf$compat$v1$disable_eager_execution()
