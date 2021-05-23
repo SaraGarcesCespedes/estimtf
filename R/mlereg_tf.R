@@ -1,19 +1,19 @@
 #' @title mleregtf function
 #'
-#' @description Function to compute the Maximum Likelihood Estimators of regression parameters with linear predictors using TensorFlow.
+#' @description Function to compute the Maximum Likelihood Estimators of regression parameters using TensorFlow.
 #'
 #' @author Sara Garces Cespedes
 #'
 #' @param ydist an object of class "formula" that specifies the distribution of the response variable.
 #' The available distributions are: \code{Normal}, \code{Poisson}, \code{Binomial}, \code{Weibull}, \code{Exponential}, \code{LogNormal},
-#' \code{Beta} and \code{Gamma}. If you want to estimate parameters from a distribution not included in the package, you must provide the
-#' name of an \code{R} function that contains its probability mass/density function.
+#' \code{Beta} and \code{Gamma}. If you want to estimate parameters from a distribution different to the ones mentioned above, you must provide the
+#' name of an object of class function that contains its probability mass/density function.
 #' @param formulas a list containing objects of class "formula". Each element of the list represents the
 #' linear predictor for each of the parameters of the regression model. The linear predictor is specified with
-#' the name of the parameter followed by \code{.fo} and it must contain an \code{~}. The terms on the right side
+#' the name of the parameter and it must contain an \code{~}. The terms on the right side
 #' separated by \code{+}.
 #' @param data a data frame containing the response variable and the covariates.
-#' @param available_distribution logical. If TRUE, the distribution of the response variable is one of the available distributions in the package.
+#' @param available_distribution logical. If TRUE, the distribution of the response variable is one of the distributions mentioned above in the package.
 #' @param fixparam a list containing the fixed parameters of the model. The parameters values and names must be specified in the list.
 #' @param initparam a list with initial values of the regression coefficients to be estimated. The list must contain the regression coefficients values and names.
 #' If you want to use the same initial values for all regression coefficients associated with a specific parameter, you can specify the
@@ -24,9 +24,10 @@
 #' \code{"AdadeltaOptimizer"}, \code{"AdagradDAOptimizer"}, \code{"AdagradOptimizer"}, \code{"AdamOptimizer"}, \code{"GradientDescentOptimizer"},
 #' \code{"MomentumOptimizer"} and \code{"RMSPropOptimizer"}.
 #' @param hyperparameters a list with the hyperparameters values of the selected TensorFlow optimizer. If the hyperparameters are not specified, their default values
-#' will be used in the oprimization process (See URL for details of hyperparameters.)
+#' will be used in the oprimization process (For more details of the hyperparameters go to this URL: FALTA URL.)
 #' @param maxiter a positive integer indicating the maximum number of iterations for the optimization algorithm. The default value is \code{10000}.
-#' @param tolerance
+#' @param tolerance a small positive number. When the difference between the loss value or the parameters values from one iteration to another is lower
+#' than this value, the optimization process stops.
 #'
 #' @return This function returns the estimates, standard errors, Z-score and p-values of significance tests
 #' of the regression model coefficients as well as some information of the optimization process like the number of
@@ -55,12 +56,17 @@
 #' @examples
 #' #-------------------------------------------------------------
 #' # Estimation of parameters of a Poisson regression model
+#'
+#' # Data frame with response variable and covariates
 #' counts <- c(18,17,15,20,10,20,25,13,12)
 #' outcome <- gl(3,1,9)
 #' treatment <- gl(3,3)
 #' data <- data.frame(treatment, outcome, counts)
 #'
-#' formulas <- list(lambda.fo = ~ outcome + treatment)
+#' # Define the linear predictors for each parameter
+#' formulas <- list(lambda = ~ outcome + treatment)
+#'
+#' # Use the mleregtf function
 #' estimation_1 <- mleregtf(ydist =  counts ~ Poisson,
 #'                             formulas = formulas,
 #'                             data = data,
@@ -68,17 +74,23 @@
 #'                             optimizer = "AdamOptimizer",
 #'                             link_function = list(lambda = "log"),
 #'                             hyperparameters = list(learning_rate = 0.1))
+#'
+#' # Get the summary of estimates
 #' summary(estimation_1)
 #'
 #' #-------------------------------------------------------------
 #' # Estimation of parameters of a linear regression model with one fixed parameter
+#'
+#' # Data frame with response variable and covariates
 #' x <- runif(n = 1000, -3, 3)
 #' y <- rnorm(n = 1000, mean = 5 - 2 * x, sd = 3)
 #' data <- data.frame(y = y, x = x)
 #'
-#' formulas <- list(mean.fo = ~ x)
+#' # Define the linear predictors for each parameter and the initial values
+#' formulas <- list(mean = ~ x)
 #' initparam <- list(mean = list(Intercept = 1.0, x = 0.0))
 #'
+#' # Use the mleregtf function
 #' estimation_2 <- mleregtf(ydist = y ~ Normal,
 #'                             formulas = formulas,
 #'                             data = data,
@@ -87,17 +99,23 @@
 #'                             optimizer = "AdamOptimizer",
 #'                             hyperparameters = list(learning_rate = 0.1))
 #'
+#' # Get the summary of estimates
 #' summary(estimation_2)
 #'
 #' #-------------------------------------------------------------
 #' # Estimation of parameters from Instantaneous Failures distribution
+#'
+#' # Create an R function that represents the probability density function
 #' pdf <- function(y, lambda) { (1 / ((lambda ^ 2) * (lambda - 1))) *
 #'                              (lambda^2 + y - 2*lambda) * exp(-y/lambda) }
+#'
+#' # Data frame with response variable and covariates
 #' y <-  c(3.4, 0.0, 0.0, 15.8, 232.8, 8.8, 123.2, 47, 154, 103.2, 89.8,  12.2)
 #' data <- data.frame(y)
 #'
+#' # Use the mleregtf function
 #' estimation_3 <- mleregtf(ydist = y ~ pdf,
-#'                              formulas = list(lambda.fo = ~1),
+#'                              formulas = list(lambda = ~1),
 #'                              data = data,
 #'                              initparam = list(lambda = rnorm(1, 5, 1)),
 #'                              available_distribution = FALSE,
@@ -105,12 +123,13 @@
 #'                              hyperparameters = list(learning_rate = 0.1),
 #'                              maxiter = 10000)
 #'
+#' # Get the summary of estimates
 #' summary(estimation_3)
 #'
 #'
 #' @export
 mleregtf <- function(ydist = y ~ Normal, formulas, data, available_distribution = TRUE, fixparam = NULL, initparam = NULL, link_function = NULL,
-                        optimizer = "AdamOptimizer", hyperparameters = NULL, maxiter = 10000, tolerance = .Machine$double.eps) {
+                      optimizer = "AdamOptimizer", hyperparameters = NULL, maxiter = 10000, tolerance = .Machine$double.eps) {
 
 
         call <- match.call()
@@ -122,12 +141,29 @@ mleregtf <- function(ydist = y ~ Normal, formulas, data, available_distribution 
                 stop(paste0("Argument 'formulas' is missing, with no default"))
         } else if (missing(data)) {
                 stop(paste0("Argument 'data' is missing, with no default"))
+        } else if (is.null(data)) {
+                stop(paste0("Please provide a data frame with the response variable and the covariates"))
         }
 
         # Formulas
         if (is.null(names(formulas))) stop(paste0("You must specify parameters ",
-                                                  "formulas with the correct ",
-                                                  "notation '.fo'"))
+                                                  "names in the argument formulas"))
+
+        # Errors in formulas
+        if (!any(lapply(formulas, class) == "formula")){
+                stop("All elements in argument 'formulas' must be of class formula")
+        }
+
+        # Number of formulas (one formula for each parameter)
+        n_formulas <- length(formulas)
+
+
+        # Response variable
+        if (!inherits(ydist, "formula")) stop(paste0("Expression in 'y_dist' ",
+                                                     "must be of class 'formula"))
+        if (length(ydist) != 3) stop(paste0("Expression in 'y_dist' ",
+                                            "must be a formula of the form ",
+                                            "'response ~ distribution'"))
 
 
         # Error in character Ydist
@@ -145,9 +181,9 @@ mleregtf <- function(ydist = y ~ Normal, formulas, data, available_distribution 
 
                 # change names of parameters to match TF parameters
                 names_param <- names(formulas)
-                names_param_final <- stringr::str_remove_all(names_param, ".fo")
-                names_new <- vector(mode = "numeric", length = length(names_param_final))
-                names_new <- sapply(1:length(names_param), FUN = function(i) names_new[i] <- paste0(parameter_name_tf(names_param_final[i], all.vars(ydist)[2]), ".fo"))
+                #names_param_final <- stringr::str_remove_all(names_param, ".fo")
+                names_new <- vector(mode = "numeric", length = length(names_param))
+                names_new <- sapply(1:length(names_param), FUN = function(i) names_new[i] <- paste0(parameter_name_tf(names_param[i], all.vars(ydist)[2])))
                 names(formulas) <- names_new
 
 
@@ -185,7 +221,7 @@ mleregtf <- function(ydist = y ~ Normal, formulas, data, available_distribution 
                 if (!is.null(data)) {
                         if (length(na.omit(match(colnames(data), all.vars(ydist)[1]))) < 1) {
                                 stop(paste0("Data for response variable ", all.vars(ydist)[1], " is missing. \n",
-                                            "Please include it in the dataframe provided in the 'data' argument."))
+                                            "Please include it in the data frame provided in the 'data' argument."))
                         }
                 }
 
@@ -220,7 +256,7 @@ mleregtf <- function(ydist = y ~ Normal, formulas, data, available_distribution 
                         np <- sum(arg)
                         argumdist <- argumdist[arg]
                 }
-
+                print(argumdist)
                 # Errors in list initparam
                 if (!is.null(initparam)) {
 
@@ -269,39 +305,51 @@ mleregtf <- function(ydist = y ~ Normal, formulas, data, available_distribution 
                 # List of arguments FDP
                 function_loss <- all.vars(ydist)[2]
 
+                # respone variable
+                response_var <- all.vars(ydist)[1]
+
                 if (function_loss %in% ls(envir = .GlobalEnv)) {
                         fdp <- get(function_loss, envir = .GlobalEnv)
                 } else {
-                        stop("Function '", paste0(function_loss), "' not found in Global Environment.")
+                        stop(paste0("Function '", function_loss, "' not found in Global Environment."))
                 }
 
                 arguments <- formals(fdp)
                 arguments <- as.list(arguments)
 
-                # eliminar x de lista vartotal
-                arguments <- as.list(arguments)
-                if ("Y" %in% names(arguments)) {
-                        response_var <- "Y"
-                        arguments$Y <- NULL
-                } else if ("y" %in% names(arguments)) {
-                        response_var <- "y"
-                        arguments$y <- NULL
-
+                # eliminar variable respuesta de lista vartotal
+                if (response_var %in% names(arguments)) {
+                        arguments[[response_var]] <- NULL
                 } else {
                         message('Caught an error!')
-                        stop(paste0('Argument "y" is missing in the probability mass/density function.'))
+                        stop(paste0("Argument '", response_var, "' is missing in the probability mass/density function."))
                 }
 
                 # remove fixed parameters
-                arguments_fixed <- vector(mode = "list", length = length(arguments))
-                arguments_fixed <- lapply(1:length(arguments), FUN = function(i) arguments_fixed[[i]] <- ifelse(is.numeric(arguments[[i]]), arguments[[i]], NA))
-                names(arguments_fixed) <- names(arguments)
-                fixparam <- arguments_fixed %>% purrr::discard(is.na)
+                # arguments_fixed <- vector(mode = "list", length = length(arguments))
+                # arguments_fixed <- lapply(1:length(arguments), FUN = function(i) arguments_fixed[[i]] <- ifelse(is.numeric(arguments[[i]]), arguments[[i]], NA))
+                # names(arguments_fixed) <- names(arguments)
+                # fixparam <- arguments_fixed %>% purrr::discard(is.na)
 
-                # Calculate number of parameters to be estimated
-                argumdist <- arguments_fixed %>% purrr::discard(is.numeric)
+                # # Calculate number of parameters to be estimated
+                # argumdist <- arguments_fixed %>% purrr::discard(is.numeric)
+                # np <- length(argumdist)
+
+
+                if (!is.null(fixparam)) {
+
+                        if (length(na.omit(match(names(arguments), names(fixparam)))) == 0) {
+                                stop(paste0("Names of fixed parameters do not match with the arguments of \n",
+                                            all.vars(ydist)[2], " distribution"))
+                        } else if (length(na.omit(match(names(fixparam), names(arguments)))) > 0) {
+                                fixed <- match(names(fixparam), names(arguments))
+                                argumdist <- arguments[-fixed]
+                        }
+                } else {
+                        argumdist <- arguments
+                }
+
                 np <- length(argumdist)
-
 
                 # Errors in list initparam
                 if (!is.null(initparam)) {
@@ -409,7 +457,7 @@ mleregtf <- function(ydist = y ~ Normal, formulas, data, available_distribution 
 
 
         # Create the design matrix
-        design_matrix <- model_matrix_MLreg(formulas, data, ydist, np, par_names)
+        design_matrix <- model_matrix_MLreg(formulas, data, ydist, np, par_names, n_formulas)
 
         # Estimation process starts
 
@@ -428,49 +476,36 @@ mleregtf <- function(ydist = y ~ Normal, formulas, data, available_distribution 
 
 
 #------------------------------------------------------------------------
-# Functions to create design matrix (EstimationTools package) -----------
+# Function to create design matrix --------------------------------------
 #------------------------------------------------------------------------
-matrixes <- function(j, formulas, model_frames){
-        do.call(what = "model.matrix",
-                args = list(object = as.formula(formulas[[j]]),
-                            data = model_frames[[j]]))
-}
+model_matrix_MLreg <- function(formulas, data, ydist, np, par_names, n_formulas){
 
-fos_bind <- function(formula, response){
-        paste(response, paste(formula, collapse = " "))
-}
+        # Error
+        if (n_formulas != np) stop(paste0("Distribution defined for response ",
+                                          "variable has ", np, " parameters to be estimated. ",
+                                          "Each parameter must have its own formula"))
 
+        # name and data for response variable
+        Y <- all.vars(ydist)[1]
 
-model_matrix_MLreg <- function(formulas, data, ydist, np, par_names){
-
-        # Errors in formulas
-        if (!any(lapply(formulas, class) == "formula")){
-                stop("All elements in argument 'formulas' must be of class formula")
-        }
-
-        # Number of formulas (one formula for each parameter)
-        nfos <- length(formulas)
-
-        if (nfos != np) stop(paste0("Distribution defined for response ",
-                                    "variable has ", np, " parameters to be estimated. ",
-                                    "Each parameter must have its own formula"))
-
-        # Response variable
-        if (!inherits(ydist, "formula")) stop(paste0("Expression in 'y_dist' ",
-                                                     "must be of class 'formula"))
-        if (length(ydist) != 3) stop(paste0("Expression in 'y_dist' ",
-                                            "must be a formula of the form ",
-                                            "'response ~ distribution'"))
-
-        Y <- all.vars(ydist)[1] #Surv_transform(y_dist = y_dist)
+        tryCatch(
+                expr = {
+                        response_data <- data[, Y]
+                },
+                error = function(e){
+                        #message('Caught an error!')
+                        #print(e)
+                        stop(paste0("Data for response variable '", Y, "' is missing in the provided dataframe."))
+                }
+        )
 
         # Extract the right side of formulas
-        formulas_corrector <- stringr::str_extract(as.character(formulas), "~.+")
-        formulas_tmp <- as.list(formulas_corrector)
-        names(formulas_tmp) <- par_names
+        formulas_right <- stringr::str_extract(as.character(formulas), "~.+")
+        formulas_final <- as.list(formulas_right)
+        names(formulas_final) <- par_names
 
         # check that all explanatory variables are included in data
-        split_form <- sapply(1:length(formulas_tmp), FUN = function(x) formulas_tmp[[x]] %>% stringr::str_remove("\\~"))
+        split_form <- sapply(1:length(formulas_final), FUN = function(x) formulas_final[[x]] %>% stringr::str_remove("\\~"))
         split_form <- sapply(1:length(split_form), FUN = function(x) split_form[[x]] %>% stringr::str_split("\\+"))
 
         dep_variables <- unlist(split_form)
@@ -481,33 +516,22 @@ model_matrix_MLreg <- function(formulas, data, ydist, np, par_names){
 
         if ((ncol(data) - 1) < length(dep_variables)) {
                 stop(paste0("Data for some explanatory variables is missing. Please include it\n",
-                            "in the dataframe provided in the 'data' argument."))
+                            "in the data frame provided in the 'data' argument."))
         }
 
-        # Variables
-        fos_mat_char <- lapply(formulas_tmp, fos_bind, response = Y)
-        fos_mat <- lapply(fos_mat_char, as.formula)
-        list_mfs <- lapply(fos_mat, model.frame, data = data)
+        # model frame for each parameter
+        formulas_modelframe <- lapply(X = 1:n_formulas, FUN = function(x) as.formula(paste(Y, paste(formulas_final[[x]], collapse = " "))))
+        names(formulas_modelframe) <- par_names
+        list_modelframe <- lapply(formulas_modelframe, model.frame, data = data)
 
-        if (is.null(data)){
-                data_reg <- as.data.frame(list_mfs)
-                var_names <- as.character(unlist(sapply(list_mfs, names)))
-                names(data_reg) <- var_names
-                data_reg <- as.data.frame(data_reg[,unique(var_names)])
-                names(data_reg) <- unique(var_names)
-                data <- data_reg
-        }
-        response <- model.frame(fos_mat[[1]], data = data)[, 1]
+        # model matrix for each ´parameter
+        design_matrix <- lapply(X = 1:n_formulas, FUN = function(x) model.matrix(formulas_modelframe[[x]], list_modelframe[[x]]))
 
-        # Formulas for 'model.frame'
-        mtrxs <- lapply(X = 1:nfos, FUN = matrixes, formulas = fos_mat,
-                        model_frames = list_mfs)
+        names(design_matrix) <- names(formulas_modelframe)
+        design_matrix$y <- response_data
+        design_matrix$data_reg <- data
 
-        names(mtrxs) <- names(fos_mat)
-        mtrxs$y <- response
-        mtrxs$data_reg <- data
-
-        return(mtrxs)
+        return(design_matrix)
 }
 
 #------------------------------------------------------------------------
