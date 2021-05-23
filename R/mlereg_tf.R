@@ -49,7 +49,6 @@
 #' @importFrom stats delete.response
 #' @importFrom stats printCoefmat
 #' @importFrom stats pnorm
-#' @importFrom fastDummies dummy_cols
 #' @import tensorflow
 #' @import tfprobability
 #'
