@@ -1,7 +1,7 @@
 #------------------------------------------------------------------------
 # Estimation of regression parameters (disable eager execution) ---------
 #------------------------------------------------------------------------
-disableagerregpdf <- function(data, fdp, design_matrix, fixparam, initparam, argumdist, opt, hyperparameters, maxiter, tolerance, np, link_function, ydist, distnotf, optimizer, arguments, response_var) {
+disableagerregpdf2 <- function(data, fdp, design_matrix, fixparam, initparam, argumdist, opt, hyperparameters, maxiter, tolerance, np, link_function, ydist, distnotf, optimizer, arguments, response_var) {
 
         # Disable eager execution
         tensorflow::tf$compat$v1$disable_eager_execution()
@@ -226,7 +226,6 @@ disableagerregpdf <- function(data, fdp, design_matrix, fixparam, initparam, arg
                 }
         }
 
-        # TODAVIA FALTAAAAA ARREGLAR ESTO
         # Compute Hessian matrix
         hesslist <- stderror <- vector(mode = "list", length = length(regparam))
         hesslist <- lapply(1:length(regparam), FUN = function(i) hesslist[[i]] <- tensorflow::tf$gradients(grads[[i]], new_list))
