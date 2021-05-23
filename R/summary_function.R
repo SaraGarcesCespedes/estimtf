@@ -1,8 +1,8 @@
 #' @title summary.MLEtf function
 #'
 #' @description Function to produce result summaries of the estimates of parameters from statistical
-#' distributions using \code{\link{dist_estimtf2}} or parameters from regression models using
-#' \code{\link{mleregtf}}.
+#' distributions using \code{\link{mle_tf}} or parameters from regression models using
+#' \code{\link{mlereg_tf}}.
 #'
 #' @author Sara Garces Cespedes
 #'
@@ -24,7 +24,7 @@
 #' # Estimation of both normal distrubution parameters
 #' x <- rnorm(n = 1000, mean = 10, sd = 3)
 #'
-#' summary(dist_estimtf2(x, xdist = "Normal",
+#' summary(mle_tf(x, xdist = "Normal",
 #'                       optimizer = "AdamOptimizer",
 #'                       initparam = list(mean = 1.0, sd = 1.0),
 #'                       hyperparameters = list(learning_rate = 0.1)))
@@ -136,8 +136,8 @@ summary.MLEtf <- function(object, ...) {
 #' @title print.MLEtf function
 #'
 #' @description Function to display the estimates of parameters from statistical
-#' distributions using \code{\link{dist_estimtf2}} or parameters from regression models using
-#' \code{\link{mleregtf}}.
+#' distributions using \code{\link{mle_tf}} or parameters from regression models using
+#' \code{\link{mlereg_tf}}.
 #'
 #' @author Sara Garces Cespedes
 #'
@@ -155,7 +155,7 @@ summary.MLEtf <- function(object, ...) {
 #' # Estimation of both normal distrubution parameters
 #' x <- rnorm(n = 1000, mean = 10, sd = 3)
 #'
-#' print(dist_estimtf2(x, xdist = "Normal",
+#' print(mle_tf(x, xdist = "Normal",
 #'                     initparam = list(mean = 1.0, sd = 1.0),
 #'                     optimizer = "AdamOptimizer",
 #'                     hyperparameters = list(learning_rate = 0.1)))
@@ -253,7 +253,7 @@ print.MLEtf <- function(x, ...) {
 #' @title plot_loss function
 #'
 #' @description Function to display a graph that contains the loss value in each iteration of
-#' the estimation process using \code{\link{dist_estimtf2}} function or using \code{\link{mleregtf}} function.
+#' the estimation process using \code{\link{mle_tf}} function or using \code{\link{mlereg_tf}} function.
 #'
 #' @author Sara Garces Cespedes
 #'
@@ -270,7 +270,7 @@ print.MLEtf <- function(x, ...) {
 #' # Estimation of both normal distrubution parameters
 #' x <- rnorm(n = 1000, mean = 10, sd = 3)
 #'
-#' plot_loss(dist_estimtf2(x, xdist = "Normal",
+#' plot_loss(mle_tf(x, xdist = "Normal",
 #'                         optimizer = "AdamOptimizer",
 #'                         initparam = list(mean = 1.0, sd = 1.0),
 #'                         hyperparameters = list(learning_rate = 0.1)))
