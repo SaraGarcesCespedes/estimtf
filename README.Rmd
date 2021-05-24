@@ -42,6 +42,7 @@ x <- rnorm(n = 1000, mean = 10, sd = 3)
 estimation <- mle_tf(x, 
                      xdist = "Normal", 
                      optimizer = "AdamOptimizer",
+                     initpara = list(mean = 0.5, sd = 0.5),
                      hyperparameters = list(learning_rate = 0.1))
 summary(estimation)
 ```
