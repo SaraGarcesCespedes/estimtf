@@ -256,7 +256,7 @@ mlereg_tf <- function(ydist = y ~ Normal, formulas, data, available_distribution
                         np <- sum(arg)
                         argumdist <- argumdist[arg]
                 }
-                print(argumdist)
+
                 # Errors in list initparam
                 if (!is.null(initparam)) {
 
