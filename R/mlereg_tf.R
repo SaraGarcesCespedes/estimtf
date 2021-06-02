@@ -24,7 +24,8 @@
 #' \code{"AdadeltaOptimizer"}, \code{"AdagradDAOptimizer"}, \code{"AdagradOptimizer"}, \code{"AdamOptimizer"}, \code{"GradientDescentOptimizer"},
 #' \code{"MomentumOptimizer"} and \code{"RMSPropOptimizer"}.
 #' @param hyperparameters a list with the hyperparameters values of the selected TensorFlow optimizer. If the hyperparameters are not specified, their default values
-#' will be used in the oprimization process (For more details of the hyperparameters go to this URL: https://www.tensorflow.org/api_docs/python/tf/compat/v1/train.)
+#' will be used in the oprimization process. For more details of the hyperparameters go to this URL:
+#' \href{https://www.tensorflow.org/api_docs/python/tf/compat/v1/train.}{https://www.tensorflow.org/api_docs/python/tf/compat/v1/train.}
 #' @param maxiter a positive integer indicating the maximum number of iterations for the optimization algorithm. The default value is \code{10000}.
 #' @param tolerance a small positive number. When the difference between the loss value or the parameters values from one iteration to another is lower
 #' than this value, the optimization process stops.
