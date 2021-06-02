@@ -312,7 +312,7 @@ link <- function(link_function, sum, parameter, ydist) {
                                 sum <- tensorflow::tf$exp(sum)
                         }else if (link_function[[parameter]] == "logit") {
                                 sum <- tensorflow::tf$exp(sum) / (1 + tensorflow::tf$exp(sum))
-                        }else if (link_function[[parameter]] == "logit") {
+                        }else if (link_function[[parameter]] == "inverse") {
                                 sum <- 1 / sum
                         }else if (link_function[[parameter]] == "identity") {
                                 sum <- sum
