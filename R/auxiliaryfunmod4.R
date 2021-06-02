@@ -57,9 +57,13 @@ disableagerestim <- function(x, fdp, arguments, fixparam, initparam, opt, hyperp
         if (!stringr::str_detect(loss_fn_final, "lgamma")) {
                 if (stringr::str_detect(loss_fn_final, "gamma\\(([^)]+)\\)")) {
                         param_name <- stringr::str_extract_all(loss_fn_final, "gamma\\(([^)]+)\\)")
+                        param_name <- unlist(param_name)
                         param_name <- stringr::str_remove_all(param_name, "^\\bgamma\\b|\\(|\\)")
-                        loss_fn_final <- stringr::str_replace_all(loss_fn_final, "gamma\\(([^)]+)\\)", paste0("tensorflow::tf$math$exp(tensorflow::tf$math$lgamma(", param_name, "))"))
-
+                        param_name <- sub('*', '\\*', param_name, fixed = TRUE)
+                        param_name <- sub('+', '\\+', param_name, fixed = TRUE)
+                        for (i in 1:length(param_name)){
+                                loss_fn_final <- stringr::str_replace_all(loss_fn_final, paste0("gamma\\(", param_name[i], "\\)"), paste0("tensorflow::tf$math$exp(tensorflow::tf$math$lgamma(", param_name[i], "))"))
+                        }
                 }
         }
 
