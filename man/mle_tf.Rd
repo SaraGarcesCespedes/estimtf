@@ -34,7 +34,7 @@ different to the ones available in the package, the values for the fixed paramet
 
 \item{hyperparameters}{a list with the hyperparameters values of the selected TensorFlow optimizer. If the hyperparameters are not specified, their default values
 will be used in the oprimization process. For more details of the hyperparameters go to this URL:
-\href{https://www.tensorflow.org/api_docs/python/tf/compat/v1/train.}{https://www.tensorflow.org/api_docs/python/tf/compat/v1/train.}}
+\href{https://www.tensorflow.org/api_docs/python/tf/compat/v1/train}{https://www.tensorflow.org/api_docs/python/tf/compat/v1/train}}
 
 \item{maxiter}{a positive integer indicating the maximum number of iterations for the optimization algorithm.}
 

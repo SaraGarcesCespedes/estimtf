@@ -13,10 +13,8 @@ knitr::opts_chunk$set(
 )
 ```
 
-# estimtf
 
-<!-- badges: start -->
-<!-- badges: end -->
+# estimtf
 
 The `estimtf` provides functions to find the Maximum Likelihood estimates of parameters from parametric distributions and linear regression models using TensorFlow optimizers.
 
