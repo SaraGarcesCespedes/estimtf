@@ -17,7 +17,7 @@ knitr::opts_chunk$set(
 
 The estimtf package provides functions to find the Maximum Likelihood estimates of parameters from parametric distributions and linear regression models using TensorFlow optimizers.
 
-This document introduces you to estimtf’s set of tools, and shows you how to apply them to estimate these parameters.
+This document introduces you to estimtf set of tools, and shows you how to apply them to estimate these parameters.
 
 ## Load estimtf package from GitHub
 ```{r, eval=FALSE}
@@ -25,41 +25,43 @@ devtools::install_github('SaraGarcesCespedes/estimtf', force=TRUE)
 library(estimtf)
 ```
 
-## dist_estimtf2 function
+## mle_tf function
 
-This function is used to compute the Maximum Likelihood Estimators of distributional parameters using TensorFlow. Use `?dist_estimtf` for more details.
+This function is used to compute the Maximum Likelihood Estimators of distributional parameters using TensorFlow. Use `?mle_tf` for more details.
 
 ```{r, eval=FALSE}
-# Estimation of both normal distrubution parameters
+# Estimation of both normal distribution parameters
 x <- rnorm(n = 1000, mean = 10, sd = 3)
-estimation1<-dist_estimtf2(x, xdist = "Normal", 
-                           optimizer = "AdamOptimizer", 
-                           hyperparameters=list(learning_rate=0.1))
+estimation1 <- mle_tf(x, 
+                      initparam = list(mean = 1.0, sd = 1.0),
+                      xdist = "Normal", 
+                      optimizer = "AdamOptimizer", 
+                      hyperparameters = list(learning_rate = 0.1))
 
 summary(estimation1)
 
 # Estimation of parameter lambda from Instantaneous Failures distribution
 pdf <- function(X, lambda) { 
-(1/((lambda^2)*(lambda-1)))*              (lambda^2+X-2*lambda)*exp(-X/lambda)
+(1/((lambda^2)*(lambda-1)))*(lambda^2+X-2*lambda)*exp(-X/lambda)
 }
 
 x <-  c(3.4,0.0,0.0,15.8,232.8,8.8,123.2,47,154,103.2,89.8, 12.2)
 
-estimation2<-dist_estimtf2(x = x, xdist = pdf, 
-                          initparam =list(lambda=rnorm(1,2,1)),
-                          optimizer = "AdamOptimizer",
-                          hyperparameters=list(learning_rate=0.1), 
-                          maxiter = 10000)
+estimation2 <- mle_tf(x = x, 
+                      xdist = pdf, 
+                      initparam =list(lambda = rnorm(1, 2, 1)),
+                      optimizer = "AdamOptimizer",
+                      hyperparameters = list(learning_rate = 0.1), 
+                      maxiter = 10000)
 summary(estimation2)
 
 ```
 
-As the `dist_estimtf` uses the TensorFlow distributions, the `mean` parameter from the Normal distribution is known as `loc` and the `sd` parameter is known as `scale`. 
 
 
-## reg_estimtf function
+## mlereg_tf function
 
-This function is used to compute the Maximum Likelihood Estimators of regression parameters using TensorFlow. Use `?reg_estimtf` for more details.
+This function is used to compute the Maximum Likelihood Estimators of regression parameters using TensorFlow. Use `?mlereg_tf` for more details.
 
 ```{r, eval=FALSE}
 # Estimation of parameters of a Poisson regression model
@@ -69,12 +71,12 @@ treatment <- gl(3,3)
 data <- data.frame(treatment, outcome, counts)
 formulas <- list(lambda.fo = ~ outcome + treatment)
 
-estimation1 <-reg_estimtf(ydist =  counts ~ Poisson, 
-                         formulas = formulas, data = data,
-                         initparam = list(rate = 1.0), 
-                         optimizer = "AdamOptimizer",
-                         link_function = list(lambda = "log"),
-                         hyperparameters=list(learning_rate=0.1))
+estimation1 <- mlereg_tf(ydist =  counts ~ Poisson, 
+                        formulas = formulas, data = data,
+                        initparam = list(rate = 1.0), 
+                        optimizer = "AdamOptimizer",
+                        link_function = list(lambda = "log"),
+                        hyperparameters=list(learning_rate=0.1))
 
 summary(estimation1)
 
@@ -85,35 +87,17 @@ data <- data.frame(y = y, x = x)
 formulas <- list(mean.fo = ~ x)
 initparam <- list(mean = list(Intercept = 1.0, x = 0.0))
 
-estimation2<-reg_estimtf(ydist = y ~ Normal, formulas = formulas,
+estimation2 <- mlereg_tf(ydist = y ~ Normal, 
+                         formulas = formulas,
                          data = data,
                          fixparam = list(sd = 3), 
                          initparam = initparam,
                          optimizer = "AdamOptimizer",
-                         hyperparameters=list(learning_rate= 0.1))
+                         hyperparameters = list(learning_rate = 0.1))
 
 summary(estimation2)
 ```
 
-As the `reg_estimtf` uses the TensorFlow distributions, the `lambda` parameter from the Poisson distribution is known as `rate`.
 
 
-## estimglm function
-
-This function is used to fit Generalized Linear Models using TensorFlow. Use `?estimglm` for more details.
-
-```{r, eval=FALSE}
-# Estimation of parameters from a simple linear regression model
-data <- data.frame(dist = cars$dist, speed = cars$speed)
-formula <- dist ~ speed
-estimation <- estimglm(formula, family = "Normal", 
-                       link_function =  "identity",
-                       data = data, initcoeff = list(speed = 1),
-                       optimizer = "AdamOptimizer",
-                       hyperparameters = list(learning_rate=0.1),
-                       maxiter = 10000)
-
-summary(estimation)
-predict(estimation, newdata = data.frame(speed = c(10, 40, 50)))
-```
 
