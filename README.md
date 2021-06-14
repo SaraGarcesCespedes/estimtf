@@ -1,15 +1,12 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-[![R build
-status](https://github.com/SaraGarcesCespedes/estimtf/workflows/R-CMD-check/badge.svg)](https://github.com/SaraGarcesCespedes/estimtf/actions)
-badge\_custom(“licence”, “in OMICS”, “GPL-3”),
-
-# estimtf
-
 <!-- badges: start -->
 
+[![R-CMD-check](https://github.com/SaraGarcesCespedes/estimtf/workflows/R-CMD-check/badge.svg)](https://github.com/SaraGarcesCespedes/estimtf/actions)
 <!-- badges: end -->
+
+# estimtf
 
 The `estimtf` provides functions to find the Maximum Likelihood
 estimates of parameters from parametric distributions and linear
@@ -47,8 +44,8 @@ summary(estimation)
 #> TensorFlow optimizer: AdamOptimizer 
 #> ---------------------------------------------------
 #>      Estimate  Std. Error Z value Pr(>|z|)    
-#> mean   9.95931    0.09222   108.0   <2e-16 ***
-#> sd     2.91612    0.06382    45.7   <2e-16 ***
+#> mean  10.02963    0.09136  109.78   <2e-16 ***
+#> sd     2.88898    0.06313   45.76   <2e-16 ***
 #> ---
 #> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ```
