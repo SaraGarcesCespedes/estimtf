@@ -15,7 +15,7 @@ knitr::opts_chunk$set(
 ```
 
 
-The estimtf package provides functions to find the Maximum Likelihood estimates of parameters from parametric distributions and linear regression models using TensorFlow optimizers.
+The estimtf package provides functions to find the Maximum Likelihood estimates of parameters from probability distributions and linear regression models using TensorFlow optimizers.
 
 This document introduces you to estimtf set of tools, and shows you how to apply them to estimate these parameters.
 
