@@ -42,7 +42,6 @@
 #' @importFrom stats printCoefmat
 #' @importFrom stats pnorm
 #' @import tensorflow
-#' @import tfprobability
 #' @import reticulate
 #'
 #'

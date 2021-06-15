@@ -28,7 +28,6 @@ Imports:
     reticulate,
     dplyr,
     stringr,
-    tfprobability,
     purrr,
     stats
 Suggests: 
