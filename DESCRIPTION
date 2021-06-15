@@ -25,7 +25,7 @@ BugReports: https://github.com/SaraGarcesCespedes/estimtf/issues
 RoxygenNote: 7.1.0
 Imports:
     tensorflow,
-    reticulate,
+    reticulate (>= 1.14),
     dplyr,
     stringr,
     tfprobability,
@@ -36,3 +36,4 @@ Suggests:
     rmarkdown,
     markdown
 VignetteBuilder: knitr
+SystemRequirements: Python (>= 3.6)
