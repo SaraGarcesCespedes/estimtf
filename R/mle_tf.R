@@ -120,7 +120,7 @@ mle_tf <- function(x, xdist = "Normal", fixparam = NULL, initparam, optimizer = 
 
         if (is.character(xdist)) {
                 # Import tensorflow_probability module
-                tf_prob <- reticulate::import("tensorflow_probability")
+                #tf_prob <- reticulate::import("tensorflow_probability")
 
                 # Defining loss function depending on xdist
                 distdisponibles <- c("Normal", "Poisson", "Gamma", "LogNormal", "Weibull", "Exponential",
@@ -133,8 +133,8 @@ mle_tf <- function(x, xdist = "Normal", fixparam = NULL, initparam, optimizer = 
                 }
 
                 if (!(xdist %in% distnotf)) {
-                        #dist <- eval(parse(text = paste("tfprobability::tfp$distributions$", xdist, sep = "")))
-                        dist <- eval(parse(text = paste("tf_prob$distributions$", xdist, sep = "")))
+                        dist <- eval(parse(text = paste("tfprobability::tfp$distributions$", xdist, sep = "")))
+                        #dist <- eval(parse(text = paste("tf_prob$distributions$", xdist, sep = "")))
                 } else {
                         dist <- xdist
                 }

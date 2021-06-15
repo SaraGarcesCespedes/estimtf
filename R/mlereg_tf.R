@@ -181,7 +181,7 @@ mlereg_tf <- function(ydist = y ~ Normal, formulas, data, available_distribution
         if (available_distribution == TRUE) {
 
                 # Import tensorflow_probability module
-                tf_prob <- reticulate::import("tensorflow_probability")
+                #tf_prob <- reticulate::import("tensorflow_probability")
 
                 # change names of parameters to match TF parameters
                 names_param <- names(formulas)
@@ -204,8 +204,8 @@ mlereg_tf <- function(ydist = y ~ Normal, formulas, data, available_distribution
                 }
 
                 if (!(all.vars(ydist)[2] %in% distnotf)) {
-                        #dist <- eval(parse(text = paste("tfprobability::tfp$distributions$", all.vars(ydist)[2], sep = "")))
-                        dist <- eval(parse(text = paste("tf_prob$distributions$", all.vars(ydist)[2], sep = "")))
+                        dist <- eval(parse(text = paste("tfprobability::tfp$distributions$", all.vars(ydist)[2], sep = "")))
+                        #dist <- eval(parse(text = paste("tf_prob$distributions$", all.vars(ydist)[2], sep = "")))
                 } else {
                         dist <- all.vars(ydist)[2]
                 }
