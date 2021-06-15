@@ -36,4 +36,3 @@ Suggests:
     rmarkdown,
     markdown
 VignetteBuilder: knitr
-SystemRequirements: Python (>= 3.6)
