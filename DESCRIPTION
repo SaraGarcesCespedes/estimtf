@@ -26,6 +26,7 @@ RoxygenNote: 7.1.0
 Imports:
     tensorflow (>= 2.4.0),
     dplyr,
+    reticulate,
     stringr,
     tfprobability,
     purrr,
