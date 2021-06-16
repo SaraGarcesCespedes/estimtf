@@ -8,6 +8,9 @@ parameter_name_tf <- function(parameter, distribution) {
                 listparam <- list(lambda = "rate",
                                   meanlog = "log",
                                   sdlog = "scale")
+        } else if (distribution == "FWE") {
+                listparam <- list(mu = "mu",
+                                  sigma = "sigma")
         } else {
                 listparam <- list(mean = "loc",
                                   sd = "scale",
@@ -34,6 +37,9 @@ parameter_name_R <- function(parameter, distribution) {
                 listparam <- list(rate = "lambda",
                                   log = "meanlog",
                                   scale = "sdlog")
+        } else if (distribution == "FWE") {
+                listparam <- list(mu = "mu",
+                                  sigma = "sigma")
         } else {
                 listparam <- list(loc = "mean",
                                   scale = "sd",
@@ -45,7 +51,6 @@ parameter_name_R <- function(parameter, distribution) {
                                   total_count = "size",
                                   probs = "prob")
         }
-
 
         return(listparam[[parameter]])
 }
