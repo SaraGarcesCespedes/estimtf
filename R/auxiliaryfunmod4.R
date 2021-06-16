@@ -74,7 +74,7 @@ disableagerestim <- function(x, fdp, arguments, fixparam, initparam, opt, hyperp
 
         #loss_fn_final <- paste0("-tensorflow::tf$reduce_sum(tensorflow::tf$math$log(", loss_fn_final, ")")
         loss_value <- eval(parse(text = loss_fn_final))
-        loss_value <- -tensorflow::tf$reduce_sum(tensorflow::tf$math$log(loss_value))
+        loss_value <- -tensorflow::tf$reduce_sum(tensorflow::tf$math$log(loss_value + 1e-10))
 
         # Compute gradients
         grads <- tensorflow::tf$gradients(loss_value, new_list)
