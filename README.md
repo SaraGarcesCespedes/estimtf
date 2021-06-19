@@ -7,14 +7,15 @@
 [![Licence](https://img.shields.io/badge/licence-GPL--3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0.en.html)
 ![GitHub R package
 version](https://img.shields.io/github/r-package/v/SaraGarcesCespedes/estimtf)
+[![CRAN\_Status\_Badge](https://www.r-pkg.org/badges/version/estimtf)](https://cran.r-project.org/package=estimtf)
 
 <!-- badges: end -->
 
 # estimtf
 
 The `estimtf` provides functions to find the Maximum Likelihood
-estimates of parameters from parametric distributions and linear
-regression models using TensorFlow optimizers.
+Estimates of parameters from probability distributions and linear
+regression models using the TensorFlow optimizers.
 
 ## Installation
 
@@ -48,8 +49,8 @@ summary(estimation)
 #> TensorFlow optimizer: AdamOptimizer 
 #> ---------------------------------------------------
 #>      Estimate  Std. Error Z value Pr(>|z|)    
-#> mean    9.9816     0.0932  107.10   <2e-16 ***
-#> sd      2.9473     0.0646   45.63   <2e-16 ***
+#> mean   9.87368    0.09080  108.74   <2e-16 ***
+#> sd     2.87137    0.06261   45.86   <2e-16 ***
 #> ---
 #> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ```
