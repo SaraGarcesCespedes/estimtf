@@ -14,15 +14,21 @@ Authors@R: c(
              role = c("ctb"), 
              comment = c(ORCID = "0000-0001-7459-3329"))
       )
-Description: Provides functions to find the Maximum Likelihood estimates 
-    of parameters from probability distributions and linear regression models using 
-    TensorFlow optimizers.
+Author: Sara Garcés [aut, cre],
+  Freddy Hernández [ctb]
+Maintainer: Sara Garcés <sgarcesc@unal.edu.co>
+Description: Provides functions to find the Maximum Likelihood Estimates of parameters from probability 
+             distributions and linear regression models using the TensorFlow optimizers. The optimization 
+             process included in the main functions of this package use the 'tensorflow' package 
+             <https://CRAN.R-project.org/package=tensorflow> and the 'tfprobability' package 
+             <https://CRAN.R-project.org/package=tfprobability>.
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
 URL: https://github.com/SaraGarcesCespedes/estimtf
 BugReports: https://github.com/SaraGarcesCespedes/estimtf/issues
 RoxygenNote: 7.1.0
+Depends: R (>= 3.5.0)
 Imports:
     tensorflow,
     dplyr,
