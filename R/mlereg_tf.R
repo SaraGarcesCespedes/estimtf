@@ -77,7 +77,7 @@
 #'                           link_function = list(lambda = "log"),
 #'                           hyperparameters = list(learning_rate = 0.1))
 #'
-#' # Get the summary of estimates
+#' # Get the summary of the estimates
 #' summary(estimation_1)
 #'
 #' #----------------------------------------------------------------------------------
@@ -97,7 +97,7 @@
 #'                           optimizer = "AdamOptimizer",
 #'                           hyperparameters = list(learning_rate = 0.1))
 #'
-#' # Get the summary of estimates
+#' # Get the summary of the estimates
 #' summary(estimation_2)
 #'
 #' #----------------------------------------------------------------------------------
@@ -121,7 +121,7 @@
 #'                           hyperparameters = list(learning_rate = 0.1),
 #'                           maxiter = 10000)
 #'
-#' # Get the summary of estimates
+#' # Get the summary of the estimates
 #' summary(estimation_3)
 #'
 #'

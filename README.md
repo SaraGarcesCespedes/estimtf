@@ -33,24 +33,30 @@ deviation parameters from the normal distribution using the `mle_tf`
 function:
 
 ``` r
+# Load the estimtf package
 library(estimtf)
 
-## Estimation of both normal distrubution parameters
+# Estimation of parameters mean and sd from the normal distribution
+
+# Generate a sample from the normal distribution
 x <- rnorm(n = 1000, mean = 10, sd = 3)
 
+# Find the MLE of the parameters using the mle_tf function
 estimation <- mle_tf(x, 
                      xdist = "Normal", 
                      optimizer = "AdamOptimizer",
                      initparam = list(mean = 0.5, sd = 0.5),
                      hyperparameters = list(learning_rate = 0.1))
+
+# Get the summary of the estimates
 summary(estimation)
 #> Distribution: Normal 
 #> Number of observations: 1000 
 #> TensorFlow optimizer: AdamOptimizer 
 #> ---------------------------------------------------
 #>      Estimate  Std. Error Z value Pr(>|z|)    
-#> mean   9.88684    0.09388  105.32   <2e-16 ***
-#> sd     2.96859    0.06480   45.81   <2e-16 ***
+#> mean   9.82428    0.09631  102.01   <2e-16 ***
+#> sd     3.04552    0.06671   45.65   <2e-16 ***
 #> ---
 #> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ```

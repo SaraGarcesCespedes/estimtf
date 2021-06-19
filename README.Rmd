@@ -45,16 +45,23 @@ devtools::install_github('SaraGarcesCespedes/estimtf', force=TRUE)
 This is a basic example that shows how to estimate the mean and standard deviation parameters from the normal distribution using the `mle_tf` function:
 
 ```{r example}
+# Load the estimtf package
 library(estimtf)
 
-## Estimation of both normal distrubution parameters
+# Estimation of parameters mean and sd from the normal distribution
+
+# Generate a sample from the normal distribution
 x <- rnorm(n = 1000, mean = 10, sd = 3)
 
+# Find the MLE of the parameters using the mle_tf function
 estimation <- mle_tf(x, 
                      xdist = "Normal", 
                      optimizer = "AdamOptimizer",
                      initparam = list(mean = 0.5, sd = 0.5),
                      hyperparameters = list(learning_rate = 0.1))
+
+# Get the summary of the estimates
 summary(estimation)
+
 ```
 
