@@ -11,13 +11,10 @@
 
 \item{...}{additional arguments affecting the summary produced.}
 }
-\value{
-The output from
-}
 \description{
-Function to produce result summaries of the estimates of parameters from statistical
-distributions using \code{\link{mle_tf}} or parameters from regression models using
-\code{\link{mlereg_tf}}.
+Function to produce result summaries of the estimates of parameters from probability
+distributions using the \code{\link{mle_tf}} function or parameters from regression models using
+the \code{\link{mlereg_tf}} function.
 }
 \details{
 \code{summary.MLEtf} function displays estimates and standard errors of parameters from statistical
@@ -25,16 +22,19 @@ distributions and regression models. Also, this function computes and displays t
 tests for these parameters.
 }
 \examples{
-#-------------------------------------------------------------
+#---------------------------------------------------------------
 # Estimation of both normal distrubution parameters
+
+# Generate a sample from the normal distribution
 x <- rnorm(n = 1000, mean = 10, sd = 3)
 
+# Use the summary function
 summary(mle_tf(x, xdist = "Normal",
-                      optimizer = "AdamOptimizer",
-                      initparam = list(mean = 1.0, sd = 1.0),
-                      hyperparameters = list(learning_rate = 0.1)))
+               optimizer = "AdamOptimizer",
+               initparam = list(mean = 1.0, sd = 1.0),
+               hyperparameters = list(learning_rate = 0.1)))
 
 }
 \author{
-Sara Garces Cespedes
+Sara Garcés Céspedes \email{sgarcesc@unal.edu.co}
 }

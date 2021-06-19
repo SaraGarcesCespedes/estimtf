@@ -22,27 +22,28 @@ mlereg_tf(
 \item{ydist}{an object of class "formula" that specifies the distribution of the response variable.
 The available distributions are: \code{Normal}, \code{Poisson}, \code{Binomial}, \code{Weibull}, \code{Exponential}, \code{LogNormal},
 \code{Beta} and \code{Gamma}. If you want to estimate parameters from a distribution different to the ones mentioned above, you must provide the
-name of an object of class function that contains its probability mass/density function.}
+name of an object of class function that contains its probability mass/density function. This \code{R} function must not contain curly brackets
+other than those that enclose the function.}
 
 \item{formulas}{a list containing objects of class "formula". Each element of the list represents the
 linear predictor for each of the parameters of the regression model. The linear predictor is specified with
-the name of the parameter and it must contain an \code{~}. The terms on the right side
-separated by \code{+}.}
+the name of the parameter and it must contain an \code{~}. The terms on the right side must be separated by \code{+}.}
 
 \item{data}{a data frame containing the response variable and the covariates.}
 
-\item{available_distribution}{logical. If TRUE, the distribution of the response variable is one of the distributions mentioned above in the package.}
+\item{available_distribution}{logical. If \code{TRUE}, the distribution of the response variable is one of the following distributions: \code{Normal},
+\code{Poisson}, \code{Binomial}, \code{Weibull}, \code{Exponential}, \code{LogNormal}, \code{Beta} and \code{Gamma}.}
 
-\item{fixparam}{a list containing the fixed parameters of the model. The parameters values and names must be specified in the list.}
+\item{fixparam}{a list containing the fixed parameters of the model only if they exist. The parameters values and names must be specified in the list.}
 
-\item{initparam}{a list with initial values of the regression coefficients to be estimated. The list must contain the regression coefficients values and names.
+\item{initparam}{a list with the initial values of the regression coefficients to be estimated. The list must contain the regression coefficients values and names.
 If you want to use the same initial values for all regression coefficients associated with a specific parameter, you can specify the
 name of the parameter and the value. If NULL the default initial value is zero.}
 
 \item{link_function}{a list with names of parameters to be linked and the corresponding link function name. The available link functions are:
 \code{log}, \code{logit}, \code{inverse} and \code{identity}.}
 
-\item{optimizer}{a character indicating the name of the TensorFlow optimizer to be used in the estimation process. The default value is \code{'AdamOptimizer'}. The available optimizers are:
+\item{optimizer}{a character indicating the name of the TensorFlow optimizer to be used in the optimization process. The default value is \code{'AdamOptimizer'}. The available optimizers are:
 \code{"AdadeltaOptimizer"}, \code{"AdagradDAOptimizer"}, \code{"AdagradOptimizer"}, \code{"AdamOptimizer"}, \code{"GradientDescentOptimizer"},
 \code{"MomentumOptimizer"} and \code{"RMSPropOptimizer"}.}
 
@@ -53,7 +54,7 @@ will be used in the oprimization process. For more details of the hyperparameter
 \item{maxiter}{a positive integer indicating the maximum number of iterations for the optimization algorithm. The default value is \code{10000}.}
 
 \item{tolerance}{a small positive number. When the difference between the loss value or the parameters values from one iteration to another is lower
-than this value, the optimization process stops.}
+than this value, the optimization process stops. The default value is \code{.Machine$double.eps}.}
 }
 \value{
 This function returns the estimates, standard errors, Z-score and p-values of significance tests
@@ -61,19 +62,22 @@ of the regression model coefficients as well as some information of the optimiza
 iterations needed for convergence.
 }
 \description{
-Function to compute the Maximum Likelihood Estimators of regression parameters using TensorFlow.
+Function to compute the Maximum Likelihood Estimates of regression parameters using TensorFlow.
 }
 \details{
 \code{mlereg_tf} computes the log-likelihood function based on the distribution specified in
 \code{ydist} and linear predictors specified in \code{formulas}. Then, it finds the values of the regression coefficients
 that maximizes this function using the TensorFlow opimizer specified in \code{optimizer}.
+
+The \code{R} function that contains the probability mass/density function must not contain curly brackets. The only curly brackets that the function can contain are those that enclose the function,
+that is, those that define the beginning and end of the \code{R} function.
 }
 \note{
-The \code{summary, print} functions can be used with a \code{mlereg_tf} object.
+The \code{summary, print, plot_loss} functions can be used with a \code{mlereg_tf} object.
 }
 \examples{
-#-------------------------------------------------------------
-# Estimation of parameters of a Poisson regression model
+#----------------------------------------------------------------------------------
+# Estimation of coefficients of a Poisson regression model
 
 # Data frame with response variable and covariates
 counts <- c(18,17,15,20,10,20,25,13,12)
@@ -81,65 +85,58 @@ outcome <- gl(3,1,9)
 treatment <- gl(3,3)
 data <- data.frame(treatment, outcome, counts)
 
-# Define the linear predictors for each parameter
-formulas <- list(lambda = ~ outcome + treatment)
-
 # Use the mlereg_tf function
 estimation_1 <- mlereg_tf(ydist =  counts ~ Poisson,
-                            formulas = formulas,
-                            data = data,
-                            initparam = list(lambda = 1.0),
-                            optimizer = "AdamOptimizer",
-                            link_function = list(lambda = "log"),
-                            hyperparameters = list(learning_rate = 0.1))
+                          formulas = list(lambda = ~ outcome + treatment),
+                          data = data,
+                          initparam = list(lambda = 1.0),
+                          optimizer = "AdamOptimizer",
+                          link_function = list(lambda = "log"),
+                          hyperparameters = list(learning_rate = 0.1))
 
 # Get the summary of estimates
 summary(estimation_1)
 
-#-------------------------------------------------------------
-# Estimation of parameters of a linear regression model with one fixed parameter
+#----------------------------------------------------------------------------------
+# Estimation of coefficients of a linear regression model with one fixed parameter
 
 # Data frame with response variable and covariates
 x <- runif(n = 1000, -3, 3)
 y <- rnorm(n = 1000, mean = 5 - 2 * x, sd = 3)
 data <- data.frame(y = y, x = x)
 
-# Define the linear predictors for each parameter and the initial values
-formulas <- list(mean = ~ x)
-initparam <- list(mean = list(Intercept = 1.0, x = 0.0))
-
 # Use the mlereg_tf function
 estimation_2 <- mlereg_tf(ydist = y ~ Normal,
-                            formulas = formulas,
-                            data = data,
-                            fixparam = list(sd = 3),
-                            initparam = initparam,
-                            optimizer = "AdamOptimizer",
-                            hyperparameters = list(learning_rate = 0.1))
+                          formulas = list(mean = ~ x),
+                          data = data,
+                          fixparam = list(sd = 3),
+                          initparam = list(mean = list(Intercept = 1.0, x = 0.0)),
+                          optimizer = "AdamOptimizer",
+                          hyperparameters = list(learning_rate = 0.1))
 
 # Get the summary of estimates
 summary(estimation_2)
 
-#-------------------------------------------------------------
-# Estimation of parameters from Instantaneous Failures distribution
+#----------------------------------------------------------------------------------
+# Estimation of parameter lambda of the Instantaneous Failures distribution
 
-# Create an R function that represents the probability density function
+# Create an R function that contains the probability density function
 pdf <- function(y, lambda) { (1 / ((lambda ^ 2) * (lambda - 1))) *
                              (lambda^2 + y - 2*lambda) * exp(-y/lambda) }
 
-# Data frame with response variable and covariates
+# Data frame with response variable
 y <-  c(3.4, 0.0, 0.0, 15.8, 232.8, 8.8, 123.2, 47, 154, 103.2, 89.8,  12.2)
 data <- data.frame(y)
 
 # Use the mlereg_tf function
 estimation_3 <- mlereg_tf(ydist = y ~ pdf,
-                             formulas = list(lambda = ~1),
-                             data = data,
-                             initparam = list(lambda = rnorm(1, 5, 1)),
-                             available_distribution = FALSE,
-                             optimizer = "AdamOptimizer",
-                             hyperparameters = list(learning_rate = 0.1),
-                             maxiter = 10000)
+                          formulas = list(lambda = ~1),
+                          data = data,
+                          initparam = list(lambda = rnorm(1, 5, 1)),
+                          available_distribution = FALSE,
+                          optimizer = "AdamOptimizer",
+                          hyperparameters = list(learning_rate = 0.1),
+                          maxiter = 10000)
 
 # Get the summary of estimates
 summary(estimation_3)
@@ -147,5 +144,5 @@ summary(estimation_3)
 
 }
 \author{
-Sara Garces Cespedes
+Sara Garcés Céspedes \email{sgarcesc@unal.edu.co}
 }

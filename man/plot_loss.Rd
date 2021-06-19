@@ -12,24 +12,28 @@ plot_loss(object, ...)
 \item{...}{additional arguments affecting the summary produced.}
 }
 \description{
-Function to display a graph that contains the loss value in each iteration of
-the estimation process using \code{\link{mle_tf}} function or using \code{\link{mlereg_tf}} function.
+Function to display a graph that contains the loss value computed in each iteration of
+the optimization process performed using the \code{\link{mle_tf}} function or using the \code{\link{mlereg_tf}}
+function.
 }
 \details{
-\code{plot_loss.MLEtf} function displays a graph with the loss values, which corresponds to the
-negative log-likelihood in each iteration of the estimation process for distributional or regression parameters.
+\code{plot_loss.MLEtf} function displays a graph with the loss values, which correspond to the
+negative log-likelihood computed in each iteration of the optimization process.
 }
 \examples{
-#-------------------------------------------------------------
+#---------------------------------------------------------------
 # Estimation of both normal distrubution parameters
+
+# Generate a sample from the normal distribution
 x <- rnorm(n = 1000, mean = 10, sd = 3)
 
+# Use the plot_loss function
 plot_loss(mle_tf(x, xdist = "Normal",
-                        optimizer = "AdamOptimizer",
-                        initparam = list(mean = 1.0, sd = 1.0),
-                        hyperparameters = list(learning_rate = 0.1)))
+                 optimizer = "AdamOptimizer",
+                 initparam = list(mean = 1.0, sd = 1.0),
+                 hyperparameters = list(learning_rate = 0.1)))
 
 }
 \author{
-Sara Garces Cespedes
+Sara Garcés Céspedes \email{sgarcesc@unal.edu.co}
 }

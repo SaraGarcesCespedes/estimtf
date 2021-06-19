@@ -12,25 +12,28 @@
 \item{...}{additional arguments affecting the summary produced.}
 }
 \description{
-Function to display the estimates of parameters from statistical
-distributions using \code{\link{mle_tf}} or parameters from regression models using
-\code{\link{mlereg_tf}}.
+Function to display the estimates of parameters from probability
+distributions using the \code{\link{mle_tf}} function or parameters from regression models using
+the \code{\link{mlereg_tf}} function.
 }
 \details{
-\code{print.MLEtf} function displays estimates of parameters from statistical distributions
+\code{print.MLEtf} function displays the estimates of parameters from probability distributions
 and regression models.
 }
 \examples{
-#-------------------------------------------------------------
+#---------------------------------------------------------------
 # Estimation of both normal distrubution parameters
+
+# Generate a sample from the normal distribution
 x <- rnorm(n = 1000, mean = 10, sd = 3)
 
+# Use the print function
 print(mle_tf(x, xdist = "Normal",
-                    initparam = list(mean = 1.0, sd = 1.0),
-                    optimizer = "AdamOptimizer",
-                    hyperparameters = list(learning_rate = 0.1)))
+             initparam = list(mean = 1.0, sd = 1.0),
+              optimizer = "AdamOptimizer",
+              hyperparameters = list(learning_rate = 0.1)))
 
 }
 \author{
-Sara Garces Cespedes
+Sara Garcés Céspedes \email{sgarcesc@unal.edu.co}
 }

@@ -21,10 +21,10 @@ mle_tf(
 \item{xdist}{a character indicating the name of the distribution of interest. The default value is \code{'Normal'}.
 The available distributions are: \code{Normal}, \code{Poisson}, \code{Binomial}, \code{Weibull}, \code{Exponential}, \code{LogNormal}, \code{Beta} and \code{Gamma}.
 If you want to estimate parameters from a distribution different to the ones mentioned above, you must provide the
-name of an object of class function that contains its probability mass/density function.}
+name of an object of class function that contains its probability mass/density function. This \code{R} function must not contain curly brackets
+other than those that enclose the function.}
 
-\item{fixparam}{a list of the fixed parameters of the distribution of interest. The list must contain the parameters values and names. If you want to work with a distribution
-different to the ones available in the package, the values for the fixed parameters must be included in the probability mass/density function.}
+\item{fixparam}{a list containing the fixed parameters of the distribution of interest only if they exist. The parameters values and names must be specified in the list.}
 
 \item{initparam}{a list with initial values of the parameters to be estimated. The list must contain the parameters values and names.}
 
@@ -36,63 +36,66 @@ different to the ones available in the package, the values for the fixed paramet
 will be used in the oprimization process. For more details of the hyperparameters go to this URL:
 \href{https://www.tensorflow.org/api_docs/python/tf/compat/v1/train}{https://www.tensorflow.org/api_docs/python/tf/compat/v1/train}}
 
-\item{maxiter}{a positive integer indicating the maximum number of iterations for the optimization algorithm.}
+\item{maxiter}{a positive integer indicating the maximum number of iterations for the optimization algorithm. The default value is \code{10000}.}
 
 \item{tolerance}{a small positive number. When the difference between the loss value or the parameters values from one iteration to another is lower
-than this value, the optimization process stops.}
+than this value, the optimization process stops. The default value is \code{.Machine$double.eps}.}
 }
 \value{
 This function returns the estimates, standard errors, Z-score and p-values of significance tests of the parameters from the distribution of interest as well as
 some information of the optimization process like the number of iterations needed for convergence.
 }
 \description{
-Function to compute the Maximum Likelihood Estimators of distributional parameters using TensorFlow.
+Function to compute the Maximum Likelihood Estimates of distributional parameters using TensorFlow.
 }
 \details{
 \code{mle_tf} computes the log-likelihood function of the distribution specified in
 \code{xdist} and finds the values of the parameters that maximizes this function using the TensorFlow optimizer
 specified in \code{optimizer}.
+
+ The \code{R} function that contains the probability mass/density function must not contain curly brackets. The only curly brackets that the function can contain are those that enclose the function,
+ that is, those that define the beginning and end of the \code{R} function.
 }
 \note{
-The \code{summary, print} functions can be used with a \code{mle_tf} object.
+The \code{summary, print, plot_loss} functions can be used with a \code{mle_tf} object.
 }
 \examples{
-#-------------------------------------------------------------
-# Estimation of both normal distrubution parameters
+#-----------------------------------------------------------------------------
+# Estimation of parameters mean and sd of the normal distribution
 
 # Vector with the data to be fitted
 x <- rnorm(n = 1000, mean = 10, sd = 3)
 
-# Use mle_tf function
+# Use the mle_tf function
 estimation_1 <- mle_tf(x, xdist = "Normal",
-                              optimizer = "AdamOptimizer",
-                              initparam = list(mean = 1.0, sd = 1.0),
-                              hyperparameters = list(learning_rate = 0.1))
+                       optimizer = "AdamOptimizer",
+                       initparam = list(mean = 1.0, sd = 1.0),
+                       hyperparameters = list(learning_rate = 0.1))
 
 # Get the summary of estimates
 summary(estimation_1)
 
-#-------------------------------------------------------------
-# Estimation of parameters from Instantaneous Failures distribution
+#-----------------------------------------------------------------------------
+# Estimation of parameter lambda of the Instantaneous Failures distribution
 
-# Create an R function that represents the probability density function
+# Create an R function that contains the probability density function
 pdf <- function(X, lambda) { (1 / ((lambda ^ 2) * (lambda - 1))) *
                              (lambda^2 + X - 2*lambda) * exp(-X/lambda) }
 
 # Vector with the data to be fitted
 x <-  c(3.4, 0.0, 0.0, 15.8, 232.8, 8.8, 123.2, 47, 154, 103.2, 89.8,  12.2)
 
-# Use mle_tf function
+# Use the mle_tf function
 estimation_2 <- mle_tf(x = x, xdist = pdf,
-                              initparam = list(lambda = rnorm(1, 5, 1)),
-                              optimizer = "AdamOptimizer",
-                              hyperparameters = list(learning_rate = 0.1),
-                              maxiter = 10000)
+                       initparam = list(lambda = rnorm(1, 5, 1)),
+                       optimizer = "AdamOptimizer",
+                       hyperparameters = list(learning_rate = 0.1),
+                       maxiter = 10000)
 
 # Get the summary of estimates
 summary(estimation_2)
 
 }
 \author{
-Sara Garces Cespedes
+Sara Garcés Céspedes \email{sgarcesc@unal.edu.co}
 }

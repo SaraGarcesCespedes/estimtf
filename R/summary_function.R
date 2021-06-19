@@ -1,15 +1,14 @@
 #' @title summary.MLEtf function
 #'
-#' @description Function to produce result summaries of the estimates of parameters from statistical
-#' distributions using \code{\link{mle_tf}} or parameters from regression models using
-#' \code{\link{mlereg_tf}}.
+#' @description Function to produce result summaries of the estimates of parameters from probability
+#' distributions using the \code{\link{mle_tf}} function or parameters from regression models using
+#' the \code{\link{mlereg_tf}} function.
 #'
-#' @author Sara Garces Cespedes
+#' @author Sara Garcés Céspedes \email{sgarcesc@unal.edu.co}
 #'
 #' @param object an object of class \code{MLEtf} for which a summary is desired.
 #' @param ... additional arguments affecting the summary produced.
 #'
-#' @return The output from
 #'
 #' @details \code{summary.MLEtf} function displays estimates and standard errors of parameters from statistical
 #' distributions and regression models. Also, this function computes and displays the Z-score and p-values of significance
@@ -20,14 +19,17 @@
 #' @importFrom stats pt
 #'
 #' @examples
-#' #-------------------------------------------------------------
+#' #---------------------------------------------------------------
 #' # Estimation of both normal distrubution parameters
+#'
+#' # Generate a sample from the normal distribution
 #' x <- rnorm(n = 1000, mean = 10, sd = 3)
 #'
+#' # Use the summary function
 #' summary(mle_tf(x, xdist = "Normal",
-#'                       optimizer = "AdamOptimizer",
-#'                       initparam = list(mean = 1.0, sd = 1.0),
-#'                       hyperparameters = list(learning_rate = 0.1)))
+#'                optimizer = "AdamOptimizer",
+#'                initparam = list(mean = 1.0, sd = 1.0),
+#'                hyperparameters = list(learning_rate = 0.1)))
 #'
 #' @rdname summary.MLEtf
 #' @export
@@ -135,30 +137,33 @@ summary.MLEtf <- function(object, ...) {
 
 #' @title print.MLEtf function
 #'
-#' @description Function to display the estimates of parameters from statistical
-#' distributions using \code{\link{mle_tf}} or parameters from regression models using
-#' \code{\link{mlereg_tf}}.
+#' @description Function to display the estimates of parameters from probability
+#' distributions using the \code{\link{mle_tf}} function or parameters from regression models using
+#' the \code{\link{mlereg_tf}} function.
 #'
-#' @author Sara Garces Cespedes
+#' @author Sara Garcés Céspedes \email{sgarcesc@unal.edu.co}
 #'
 #' @param x an object of class \code{MLEtf} for which a summary is desired.
 #' @param ... additional arguments affecting the summary produced.
 #'
 #'
-#' @details \code{print.MLEtf} function displays estimates of parameters from statistical distributions
+#' @details \code{print.MLEtf} function displays the estimates of parameters from probability distributions
 #' and regression models.
 #'
 #' @importFrom stats printCoefmat
 #'
 #' @examples
-#' #-------------------------------------------------------------
+#' #---------------------------------------------------------------
 #' # Estimation of both normal distrubution parameters
+#'
+#' # Generate a sample from the normal distribution
 #' x <- rnorm(n = 1000, mean = 10, sd = 3)
 #'
+#' # Use the print function
 #' print(mle_tf(x, xdist = "Normal",
-#'                     initparam = list(mean = 1.0, sd = 1.0),
-#'                     optimizer = "AdamOptimizer",
-#'                     hyperparameters = list(learning_rate = 0.1)))
+#'              initparam = list(mean = 1.0, sd = 1.0),
+#'               optimizer = "AdamOptimizer",
+#'               hyperparameters = list(learning_rate = 0.1)))
 #'
 #' @rdname print.MLEtf
 #' @export
@@ -252,28 +257,32 @@ print.MLEtf <- function(x, ...) {
 
 #' @title plot_loss function
 #'
-#' @description Function to display a graph that contains the loss value in each iteration of
-#' the estimation process using \code{\link{mle_tf}} function or using \code{\link{mlereg_tf}} function.
+#' @description Function to display a graph that contains the loss value computed in each iteration of
+#' the optimization process performed using the \code{\link{mle_tf}} function or using the \code{\link{mlereg_tf}}
+#' function.
 #'
-#' @author Sara Garces Cespedes
+#' @author Sara Garcés Céspedes \email{sgarcesc@unal.edu.co}
 #'
 #' @param object an object of class \code{MLEtf} for which a plot with loss values is desired.
 #' @param ... additional arguments affecting the summary produced.
 #'
 #'
-#' @details \code{plot_loss.MLEtf} function displays a graph with the loss values, which corresponds to the
-#' negative log-likelihood in each iteration of the estimation process for distributional or regression parameters.
+#' @details \code{plot_loss.MLEtf} function displays a graph with the loss values, which correspond to the
+#' negative log-likelihood computed in each iteration of the optimization process.
 #'
 #'
 #' @examples
-#' #-------------------------------------------------------------
+#' #---------------------------------------------------------------
 #' # Estimation of both normal distrubution parameters
+#'
+#' # Generate a sample from the normal distribution
 #' x <- rnorm(n = 1000, mean = 10, sd = 3)
 #'
+#' # Use the plot_loss function
 #' plot_loss(mle_tf(x, xdist = "Normal",
-#'                         optimizer = "AdamOptimizer",
-#'                         initparam = list(mean = 1.0, sd = 1.0),
-#'                         hyperparameters = list(learning_rate = 0.1)))
+#'                  optimizer = "AdamOptimizer",
+#'                  initparam = list(mean = 1.0, sd = 1.0),
+#'                  hyperparameters = list(learning_rate = 0.1)))
 #'
 #' @export
 #------------------------------------------------------------------------

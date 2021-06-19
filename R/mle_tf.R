@@ -1,16 +1,16 @@
 #' @title mle_tf function
 #'
-#' @description Function to compute the Maximum Likelihood Estimators of distributional parameters using TensorFlow.
+#' @description Function to compute the Maximum Likelihood Estimates of distributional parameters using TensorFlow.
 #'
-#' @author Sara Garces Cespedes
+#' @author Sara Garcés Céspedes \email{sgarcesc@unal.edu.co}
 #'
 #' @param x a vector containing the data to be fitted.
 #' @param xdist a character indicating the name of the distribution of interest. The default value is \code{'Normal'}.
 #' The available distributions are: \code{Normal}, \code{Poisson}, \code{Binomial}, \code{Weibull}, \code{Exponential}, \code{LogNormal}, \code{Beta} and \code{Gamma}.
 #' If you want to estimate parameters from a distribution different to the ones mentioned above, you must provide the
-#' name of an object of class function that contains its probability mass/density function.
-#' @param fixparam a list of the fixed parameters of the distribution of interest. The list must contain the parameters values and names. If you want to work with a distribution
-#' different to the ones available in the package, the values for the fixed parameters must be included in the probability mass/density function.
+#' name of an object of class function that contains its probability mass/density function. This \code{R} function must not contain curly brackets
+#' other than those that enclose the function.
+#' @param fixparam a list containing the fixed parameters of the distribution of interest only if they exist. The parameters values and names must be specified in the list.
 #' @param initparam a list with initial values of the parameters to be estimated. The list must contain the parameters values and names.
 #' @param optimizer a character indicating the name of the TensorFlow optimizer to be used in the estimation process The default value is \code{'AdamOptimizer'}. The available optimizers are:
 #' \code{"AdadeltaOptimizer"}, \code{"AdagradDAOptimizer"}, \code{"AdagradOptimizer"}, \code{"AdamOptimizer"}, \code{"GradientDescentOptimizer"},
@@ -18,9 +18,9 @@
 #' @param hyperparameters a list with the hyperparameters values of the selected TensorFlow optimizer. If the hyperparameters are not specified, their default values
 #' will be used in the oprimization process. For more details of the hyperparameters go to this URL:
 #' \href{https://www.tensorflow.org/api_docs/python/tf/compat/v1/train}{https://www.tensorflow.org/api_docs/python/tf/compat/v1/train}
-#' @param maxiter a positive integer indicating the maximum number of iterations for the optimization algorithm.
+#' @param maxiter a positive integer indicating the maximum number of iterations for the optimization algorithm. The default value is \code{10000}.
 #' @param tolerance a small positive number. When the difference between the loss value or the parameters values from one iteration to another is lower
-#' than this value, the optimization process stops.
+#' than this value, the optimization process stops. The default value is \code{.Machine$double.eps}.
 #'
 #' @return This function returns the estimates, standard errors, Z-score and p-values of significance tests of the parameters from the distribution of interest as well as
 #' some information of the optimization process like the number of iterations needed for convergence.
@@ -29,7 +29,10 @@
 #' \code{xdist} and finds the values of the parameters that maximizes this function using the TensorFlow optimizer
 #' specified in \code{optimizer}.
 #'
-#' @note The \code{summary, print} functions can be used with a \code{mle_tf} object.
+#'  The \code{R} function that contains the probability mass/density function must not contain curly brackets. The only curly brackets that the function can contain are those that enclose the function,
+#'  that is, those that define the beginning and end of the \code{R} function.
+#'
+#' @note The \code{summary, print, plot_loss} functions can be used with a \code{mle_tf} object.
 #'
 #' @importFrom stringr str_split
 #' @importFrom dplyr %>%
@@ -47,44 +50,44 @@
 #'
 #'
 #' @examples
-#' #-------------------------------------------------------------
-#' # Estimation of both normal distrubution parameters
+#' #-----------------------------------------------------------------------------
+#' # Estimation of parameters mean and sd of the normal distribution
 #'
 #' # Vector with the data to be fitted
 #' x <- rnorm(n = 1000, mean = 10, sd = 3)
 #'
-#' # Use mle_tf function
+#' # Use the mle_tf function
 #' estimation_1 <- mle_tf(x, xdist = "Normal",
-#'                               optimizer = "AdamOptimizer",
-#'                               initparam = list(mean = 1.0, sd = 1.0),
-#'                               hyperparameters = list(learning_rate = 0.1))
+#'                        optimizer = "AdamOptimizer",
+#'                        initparam = list(mean = 1.0, sd = 1.0),
+#'                        hyperparameters = list(learning_rate = 0.1))
 #'
 #' # Get the summary of estimates
 #' summary(estimation_1)
 #'
-#' #-------------------------------------------------------------
-#' # Estimation of parameters from Instantaneous Failures distribution
+#' #-----------------------------------------------------------------------------
+#' # Estimation of parameter lambda of the Instantaneous Failures distribution
 #'
-#' # Create an R function that represents the probability density function
+#' # Create an R function that contains the probability density function
 #' pdf <- function(X, lambda) { (1 / ((lambda ^ 2) * (lambda - 1))) *
 #'                              (lambda^2 + X - 2*lambda) * exp(-X/lambda) }
 #'
 #' # Vector with the data to be fitted
 #' x <-  c(3.4, 0.0, 0.0, 15.8, 232.8, 8.8, 123.2, 47, 154, 103.2, 89.8,  12.2)
 #'
-#' # Use mle_tf function
+#' # Use the mle_tf function
 #' estimation_2 <- mle_tf(x = x, xdist = pdf,
-#'                               initparam = list(lambda = rnorm(1, 5, 1)),
-#'                               optimizer = "AdamOptimizer",
-#'                               hyperparameters = list(learning_rate = 0.1),
-#'                               maxiter = 10000)
+#'                        initparam = list(lambda = rnorm(1, 5, 1)),
+#'                        optimizer = "AdamOptimizer",
+#'                        hyperparameters = list(learning_rate = 0.1),
+#'                        maxiter = 10000)
 #'
 #' # Get the summary of estimates
 #' summary(estimation_2)
 #'
 #' @export
 mle_tf <- function(x, xdist = "Normal", fixparam = NULL, initparam, optimizer = "AdamOptimizer", hyperparameters = NULL,
-                         maxiter = 10000, tolerance = .Machine$double.eps) {
+                   maxiter = 10000, tolerance = .Machine$double.eps) {
 
         call <- match.call()
 
