@@ -4,16 +4,16 @@
 <!-- badges: start -->
 
 [![R-CMD-check](https://github.com/SaraGarcesCespedes/estimtf/workflows/R-CMD-check/badge.svg)](https://github.com/SaraGarcesCespedes/estimtf/actions)
-<!-- [![Travis build status](https://travis-ci.com/SaraGarcesCespedes/estimtf.svg?branch=master)](https://travis-ci.com/SaraGarcesCespedes/estimtf) -->
 [![Licence](https://img.shields.io/badge/licence-GPL--3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0.en.html)
 ![GitHub R package
 version](https://img.shields.io/github/r-package/v/SaraGarcesCespedes/estimtf)
 [![CRAN\_Status\_Badge](https://www.r-pkg.org/badges/version/estimtf)](https://cran.r-project.org/package=estimtf)
+<!-- [![Travis build status](https://travis-ci.com/SaraGarcesCespedes/estimtf.svg?branch=master)](https://travis-ci.com/SaraGarcesCespedes/estimtf) -->
 <!-- badges: end -->
 
 # estimtf
 
-The `estimtf` provides functions to find the Maximum Likelihood
+The `estimtf` package provides functions to find the Maximum Likelihood
 Estimates of parameters from probability distributions and linear
 regression models using the TensorFlow optimizers.
 
@@ -41,7 +41,7 @@ x <- rnorm(n = 1000, mean = 10, sd = 3)
 estimation <- mle_tf(x, 
                      xdist = "Normal", 
                      optimizer = "AdamOptimizer",
-                     initpara = list(mean = 0.5, sd = 0.5),
+                     initparam = list(mean = 0.5, sd = 0.5),
                      hyperparameters = list(learning_rate = 0.1))
 summary(estimation)
 #> Distribution: Normal 
@@ -49,8 +49,8 @@ summary(estimation)
 #> TensorFlow optimizer: AdamOptimizer 
 #> ---------------------------------------------------
 #>      Estimate  Std. Error Z value Pr(>|z|)    
-#> mean   9.98226    0.09521  104.85   <2e-16 ***
-#> sd     3.01068    0.06591   45.68   <2e-16 ***
+#> mean   9.88684    0.09388  105.32   <2e-16 ***
+#> sd     2.96859    0.06480   45.81   <2e-16 ***
 #> ---
 #> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ```
