@@ -94,7 +94,7 @@ estimation_1 <- mlereg_tf(ydist =  counts ~ Poisson,
                           link_function = list(lambda = "log"),
                           hyperparameters = list(learning_rate = 0.1))
 
-# Get the summary of estimates
+# Get the summary of the estimates
 summary(estimation_1)
 
 #----------------------------------------------------------------------------------
@@ -114,7 +114,7 @@ estimation_2 <- mlereg_tf(ydist = y ~ Normal,
                           optimizer = "AdamOptimizer",
                           hyperparameters = list(learning_rate = 0.1))
 
-# Get the summary of estimates
+# Get the summary of the estimates
 summary(estimation_2)
 
 #----------------------------------------------------------------------------------
@@ -138,7 +138,7 @@ estimation_3 <- mlereg_tf(ydist = y ~ pdf,
                           hyperparameters = list(learning_rate = 0.1),
                           maxiter = 10000)
 
-# Get the summary of estimates
+# Get the summary of the estimates
 summary(estimation_3)
 
 

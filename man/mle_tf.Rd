@@ -72,7 +72,7 @@ estimation_1 <- mle_tf(x, xdist = "Normal",
                        initparam = list(mean = 1.0, sd = 1.0),
                        hyperparameters = list(learning_rate = 0.1))
 
-# Get the summary of estimates
+# Get the summary of the estimates
 summary(estimation_1)
 
 #-----------------------------------------------------------------------------
@@ -92,7 +92,7 @@ estimation_2 <- mle_tf(x = x, xdist = pdf,
                        hyperparameters = list(learning_rate = 0.1),
                        maxiter = 10000)
 
-# Get the summary of estimates
+# Get the summary of the estimates
 summary(estimation_2)
 
 }
