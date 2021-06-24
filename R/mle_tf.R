@@ -1,6 +1,6 @@
 #' @title mle_tf function
 #'
-#' @description Function to compute the Maximum Likelihood Estimates of distributional parameters using TensorFlow.
+#' @description Function to find the Maximum Likelihood Estimates of distributional parameters using TensorFlow.
 #'
 #' @author Sara Garcés Céspedes \email{sgarcesc@unal.edu.co}
 #'
@@ -57,7 +57,8 @@
 #' x <- rnorm(n = 1000, mean = 10, sd = 3)
 #'
 #' # Use the mle_tf function
-#' estimation_1 <- mle_tf(x, xdist = "Normal",
+#' estimation_1 <- mle_tf(x,
+#'                        xdist = "Normal",
 #'                        optimizer = "AdamOptimizer",
 #'                        initparam = list(mean = 1.0, sd = 1.0),
 #'                        hyperparameters = list(learning_rate = 0.1))
@@ -76,7 +77,8 @@
 #' x <-  c(3.4, 0.0, 0.0, 15.8, 232.8, 8.8, 123.2, 47, 154, 103.2, 89.8,  12.2)
 #'
 #' # Use the mle_tf function
-#' estimation_2 <- mle_tf(x = x, xdist = pdf,
+#' estimation_2 <- mle_tf(x = x,
+#'                        xdist = pdf,
 #'                        initparam = list(lambda = rnorm(1, 5, 1)),
 #'                        optimizer = "AdamOptimizer",
 #'                        hyperparameters = list(learning_rate = 0.1),

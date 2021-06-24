@@ -9,7 +9,7 @@ plot_loss(object, ...)
 \arguments{
 \item{object}{an object of class \code{MLEtf} for which a plot with loss values is desired.}
 
-\item{...}{additional arguments affecting the summary produced.}
+\item{...}{additional arguments affecting the plot produced.}
 }
 \description{
 Function to display a graph that contains the loss value computed in each iteration of
@@ -28,7 +28,8 @@ negative log-likelihood computed in each iteration of the optimization process.
 x <- rnorm(n = 1000, mean = 10, sd = 3)
 
 # Use the plot_loss function
-plot_loss(mle_tf(x, xdist = "Normal",
+plot_loss(mle_tf(x,
+                 xdist = "Normal",
                  optimizer = "AdamOptimizer",
                  initparam = list(mean = 1.0, sd = 1.0),
                  hyperparameters = list(learning_rate = 0.1)))

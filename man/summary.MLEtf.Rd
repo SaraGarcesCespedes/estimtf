@@ -29,7 +29,8 @@ tests for these parameters.
 x <- rnorm(n = 1000, mean = 10, sd = 3)
 
 # Use the summary function
-summary(mle_tf(x, xdist = "Normal",
+summary(mle_tf(x,
+               xdist = "Normal",
                optimizer = "AdamOptimizer",
                initparam = list(mean = 1.0, sd = 1.0),
                hyperparameters = list(learning_rate = 0.1)))

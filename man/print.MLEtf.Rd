@@ -7,9 +7,9 @@
 \method{print}{MLEtf}(x, ...)
 }
 \arguments{
-\item{x}{an object of class \code{MLEtf} for which a summary is desired.}
+\item{x}{an object of class \code{MLEtf} for which the estimates are desired.}
 
-\item{...}{additional arguments affecting the summary produced.}
+\item{...}{additional arguments affecting the estimates produced.}
 }
 \description{
 Function to display the estimates of parameters from probability
@@ -28,10 +28,11 @@ and regression models.
 x <- rnorm(n = 1000, mean = 10, sd = 3)
 
 # Use the print function
-print(mle_tf(x, xdist = "Normal",
+print(mle_tf(x,
+             xdist = "Normal",
              initparam = list(mean = 1.0, sd = 1.0),
-              optimizer = "AdamOptimizer",
-              hyperparameters = list(learning_rate = 0.1)))
+             optimizer = "AdamOptimizer",
+             hyperparameters = list(learning_rate = 0.1)))
 
 }
 \author{

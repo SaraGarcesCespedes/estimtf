@@ -26,7 +26,8 @@
 #' x <- rnorm(n = 1000, mean = 10, sd = 3)
 #'
 #' # Use the summary function
-#' summary(mle_tf(x, xdist = "Normal",
+#' summary(mle_tf(x,
+#'                xdist = "Normal",
 #'                optimizer = "AdamOptimizer",
 #'                initparam = list(mean = 1.0, sd = 1.0),
 #'                hyperparameters = list(learning_rate = 0.1)))
@@ -143,8 +144,8 @@ summary.MLEtf <- function(object, ...) {
 #'
 #' @author Sara Garcés Céspedes \email{sgarcesc@unal.edu.co}
 #'
-#' @param x an object of class \code{MLEtf} for which a summary is desired.
-#' @param ... additional arguments affecting the summary produced.
+#' @param x an object of class \code{MLEtf} for which the estimates are desired.
+#' @param ... additional arguments affecting the estimates produced.
 #'
 #'
 #' @details \code{print.MLEtf} function displays the estimates of parameters from probability distributions
@@ -160,10 +161,11 @@ summary.MLEtf <- function(object, ...) {
 #' x <- rnorm(n = 1000, mean = 10, sd = 3)
 #'
 #' # Use the print function
-#' print(mle_tf(x, xdist = "Normal",
+#' print(mle_tf(x,
+#'              xdist = "Normal",
 #'              initparam = list(mean = 1.0, sd = 1.0),
-#'               optimizer = "AdamOptimizer",
-#'               hyperparameters = list(learning_rate = 0.1)))
+#'              optimizer = "AdamOptimizer",
+#'              hyperparameters = list(learning_rate = 0.1)))
 #'
 #' @rdname print.MLEtf
 #' @export
@@ -264,7 +266,7 @@ print.MLEtf <- function(x, ...) {
 #' @author Sara Garcés Céspedes \email{sgarcesc@unal.edu.co}
 #'
 #' @param object an object of class \code{MLEtf} for which a plot with loss values is desired.
-#' @param ... additional arguments affecting the summary produced.
+#' @param ... additional arguments affecting the plot produced.
 #'
 #'
 #' @details \code{plot_loss.MLEtf} function displays a graph with the loss values, which correspond to the
@@ -279,7 +281,8 @@ print.MLEtf <- function(x, ...) {
 #' x <- rnorm(n = 1000, mean = 10, sd = 3)
 #'
 #' # Use the plot_loss function
-#' plot_loss(mle_tf(x, xdist = "Normal",
+#' plot_loss(mle_tf(x,
+#'                  xdist = "Normal",
 #'                  optimizer = "AdamOptimizer",
 #'                  initparam = list(mean = 1.0, sd = 1.0),
 #'                  hyperparameters = list(learning_rate = 0.1)))

@@ -19,7 +19,7 @@ mlereg_tf(
 )
 }
 \arguments{
-\item{ydist}{an object of class "formula" that specifies the distribution of the response variable.
+\item{ydist}{an object of class "formula" that specifies the distribution of the response variable. The default value is \code{y ~ Normal}.
 The available distributions are: \code{Normal}, \code{Poisson}, \code{Binomial}, \code{Weibull}, \code{Exponential}, \code{LogNormal},
 \code{Beta} and \code{Gamma}. If you want to estimate parameters from a distribution different to the ones mentioned above, you must provide the
 name of an object of class function that contains its probability mass/density function. This \code{R} function must not contain curly brackets
@@ -62,7 +62,7 @@ of the regression model coefficients as well as some information of the optimiza
 iterations needed for convergence.
 }
 \description{
-Function to compute the Maximum Likelihood Estimates of regression parameters using TensorFlow.
+Function to find the Maximum Likelihood Estimates of regression parameters using TensorFlow.
 }
 \details{
 \code{mlereg_tf} computes the log-likelihood function based on the distribution specified in

@@ -46,7 +46,7 @@ This function returns the estimates, standard errors, Z-score and p-values of si
 some information of the optimization process like the number of iterations needed for convergence.
 }
 \description{
-Function to compute the Maximum Likelihood Estimates of distributional parameters using TensorFlow.
+Function to find the Maximum Likelihood Estimates of distributional parameters using TensorFlow.
 }
 \details{
 \code{mle_tf} computes the log-likelihood function of the distribution specified in
@@ -67,7 +67,8 @@ The \code{summary, print, plot_loss} functions can be used with a \code{mle_tf} 
 x <- rnorm(n = 1000, mean = 10, sd = 3)
 
 # Use the mle_tf function
-estimation_1 <- mle_tf(x, xdist = "Normal",
+estimation_1 <- mle_tf(x,
+                       xdist = "Normal",
                        optimizer = "AdamOptimizer",
                        initparam = list(mean = 1.0, sd = 1.0),
                        hyperparameters = list(learning_rate = 0.1))
@@ -86,7 +87,8 @@ pdf <- function(X, lambda) { (1 / ((lambda ^ 2) * (lambda - 1))) *
 x <-  c(3.4, 0.0, 0.0, 15.8, 232.8, 8.8, 123.2, 47, 154, 103.2, 89.8,  12.2)
 
 # Use the mle_tf function
-estimation_2 <- mle_tf(x = x, xdist = pdf,
+estimation_2 <- mle_tf(x = x,
+                       xdist = pdf,
                        initparam = list(lambda = rnorm(1, 5, 1)),
                        optimizer = "AdamOptimizer",
                        hyperparameters = list(learning_rate = 0.1),
