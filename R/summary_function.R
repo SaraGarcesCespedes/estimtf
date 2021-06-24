@@ -144,8 +144,8 @@ summary.MLEtf <- function(object, ...) {
 #'
 #' @author Sara Garcés Céspedes \email{sgarcesc@unal.edu.co}
 #'
-#' @param x an object of class \code{MLEtf} for which the estimates are desired.
-#' @param ... additional arguments affecting the estimates produced.
+#' @param x an object of class \code{MLEtf} for which a visualization of the estimates is desired.
+#' @param ... additional arguments affecting the displayed estimates.
 #'
 #'
 #' @details \code{print.MLEtf} function displays the estimates of parameters from probability distributions
@@ -265,11 +265,11 @@ print.MLEtf <- function(x, ...) {
 #'
 #' @author Sara Garcés Céspedes \email{sgarcesc@unal.edu.co}
 #'
-#' @param object an object of class \code{MLEtf} for which a plot with loss values is desired.
-#' @param ... additional arguments affecting the plot produced.
+#' @param object an object of class \code{MLEtf} for which the construction of a graph with the loss values is desired.
+#' @param ... additional arguments affecting the constructed graph.
 #'
 #'
-#' @details \code{plot_loss.MLEtf} function displays a graph with the loss values, which correspond to the
+#' @details \code{plot_loss.MLEtf} function displays a graph of the loss value, which correspond to the
 #' negative log-likelihood computed in each iteration of the optimization process.
 #'
 #'

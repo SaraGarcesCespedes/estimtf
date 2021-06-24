@@ -7,9 +7,9 @@
 \method{print}{MLEtf}(x, ...)
 }
 \arguments{
-\item{x}{an object of class \code{MLEtf} for which the estimates are desired.}
+\item{x}{an object of class \code{MLEtf} for which a visualization of the estimates is desired.}
 
-\item{...}{additional arguments affecting the estimates produced.}
+\item{...}{additional arguments affecting the displayed estimates.}
 }
 \description{
 Function to display the estimates of parameters from probability

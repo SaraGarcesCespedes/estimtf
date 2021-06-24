@@ -7,9 +7,9 @@
 plot_loss(object, ...)
 }
 \arguments{
-\item{object}{an object of class \code{MLEtf} for which a plot with loss values is desired.}
+\item{object}{an object of class \code{MLEtf} for which the construction of a graph with the loss values is desired.}
 
-\item{...}{additional arguments affecting the plot produced.}
+\item{...}{additional arguments affecting the constructed graph.}
 }
 \description{
 Function to display a graph that contains the loss value computed in each iteration of
@@ -17,7 +17,7 @@ the optimization process performed using the \code{\link{mle_tf}} function or us
 function.
 }
 \details{
-\code{plot_loss.MLEtf} function displays a graph with the loss values, which correspond to the
+\code{plot_loss.MLEtf} function displays a graph of the loss value, which correspond to the
 negative log-likelihood computed in each iteration of the optimization process.
 }
 \examples{
