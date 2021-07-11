@@ -19,11 +19,31 @@ regression models using the TensorFlow optimizers.
 
 ## Installation
 
-You can install `estimtf` from GitHub with the following command:
+You can install `estimtf` from GitHub. It is recommended to follow these
+steps to avoid problems when using the package:
 
 ``` r
-install.packages('devtools')
-devtools::install_github('SaraGarcesCespedes/estimtf', force=TRUE) 
+# Step 1: Install the reticulate package
+install.packages("reticulate")
+library(reticulate)
+
+# Step 2: Install the tensorflow and the tfprobability packages
+install.packages(c("tensorflow", "tfprobability"))
+library(tfprobability)
+
+# Step 3: Use the install_tfprobability() funcion to install TensorFlow and TensorFlow Probability modules
+install_tfprobability()
+
+# Step 4: Confirm that the TensorFlow installation succeded
+library(tensorflow)
+tf$constant("Hello Tensorflow")
+
+# Step 5: Install the devtools package
+install.packages("devtools")
+
+# Step 6: Install and load the estimtf package
+devtools::install_github("SaraGarcesCespedes/estimtf", force=TRUE)
+library(estimtf)
 ```
 
 ## Example
@@ -55,8 +75,8 @@ summary(estimation)
 #> TensorFlow optimizer: AdamOptimizer 
 #> ---------------------------------------------------
 #>      Estimate  Std. Error Z value Pr(>|z|)    
-#> mean   9.82428    0.09631  102.01   <2e-16 ***
-#> sd     3.04552    0.06671   45.65   <2e-16 ***
+#> mean  10.08091    0.09302  108.37   <2e-16 ***
+#> sd     2.94169    0.06444   45.65   <2e-16 ***
 #> ---
 #> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ```
