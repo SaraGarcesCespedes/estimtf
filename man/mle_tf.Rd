@@ -9,6 +9,8 @@ mle_tf(
   xdist = "Normal",
   fixparam = NULL,
   initparam,
+  lower = NULL,
+  upper = NULL,
   optimizer = "AdamOptimizer",
   hyperparameters = NULL,
   maxiter = 10000,
@@ -27,6 +29,10 @@ other than those that enclose the function.}
 \item{fixparam}{a list containing the fixed parameters of the distribution of interest only if they exist. The parameters values and names must be specified in the list.}
 
 \item{initparam}{a list with initial values of the parameters to be estimated. The list must contain the parameters values and names.}
+
+\item{lower}{a list with lower bounds for each parameter to be estimated.The list must contain the parameters lower bounds and names. If NULL, all parameters are assumed to be unconstrained.}
+
+\item{upper}{a list with upper bounds for each parameter to be estimated.The list must contain the parameters upper bounds and names. If NULL, all parameters are assumed to be unconstrained.}
 
 \item{optimizer}{a character indicating the name of the TensorFlow optimizer to be used in the estimation process The default value is \code{'AdamOptimizer'}. The available optimizers are:
 \code{"AdadeltaOptimizer"}, \code{"AdagradDAOptimizer"}, \code{"AdagradOptimizer"}, \code{"AdamOptimizer"}, \code{"GradientDescentOptimizer"},

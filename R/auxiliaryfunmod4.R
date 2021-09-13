@@ -2,7 +2,7 @@
 # Estimation of distribution parameters (disable eager execution) -------
 #------------------------------------------------------------------------
 
-disableagerestim <- function(x, fdp, arguments, fixparam, initparam, opt, hyperparameters, maxiter, tolerance, np, optimizer) {
+disableagerestim <- function(x, fdp, arguments, fixparam, initparam, opt, hyperparameters, maxiter, tolerance, np, optimizer, lower, upper) {
 
         # Disable eager execution
         tensorflow::tf$compat$v1$disable_eager_execution()
@@ -22,6 +22,50 @@ disableagerestim <- function(x, fdp, arguments, fixparam, initparam, opt, hyperp
                                                                      envir = .GlobalEnv))
 
         names(var_list) <- names(initparam)
+
+        # lower and upper limits
+        if (!is.null(lower) & !is.null(upper)) {
+                var_list_new <- vector(mode = "list", length = np)
+                var_list_new <- lapply(1:np,
+                                       FUN = function(i) var_list_new[[i]] <- assign(names(initparam)[i],
+                                                                                     tf$clip_by_value(get(names(initparam)[i], envir = .GlobalEnv),
+                                                                                                      clip_value_min=lower[[names(initparam)[i]]],
+                                                                                                      clip_value_max=upper[[names(initparam)[i]]]),
+                                                                                     envir = .GlobalEnv))
+
+                names(var_list_new) <- names(initparam)
+                var_list <- var_list_new
+        } else if (!is.null(lower) & is.null(upper)) {
+                upper <- vector(mode = "list", length = np)
+                upper <- lapply(1:np, FUN = function(i) upper[[i]] <- Inf)
+                names(upper) <- names(var_list)
+
+                var_list_new <- vector(mode = "list", length = np)
+                var_list_new <- lapply(1:np,
+                                       FUN = function(i) var_list_new[[i]] <- assign(names(initparam)[i],
+                                                                                     tf$clip_by_value(get(names(initparam)[i], envir = .GlobalEnv),
+                                                                                                      clip_value_min=lower[[names(initparam)[i]]],
+                                                                                                      clip_value_max=upper[[names(initparam)[i]]]),
+                                                                                     envir = .GlobalEnv))
+
+                names(var_list_new) <- names(initparam)
+                var_list <- var_list_new
+        } else if (is.null(lower) & !is.null(upper)) {
+                lower <- vector(mode = "list", length = np)
+                lower <- lapply(1:np, FUN = function(i) lower[[i]] <- -Inf)
+                names(lower) <- names(var_list)
+
+                var_list_new <- vector(mode = "list", length = np)
+                var_list_new <- lapply(1:np,
+                                       FUN = function(i) var_list_new[[i]] <- assign(names(initparam)[i],
+                                                                                     tf$clip_by_value(get(names(initparam)[i], envir = .GlobalEnv),
+                                                                                                      clip_value_min=lower[[names(initparam)[i]]],
+                                                                                                      clip_value_max=upper[[names(initparam)[i]]]),
+                                                                                     envir = .GlobalEnv))
+
+                names(var_list_new) <- names(initparam)
+                var_list <- var_list_new
+        }
 
         # Create a list with all parameters, fixed and not fixed
         vartotal <- append(fixparam, var_list)

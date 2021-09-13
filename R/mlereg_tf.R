@@ -57,6 +57,7 @@
 #' @import tensorflow
 #' @import tfprobability
 #' @import reticulate
+#' @import keras
 #'
 #' @examples
 #' #----------------------------------------------------------------------------------
