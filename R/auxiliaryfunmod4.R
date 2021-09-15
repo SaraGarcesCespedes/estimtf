@@ -31,7 +31,7 @@ disableagerestim <- function(x, fdp, arguments, fixparam, initparam, opt, hyperp
                 link <- lapply(1:np, FUN = function(i) link[[i]] <- link(lower[[i]], upper[[i]], var_list[[i]], names(var_list)[i]))
                 var_list_new <- lapply(1:np, FUN = function(i) var_list_new[[i]] <- assign(names(initparam)[i], link[[i]], envir = .GlobalEnv))
                 names(var_list_new) <- names(initparam)
-                var_list <- var_list_new
+                #var_list <- var_list_new
 
         } else if (!is.null(lower) & is.null(upper)) {
                 upper <- vector(mode = "list", length = np)
@@ -41,7 +41,7 @@ disableagerestim <- function(x, fdp, arguments, fixparam, initparam, opt, hyperp
                 link <- lapply(1:np, FUN = function(i) link[[i]] <- link(lower[[i]], upper[[i]], var_list[[i]], names(var_list)[i]))
                 var_list_new <- lapply(1:np, FUN = function(i) var_list_new[[i]] <- assign(names(initparam)[i], link[[i]], envir = .GlobalEnv))
                 names(var_list_new) <- names(initparam)
-                var_list <- var_list_new
+                #var_list <- var_list_new
 
         } else if (is.null(lower) & !is.null(upper)) {
                 lower <- vector(mode = "list", length = np)
@@ -51,11 +51,13 @@ disableagerestim <- function(x, fdp, arguments, fixparam, initparam, opt, hyperp
                 link <- lapply(1:np, FUN = function(i) link[[i]] <- link(lower[[i]], upper[[i]], var_list[[i]], names(var_list)[i]))
                 var_list_new <- lapply(1:np, FUN = function(i) var_list_new[[i]] <- assign(names(initparam)[i], link[[i]], envir = .GlobalEnv))
                 names(var_list_new) <- names(initparam)
-                var_list <- var_list_new
+                #var_list <- var_list_new
+        } else {
+                var_list_new <- var_list
         }
 
         # Create a list with all parameters, fixed and not fixed
-        vartotal <- append(fixparam, var_list)
+        vartotal <- append(fixparam, var_list_new)
 
         # Create vectors to store parameters, gradientes and loss values of each iteration
         loss <- new_list <- parameters <- gradients <- itergrads <- objvariables <- vector(mode = "list")
