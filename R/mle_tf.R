@@ -268,6 +268,8 @@ mle_tf <- function(x, xdist = "Normal", fixparam = NULL, initparam, lower = NULL
 
                 # order of initparam and par_names(names argumdist) must be the same
                 initparam <- initparam[names(argumdist)]
+                upper <- upper[names(argumdist)]
+                lower <- lower[names(argumdist)]
 
         } else {
                 # List of arguments FDP
@@ -376,6 +378,8 @@ mle_tf <- function(x, xdist = "Normal", fixparam = NULL, initparam, lower = NULL
 
                 # order of initparam and par_names(names argumdist) must be the same
                 initparam <- initparam[names(argumdist)]
+                upper <- upper[names(argumdist)]
+                lower <- lower[names(argumdist)]
 
         }
 
