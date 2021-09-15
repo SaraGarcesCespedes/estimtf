@@ -62,6 +62,7 @@ disableagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, 
         # Create a list with all parameters, fixed and not fixed
         vartotal <- append(fixparam, var_list_new)
 
+
         # Create vectors to store parameters, gradientes and loss values of each iteration
         loss <- new_list <- parameters <- gradients <- itergrads <- objvariables <- vector(mode = "list")
 
@@ -209,14 +210,18 @@ link <- function(lower, upper, param_tf, param_name) {
         }
 
 
-
         if (limits[1] == 0 & limits[2] == Inf) {
                 param_final <- tensorflow::tf$exp(param_tf)
         } else if (limits[1] == 0 & limits[2] == 1) {
                 param_final <- tensorflow::tf$exp(param_tf) / (1 + tensorflow::tf$exp(param_tf))
         } else if (limits[1] == -Inf & limits[2] == Inf) {
                 param_final <- param_tf
+        } else {
+                param_final <- tf$clip_by_value(param_tf,
+                                                clip_value_min = lower,
+                                                clip_value_max = upper)
         }
+
 
         return(param_final)
 }
@@ -231,9 +236,9 @@ lossfun <- function(dist, vartotal, X) {
                         tensorflow::tf$reduce_sum(tensorflow::tf$math$exp(vartotal[["mu"]] * X - vartotal[["sigma"]] / X))
         } else if (dist == "InstantaneousFailures") {
                 loss <- -tensorflow::tf$reduce_sum(tensorflow::tf$math$log((((vartotal[["lambda"]] ^ 2) +
-                                                             X - 2 * vartotal[["lambda"]]) *
-                                                             tensorflow::tf$math$exp(-X / vartotal[["lambda"]])) /
-                                                           ((vartotal[["lambda"]] ^ 2) * (vartotal[["lambda"]] - 1))))
+                                                                                     X - 2 * vartotal[["lambda"]]) *
+                                                                                    tensorflow::tf$math$exp(-X / vartotal[["lambda"]])) /
+                                                                                   ((vartotal[["lambda"]] ^ 2) * (vartotal[["lambda"]] - 1))))
         } else if (dist == "Weibull") {
                 loss <- -n * tensorflow::tf$math$log(vartotal[["shape"]]) + vartotal[["shape"]] * n * tensorflow::tf$math$log(vartotal[["scale"]]) -
                         (vartotal[["shape"]] - 1) * tensorflow::tf$reduce_sum(tensorflow::tf$math$log(X)) +
