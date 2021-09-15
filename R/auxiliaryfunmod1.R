@@ -29,7 +29,7 @@ disableagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, 
         # lower and upper limits
         if (!is.null(lower) & !is.null(upper)) {
 
-                link <- lapply(1:np, FUN = function(i) link[[i]] <- link(lower[[i]], upper[[i]], var_list[[i]], names(var_list)[i]))
+                link <- lapply(1:np, FUN = function(i) link[[i]] <- link_dist(lower[[i]], upper[[i]], var_list[[i]], names(var_list)[i]))
                 var_list_new <- lapply(1:np, FUN = function(i) var_list_new[[i]] <- assign(names(initparam)[i], link[[i]], envir = .GlobalEnv))
                 names(var_list_new) <- names(initparam)
                 #var_list <- var_list_new
@@ -39,7 +39,7 @@ disableagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, 
                 upper <- lapply(1:np, FUN = function(i) upper[[i]] <- Inf)
                 names(upper) <- names(var_list)
 
-                link <- lapply(1:np, FUN = function(i) link[[i]] <- link(lower[[i]], upper[[i]], var_list[[i]], names(var_list)[i]))
+                link <- lapply(1:np, FUN = function(i) link[[i]] <- link_dist(lower[[i]], upper[[i]], var_list[[i]], names(var_list)[i]))
                 var_list_new <- lapply(1:np, FUN = function(i) var_list_new[[i]] <- assign(names(initparam)[i], link[[i]], envir = .GlobalEnv))
                 names(var_list_new) <- names(initparam)
                 #var_list <- var_list_new
@@ -49,7 +49,7 @@ disableagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, 
                 lower <- lapply(1:np, FUN = function(i) lower[[i]] <- -Inf)
                 names(lower) <- names(var_list)
 
-                link <- lapply(1:np, FUN = function(i) link[[i]] <- link(lower[[i]], upper[[i]], var_list[[i]], names(var_list)[i]))
+                link <- lapply(1:np, FUN = function(i) link[[i]] <- link_dist(lower[[i]], upper[[i]], var_list[[i]], names(var_list)[i]))
                 var_list_new <- lapply(1:np, FUN = function(i) var_list_new[[i]] <- assign(names(initparam)[i], link[[i]], envir = .GlobalEnv))
                 names(var_list_new) <- names(initparam)
                 #var_list <- var_list_new
@@ -195,7 +195,7 @@ disableagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, 
 #------------------------------------------------------------------------
 # Link function ---------------------------------------------------------
 #------------------------------------------------------------------------
-link <- function(lower, upper, param_tf, param_name) {
+link_dist <- function(lower, upper, param_tf, param_name) {
 
 
         # lower and upper limits
