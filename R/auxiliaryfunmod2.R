@@ -104,7 +104,7 @@ disableagerreg <- function(data, dist, design_matrix, fixparam, initparam, argum
         }
 
         # Compute gradients
-        new_list <- lapply(1:length(regparam), FUN = function(i) new_list[[i]] <- param[[i]])
+        new_list <- lapply(1:length(regparam), FUN = function(i) new_list[[i]] <- regparam[[i]])
         grads <- tensorflow::tf$gradients(loss_value, new_list)
 
         # Define optimizer
@@ -140,7 +140,7 @@ disableagerreg <- function(data, dist, design_matrix, fixparam, initparam, argum
                 # Gradient step
                 sess$run(train, feed_dict = fd)
 
-                objvariables <- lapply(1:length(regparam), FUN = function(i) objvariables[[i]] <- as.numeric(sess$run(new_list[[i]])))
+                objvariables <- lapply(1:length(regparam), FUN = function(i) objvariables[[i]] <- as.numeric(sess$run(regparam[[i]])))
                 itergrads <- lapply(1:length(regparam), FUN = function(i) itergrads[[i]] <- as.numeric(sess$run(grads, feed_dict = fd)[[i]]))
 
 
