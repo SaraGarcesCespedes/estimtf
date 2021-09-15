@@ -253,7 +253,7 @@ mle_tf <- function(x, xdist = "Normal", fixparam = NULL, initparam, lower = NULL
                                 providedvalues <- match(names(upper), names(argumdist))
                                 namesprovidedvalues <- names(upper)
                                 missingvalues <- argumdist[-providedvalues]
-                                upper <- append(upper, rep(-Inf, length(missingvalues))) #valor de 1 a los parametros que no me dieron initparam
+                                upper <- append(upper, rep(Inf, length(missingvalues))) #valor de 1 a los parametros que no me dieron initparam
                                 names(upper) <- c(namesprovidedvalues, names(missingvalues))
                         }
                 }
@@ -333,12 +333,6 @@ mle_tf <- function(x, xdist = "Normal", fixparam = NULL, initparam, lower = NULL
                 # Errors in list lower
                 if (!is.null(lower)) {
 
-                        # change names of parameters to match TF parameters
-                        names_param <- names(lower)
-                        names_new <- vector(mode = "numeric", length = length(names_param))
-                        names_new <- sapply(1:length(names_param), FUN = function(i) names_new[i] <- parameter_name_tf(names_param[i], xdist))
-                        names(lower) <- names_new
-
                         if (all(names(lower) %in% names(argumdist)) == FALSE) {
                                 stop(paste0("Some or all of the parameters included in the 'lower' list do not match with the arguments of ",
                                             " the provided distribution."))
@@ -356,11 +350,6 @@ mle_tf <- function(x, xdist = "Normal", fixparam = NULL, initparam, lower = NULL
                 # Errors in list upper
                 if (!is.null(upper)) {
 
-                        # change names of parameters to match TF parameters
-                        names_param <- names(upper)
-                        names_new <- vector(mode = "numeric", length = length(names_param))
-                        names_new <- sapply(1:length(names_param), FUN = function(i) names_new[i] <- parameter_name_tf(names_param[i], xdist))
-                        names(upper) <- names_new
 
                         if (all(names(upper) %in% names(argumdist)) == FALSE) {
                                 stop(paste0("Some or all of the parameters included in the 'upper' list do not match with the arguments of ",
@@ -371,7 +360,7 @@ mle_tf <- function(x, xdist = "Normal", fixparam = NULL, initparam, lower = NULL
                                 providedvalues <- match(names(upper), names(argumdist))
                                 namesprovidedvalues <- names(upper)
                                 missingvalues <- argumdist[-providedvalues]
-                                upper <- append(upper, rep(-Inf, length(missingvalues))) #valor de 1 a los parametros que no me dieron initparam
+                                upper <- append(upper, rep(Inf, length(missingvalues))) #valor de 1 a los parametros que no me dieron initparam
                                 names(upper) <- c(namesprovidedvalues, names(missingvalues))
                         }
                 }

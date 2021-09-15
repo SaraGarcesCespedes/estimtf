@@ -12,6 +12,8 @@ disableagerestim <- function(x, fdp, arguments, fixparam, initparam, opt, hyperp
 
         # Create list to store the parameters to be estimated
         var_list <- vector(mode = "list", length = np)
+        link <- vector(mode = "list", length = np)
+        var_list_new <- vector(mode = "list", length = np)
 
         # Create tf Variables
         var_list <- lapply(1:np,
@@ -25,44 +27,29 @@ disableagerestim <- function(x, fdp, arguments, fixparam, initparam, opt, hyperp
 
         # lower and upper limits
         if (!is.null(lower) & !is.null(upper)) {
-                var_list_new <- vector(mode = "list", length = np)
-                var_list_new <- lapply(1:np,
-                                       FUN = function(i) var_list_new[[i]] <- assign(names(initparam)[i],
-                                                                                     tf$clip_by_value(get(names(initparam)[i], envir = .GlobalEnv),
-                                                                                                      clip_value_min=lower[[names(initparam)[i]]],
-                                                                                                      clip_value_max=upper[[names(initparam)[i]]]),
-                                                                                     envir = .GlobalEnv))
 
+                link <- lapply(1:np, FUN = function(i) link[[i]] <- link(lower[[i]], upper[[i]], var_list[[i]], names(var_list)[i]))
+                var_list_new <- lapply(1:np, FUN = function(i) var_list_new[[i]] <- assign(names(initparam)[i], link[[i]], envir = .GlobalEnv))
                 names(var_list_new) <- names(initparam)
                 var_list <- var_list_new
+
         } else if (!is.null(lower) & is.null(upper)) {
                 upper <- vector(mode = "list", length = np)
                 upper <- lapply(1:np, FUN = function(i) upper[[i]] <- Inf)
                 names(upper) <- names(var_list)
 
-                var_list_new <- vector(mode = "list", length = np)
-                var_list_new <- lapply(1:np,
-                                       FUN = function(i) var_list_new[[i]] <- assign(names(initparam)[i],
-                                                                                     tf$clip_by_value(get(names(initparam)[i], envir = .GlobalEnv),
-                                                                                                      clip_value_min=lower[[names(initparam)[i]]],
-                                                                                                      clip_value_max=upper[[names(initparam)[i]]]),
-                                                                                     envir = .GlobalEnv))
-
+                link <- lapply(1:np, FUN = function(i) link[[i]] <- link(lower[[i]], upper[[i]], var_list[[i]], names(var_list)[i]))
+                var_list_new <- lapply(1:np, FUN = function(i) var_list_new[[i]] <- assign(names(initparam)[i], link[[i]], envir = .GlobalEnv))
                 names(var_list_new) <- names(initparam)
                 var_list <- var_list_new
+
         } else if (is.null(lower) & !is.null(upper)) {
                 lower <- vector(mode = "list", length = np)
                 lower <- lapply(1:np, FUN = function(i) lower[[i]] <- -Inf)
                 names(lower) <- names(var_list)
 
-                var_list_new <- vector(mode = "list", length = np)
-                var_list_new <- lapply(1:np,
-                                       FUN = function(i) var_list_new[[i]] <- assign(names(initparam)[i],
-                                                                                     tf$clip_by_value(get(names(initparam)[i], envir = .GlobalEnv),
-                                                                                                      clip_value_min=lower[[names(initparam)[i]]],
-                                                                                                      clip_value_max=upper[[names(initparam)[i]]]),
-                                                                                     envir = .GlobalEnv))
-
+                link <- lapply(1:np, FUN = function(i) link[[i]] <- link(lower[[i]], upper[[i]], var_list[[i]], names(var_list)[i]))
+                var_list_new <- lapply(1:np, FUN = function(i) var_list_new[[i]] <- assign(names(initparam)[i], link[[i]], envir = .GlobalEnv))
                 names(var_list_new) <- names(initparam)
                 var_list <- var_list_new
         }
@@ -225,6 +212,36 @@ disableagerestim <- function(x, fdp, arguments, fixparam, initparam, opt, hyperp
         result <- list(results = results.table, vcov = mhess, standarderror = stderror,
                        outputs = outputs)
         return(result)
+}
+
+#------------------------------------------------------------------------
+# Link function ---------------------------------------------------------
+#------------------------------------------------------------------------
+link <- function(lower, upper, param_tf, param_name) {
+
+
+        # lower and upper limits
+        if (!is.null(lower) & !is.null(upper)) {
+                limits <- c(lower, upper)
+        } else if (!is.null(lower) & is.null(upper)) {
+                limits <- c(lower, Inf)
+        } else if (is.null(lower) & !is.null(upper)) {
+                limits <- c(-Inf, upper)
+        } else {
+                limits <- c(-Inf, Inf)
+        }
+
+
+
+        if (limits[1] == 0 & limits[2] == Inf) {
+                param_final <- tensorflow::tf$exp(param_tf)
+        } else if (limits[1] == 0 & limits[2] == 1) {
+                param_final <- tensorflow::tf$exp(param_tf) / (1 + tensorflow::tf$exp(param_tf))
+        } else if (limits[1] == -Inf & limits[2] == Inf) {
+                param_final <- param_tf
+        }
+
+        return(param_final)
 }
 
 #------------------------------------------------------------------------
