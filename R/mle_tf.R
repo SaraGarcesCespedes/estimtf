@@ -12,8 +12,7 @@
 #' other than those that enclose the function.
 #' @param fixparam a list containing the fixed parameters of the distribution of interest only if they exist. The parameters values and names must be specified in the list.
 #' @param initparam a list with initial values of the parameters to be estimated. The list must contain the parameters values and names.
-#' @param lower a list with lower bounds for each parameter to be estimated.The list must contain the parameters lower bounds and names. If NULL, all parameters are assumed to be unconstrained.
-#' @param upper a list with upper bounds for each parameter to be estimated.The list must contain the parameters upper bounds and names. If NULL, all parameters are assumed to be unconstrained.
+#' @param bounds a list with lower and upper bounds for each parameter to be estimated. The list must contain the parameters names and vectors with the bounds. The default value is NULL.
 #' @param optimizer a character indicating the name of the TensorFlow optimizer to be used in the estimation process The default value is \code{'AdamOptimizer'}. The available optimizers are:
 #' \code{"AdadeltaOptimizer"}, \code{"AdagradDAOptimizer"}, \code{"AdagradOptimizer"}, \code{"AdamOptimizer"}, \code{"GradientDescentOptimizer"},
 #' \code{"MomentumOptimizer"} and \code{"RMSPropOptimizer"}.
@@ -82,6 +81,7 @@
 #' estimation_2 <- mle_tf(x = x,
 #'                        xdist = pdf,
 #'                        initparam = list(lambda = rnorm(1, 5, 1)),
+#'                        bounds = list(lambda = c(2, Inf)),
 #'                        optimizer = "AdamOptimizer",
 #'                        hyperparameters = list(learning_rate = 0.1),
 #'                        maxiter = 10000)
@@ -90,11 +90,11 @@
 #' summary(estimation_2)
 #'
 #' @export
-mle_tf <- function(x, xdist = "Normal", fixparam = NULL, initparam, lower = NULL, upper = NULL, optimizer = "AdamOptimizer", hyperparameters = NULL,
+mle_tf <- function(x, xdist = "Normal", fixparam = NULL, initparam, bounds = NULL, optimizer = "AdamOptimizer", hyperparameters = NULL,
                    maxiter = 10000, tolerance = .Machine$double.eps) {
 
         call <- match.call()
-
+        limits <- bounds
 
         # Errors in arguments
 
@@ -188,6 +188,7 @@ mle_tf <- function(x, xdist = "Normal", fixparam = NULL, initparam, lower = NULL
                         argumdist <- argumdist[arg]
                 }
 
+
                 # Errors in list initparam
                 if (!is.null(initparam)) {
 
@@ -197,65 +198,55 @@ mle_tf <- function(x, xdist = "Normal", fixparam = NULL, initparam, lower = NULL
                         names_new <- sapply(1:length(names_param), FUN = function(i) names_new[i] <- parameter_name_tf(names_param[i], xdist))
                         names(initparam) <- names_new
 
+
                         if (all(names(initparam) %in% names(argumdist)) == FALSE) {
                                 stop(paste0("Some or all of the parameters included in the 'initparam' list do not match with the arguments of ",
                                             " the provided distribution."))
                         } else if (length(na.omit(match(names(initparam), names(argumdist)))) > np) {
                                 stop(paste0("Only include in 'initparam' the names of parameters that are not fixed"))
-                        } else {
-                                providedvalues <- match(names(initparam), names(argumdist))
-                                namesprovidedvalues <- names(initparam)
-                                missingvalues <- argumdist[-providedvalues]
-                                initparam <- append(initparam, rep(1.0, length(missingvalues))) #valor de 1 a los parametros que no me dieron initparam
-                                names(initparam) <- c(namesprovidedvalues, names(missingvalues))
+                        } else if (length(na.omit(match(names(initparam), names(argumdist)))) < np) {
+                                stop("It is required to provide start values for all the parameters to estimate.")
+                                # providedvalues <- match(names(initparam), names(argumdist))
+                                # namesprovidedvalues <- names(initparam)
+                                # missingvalues <- argumdist[-providedvalues]
+                                # initparam <- append(initparam, rep(0.0, length(missingvalues)))
+                                # names(initparam) <- c(namesprovidedvalues, names(missingvalues))
                         }
                 }
 
 
-                # Errors in list lower
-                if (!is.null(lower)) {
+                # Errors in list LIMITS
+                if (!is.null(limits)) {
 
                         # change names of parameters to match TF parameters
-                        names_param <- names(lower)
-                        names_new <- vector(mode = "numeric", length = length(names_param))
-                        names_new <- sapply(1:length(names_param), FUN = function(i) names_new[i] <- parameter_name_tf(names_param[i], xdist))
-                        names(lower) <- names_new
+                        names_param_lim <- names(limits)
+                        names_new <- vector(mode = "numeric", length = length(names_param_lim))
+                        names_new <- sapply(1:length(names_param_lim), FUN = function(i) names_new[i] <- parameter_name_tf(names_param_lim[i], xdist))
+                        names(limits) <- names_new
 
-                        if (all(names(lower) %in% names(argumdist)) == FALSE) {
-                                stop(paste0("Some or all of the parameters included in the 'lower' list do not match with the arguments of ",
+                        if (all(names(limits) %in% names(argumdist)) == FALSE) {
+                                stop(paste0("Some or all of the parameters included in the 'limits' list do not match with the arguments of ",
                                             " the provided distribution."))
-                        } else if (length(na.omit(match(names(lower), names(argumdist)))) > np) {
-                                stop(paste0("Only include in 'lower' the names of parameters that are not fixed"))
+                        } else if (length(na.omit(match(names(limits), names(argumdist)))) > np) {
+                                stop(paste0("Only include in 'limits' the names of parameters that are not fixed."))
+                        } else if (!is.numeric(unlist(limits, use.names = FALSE))) {
+                                stop(paste0("The limits provided for each parameter must be numeric."))
                         } else {
-                                providedvalues <- match(names(lower), names(argumdist))
-                                namesprovidedvalues <- names(lower)
+                                providedvalues <- match(names(limits), names(argumdist))
+                                namesprovidedvalues <- names(limits)
                                 missingvalues <- argumdist[-providedvalues]
-                                lower <- append(lower, rep(-Inf, length(missingvalues))) #valor de 1 a los parametros que no me dieron initparam
-                                names(lower) <- c(namesprovidedvalues, names(missingvalues))
+                                limits <- append(limits, rep("na", length(missingvalues))) #valor de 1 a los parametros que no me dieron initparam
+                                names(limits) <- c(namesprovidedvalues, names(missingvalues))
                         }
                 }
 
-                # Errors in list upper
-                if (!is.null(upper)) {
+                # order of initparam and par_names(names argumdist) must be the same
+                initparam <- initparam[names(argumdist)]
+                limits <- limits[names(argumdist)]
 
-                        # change names of parameters to match TF parameters
-                        names_param <- names(upper)
-                        names_new <- vector(mode = "numeric", length = length(names_param))
-                        names_new <- sapply(1:length(names_param), FUN = function(i) names_new[i] <- parameter_name_tf(names_param[i], xdist))
-                        names(upper) <- names_new
-
-                        if (all(names(upper) %in% names(argumdist)) == FALSE) {
-                                stop(paste0("Some or all of the parameters included in the 'upper' list do not match with the arguments of ",
-                                            " the provided distribution."))
-                        } else if (length(na.omit(match(names(upper), names(argumdist)))) > np) {
-                                stop(paste0("Only include in 'upper' the names of parameters that are not fixed"))
-                        } else {
-                                providedvalues <- match(names(upper), names(argumdist))
-                                namesprovidedvalues <- names(upper)
-                                missingvalues <- argumdist[-providedvalues]
-                                upper <- append(upper, rep(Inf, length(missingvalues))) #valor de 1 a los parametros que no me dieron initparam
-                                names(upper) <- c(namesprovidedvalues, names(missingvalues))
-                        }
+                if (!is.null(initparam) & !is.null(limits)) {
+                        # check that all initiparm are inside bounds
+                        sapply(1:np, FUN = function(i) check_initparam(initparam[[i]], limits[[i]], names_param[i]))
                 }
 
                 # If the user do not provide initial values for the parameters to be estimated, by default the values will be 1 or 2
@@ -266,10 +257,7 @@ mle_tf <- function(x, xdist = "Normal", fixparam = NULL, initparam, lower = NULL
                 #         names(initparam) <- names(argumdist)
                 # }
 
-                # order of initparam and par_names(names argumdist) must be the same
-                initparam <- initparam[names(argumdist)]
-                upper <- upper[names(argumdist)]
-                lower <- lower[names(argumdist)]
+
 
         } else {
                 # List of arguments FDP
@@ -318,55 +306,53 @@ mle_tf <- function(x, xdist = "Normal", fixparam = NULL, initparam, lower = NULL
 
                 # Errors in list initparam
                 if (!is.null(initparam)) {
+
+
                         if (all(names(initparam) %in% names(argumdist)) == FALSE) {
                                 stop(paste0("Some or all of the parameters included in the 'initparam' list do not match with the arguments of ",
                                             "the fdp."))
                         } else if (length(na.omit(match(names(initparam), names(argumdist)))) > np) {
                                 stop(paste0("Only include in 'initparam' the names of parameters that are not fixed"))
-                        } else {
-                                providedvalues <- match(names(initparam), names(argumdist))
-                                namesprovidedvalues <- names(initparam)
-                                missingvalues <- argumdist[-providedvalues]
-                                initparam <- append(initparam, rep(0.0, length(missingvalues))) #valor de 1 a los parametros que no me dieron initparam
-                                names(initparam) <- c(namesprovidedvalues, names(missingvalues))
+                        } else if (length(na.omit(match(names(initparam), names(argumdist)))) < np) {
+                                stop("It is required to provide start values for all the parameters to estimate.")
+                                # providedvalues <- match(names(initparam), names(argumdist))
+                                # namesprovidedvalues <- names(initparam)
+                                # missingvalues <- argumdist[-providedvalues]
+                                # initparam <- append(initparam, rep(0.0, length(missingvalues)))
+                                # names(initparam) <- c(namesprovidedvalues, names(missingvalues))
                         }
                 }
 
-                # Errors in list lower
-                if (!is.null(lower)) {
+                # Errors in list LIMITS
+                if (!is.null(limits)) {
 
-                        if (all(names(lower) %in% names(argumdist)) == FALSE) {
-                                stop(paste0("Some or all of the parameters included in the 'lower' list do not match with the arguments of ",
+                        if (all(names(limits) %in% names(argumdist)) == FALSE) {
+                                stop(paste0("Some or all of the parameters included in the 'limits' list do not match with the arguments of ",
                                             " the provided distribution."))
-                        } else if (length(na.omit(match(names(lower), names(argumdist)))) > np) {
-                                stop(paste0("Only include in 'lower' the names of parameters that are not fixed"))
+                        } else if (length(na.omit(match(names(limits), names(argumdist)))) > np) {
+                                stop(paste0("Only include in 'limits' the names of parameters that are not fixed"))
+                        } else if (!is.numeric(unlist(limits, use.names = FALSE))) {
+                                stop(paste0("The limits provided for each parameter must be numeric."))
                         } else {
-                                providedvalues <- match(names(lower), names(argumdist))
-                                namesprovidedvalues <- names(lower)
+                                providedvalues <- match(names(limits), names(argumdist))
+                                namesprovidedvalues <- names(limits)
                                 missingvalues <- argumdist[-providedvalues]
-                                lower <- append(lower, rep(-Inf, length(missingvalues))) #valor de 1 a los parametros que no me dieron initparam
-                                names(lower) <- c(namesprovidedvalues, names(missingvalues))
+                                limits <- append(limits, rep(NULL, length(missingvalues))) #valor de 1 a los parametros que no me dieron initparam
+                                names(limits) <- c(namesprovidedvalues, names(missingvalues))
                         }
                 }
 
-                # Errors in list upper
-                if (!is.null(upper)) {
 
+                # order of initparam and par_names(names argumdist) must be the same
+                initparam <- initparam[names(argumdist)]
+                limits <- limits[names(argumdist)]
+                names_param <- names(initparam)
 
-                        if (all(names(upper) %in% names(argumdist)) == FALSE) {
-                                stop(paste0("Some or all of the parameters included in the 'upper' list do not match with the arguments of ",
-                                            " the provided distribution."))
-                        } else if (length(na.omit(match(names(upper), names(argumdist)))) > np) {
-                                stop(paste0("Only include in 'upper' the names of parameters that are not fixed"))
-                        } else {
-                                providedvalues <- match(names(upper), names(argumdist))
-                                namesprovidedvalues <- names(upper)
-                                missingvalues <- argumdist[-providedvalues]
-                                upper <- append(upper, rep(Inf, length(missingvalues))) #valor de 1 a los parametros que no me dieron initparam
-                                names(upper) <- c(namesprovidedvalues, names(missingvalues))
-                        }
+                if (!is.null(initparam) & !is.null(limits)) {
+                        # check that all initiparm are inside bounds
+
+                        sapply(1:np, FUN = function(i) check_initparam(initparam[[i]], limits[[i]], names_param[i]))
                 }
-
 
                 # If the user do not provide initial values for the parameters to be estimated, by default the values will be 1 or 2
                 # if (is.null(initparam)) {
@@ -376,10 +362,7 @@ mle_tf <- function(x, xdist = "Normal", fixparam = NULL, initparam, lower = NULL
                 #         names(initparam) <- names(argumdist)
                 # }
 
-                # order of initparam and par_names(names argumdist) must be the same
-                initparam <- initparam[names(argumdist)]
-                upper <- upper[names(argumdist)]
-                lower <- lower[names(argumdist)]
+
 
         }
 
@@ -427,9 +410,9 @@ mle_tf <- function(x, xdist = "Normal", fixparam = NULL, initparam, lower = NULL
 
         # With disable eager execution
         if (is.character(xdist)) {
-                res <- disableagerdist(x, dist, fixparam, initparam, opt, hyperparameters, maxiter, tolerance, np, distnotf, xdist, optimizer, lower, upper)
+                res <- disableagerdist(x, dist, fixparam, initparam, opt, hyperparameters, maxiter, tolerance, np, distnotf, xdist, optimizer, limits)
         } else {
-                res <- disableagerestim(x, fdp, arguments, fixparam, initparam, opt, hyperparameters, maxiter, tolerance, np, optimizer, lower, upper)
+                res <- disableagerestim(x, fdp, arguments, fixparam, initparam, opt, hyperparameters, maxiter, tolerance, np, optimizer, limits)
         }
 
         result <- list(tf = res$results, vvoc = res$vcov, stderrtf = res$standarderror,
@@ -450,5 +433,41 @@ arguments <- function(dist) {
                               DoubleExponential = list(loc = NULL, scale = NULL))
 
         return(listarguments[[dist]])
+
+}
+
+#------------------------------------------------------------------------
+# Check values of initparam ---------------------------------------------
+#------------------------------------------------------------------------
+# Methodology taken from Nonlinear Parameter Optimization Using R Tools
+check_initparam <- function(init, limits, name_param) {
+
+        if (length(limits) != 1) {
+                lower <- limits[1]
+                upper <- limits[2]
+
+                low.finite <- is.finite(lower)
+                upp.finite <- is.finite(upper)
+
+                c1 <- low.finite & upp.finite # both lower and upper bounds are finite
+                c2 <- !(low.finite | upp.finite) # both lower and upper bounds infinite
+                c3 <- !(c1 | c2) & low.finite # finite lower bound, infinite upper bound
+                c4 <- !(c1 | c2) & upp.finite # finite upper bound, infinite lower bound
+
+                if (c1 == TRUE) {
+                        if (init < lower | init > upper) {
+                                stop(paste0("The start value for parameter ", name_param, " is out of bounds."))
+                        }
+                } else if (c3 == TRUE) {
+                        if (init < lower)  {
+                                stop(paste0("The start value for parameter ", name_param, " is out of bounds."))
+                        }
+                } else if (c4 == TRUE) {
+                        if (init > upper) {
+                                stop(paste0("The start value for parameter ", name_param, " is out of bounds."))
+                        }
+                }
+
+        }
 
 }

@@ -2,7 +2,7 @@
 # Estimation of distribution parameters (disable eager execution) -------
 #------------------------------------------------------------------------
 
-disableagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, maxiter, tolerance, np, distnotf, xdist, optimizer, lower, upper) {
+disableagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, maxiter, tolerance, np, distnotf, xdist, optimizer, limits) {
 
         # Disable eager execution
         tensorflow::tf$compat$v1$disable_eager_execution()
@@ -26,36 +26,14 @@ disableagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, 
         names(var_list) <- names(initparam)
 
 
-        # lower and upper limits
-        if (!is.null(lower) & !is.null(upper)) {
-
-                link <- lapply(1:np, FUN = function(i) link[[i]] <- link_dist(lower[[i]], upper[[i]], var_list[[i]], names(var_list)[i]))
+        if (!is.null(limits)) {
+                link <- lapply(1:np, FUN = function(i) link[[i]] <- link_dist(limits[[i]], var_list[[i]], names(var_list)[i]))
                 var_list_new <- lapply(1:np, FUN = function(i) var_list_new[[i]] <- assign(names(initparam)[i], link[[i]], envir = .GlobalEnv))
                 names(var_list_new) <- names(initparam)
-                #var_list <- var_list_new
-
-        } else if (!is.null(lower) & is.null(upper)) {
-                upper <- vector(mode = "list", length = np)
-                upper <- lapply(1:np, FUN = function(i) upper[[i]] <- Inf)
-                names(upper) <- names(var_list)
-
-                link <- lapply(1:np, FUN = function(i) link[[i]] <- link_dist(lower[[i]], upper[[i]], var_list[[i]], names(var_list)[i]))
-                var_list_new <- lapply(1:np, FUN = function(i) var_list_new[[i]] <- assign(names(initparam)[i], link[[i]], envir = .GlobalEnv))
-                names(var_list_new) <- names(initparam)
-                #var_list <- var_list_new
-
-        } else if (is.null(lower) & !is.null(upper)) {
-                lower <- vector(mode = "list", length = np)
-                lower <- lapply(1:np, FUN = function(i) lower[[i]] <- -Inf)
-                names(lower) <- names(var_list)
-
-                link <- lapply(1:np, FUN = function(i) link[[i]] <- link_dist(lower[[i]], upper[[i]], var_list[[i]], names(var_list)[i]))
-                var_list_new <- lapply(1:np, FUN = function(i) var_list_new[[i]] <- assign(names(initparam)[i], link[[i]], envir = .GlobalEnv))
-                names(var_list_new) <- names(initparam)
-                #var_list <- var_list_new
         } else {
                 var_list_new <- var_list
         }
+
 
 
 
@@ -144,10 +122,10 @@ disableagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, 
                         } else if (step >= maxiter) {
                                 convergence <- paste("Maximum number of iterations reached.")
                                 break
-                        } else if (isTRUE(sapply(1:np, FUN= function(x) abs(parameters[[step]][[x]]) < tolerance$parameters))) {
+                        } else if (isTRUE(sapply(1:np, FUN= function(x) abs(parameters[[step]][[x]]-parameters[[step-1]][[x]]) < tolerance$parameters))) {
                                 convergence <- paste("Parameters convergence,", step, "iterations needed.")
                                 break
-                        } else if (isTRUE(sapply(1:np, FUN= function(x) abs(gradients[[step]][[x]]) < tolerance$gradients))) {
+                        } else if (isTRUE(sapply(1:np, FUN= function(x) abs(gradients[[step]][[x]]-gradients[[step-1]][[x]]) < tolerance$gradients))) {
                                 convergence <- paste("Gradients convergence,", step, "iterations needed.")
                                 break
                         }
@@ -161,8 +139,15 @@ disableagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, 
         mhess <- sess$run(hess, feed_dict = fd)
         diagvarcov <- hessian_matrix_try(mhess)
         #diagvarcov <- sqrt(diag(solve(mhess)))
-        stderror <- lapply(1:np, FUN = function(i) stderror[[i]] <- diagvarcov[i])
-        names(stderror) <- names(var_list)
+
+        if (!is.null(diagvarcov)) {
+                stderror <- lapply(1:np, FUN = function(i) stderror[[i]] <- diagvarcov[i])
+                names(stderror) <- names(var_list)
+        } else {
+                stderror <- lapply(1:np, FUN = function(i) stderror[[i]] <- NULL)
+                names(stderror) <- names(var_list)
+        }
+
 
         # Close tf session
         sess$close()
@@ -184,45 +169,141 @@ disableagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, 
         # Table of results
         results.table <- cbind(as.numeric(loss), parametersfinal, gradientsfinal)
         colnames(results.table) <- c("loss", names(var_list), namesgradients)
+
+        # transform estimates
+        estimates <- tail(results.table[, 2:(np + 1)], 1)
+
+        if (!is.null(limits)) {
+                estimates_final <- as.numeric()
+                stderror_final <- vector(mode = "list", length = np)
+                results_transform <- vector(mode = "list", length = np)
+                results_transform <- lapply(1:np, FUN = function(i) results_transform[[i]] <- transform(limits[[i]], estimates[i], stderror[[i]]))
+                estimates_final <- sapply(1:np, FUN = function(i) estimates_final[i] <- results_transform[[i]][["estimate_final"]])
+                stderror_final <- lapply(1:np, FUN = function(i) stderror_final[[i]] <- results_transform[[i]][["stderror_final"]])
+        } else {
+                estimates_final <- estimates
+                stderror_final <- stderror
+        }
+
+
         outputs <- list(n = n, type = "MLEdistf", parnames = names(initparam),
-                        estimates = tail(results.table[, 2:(np + 1)], 1),
+                        estimates = estimates_final,
                         convergence = convergence)
-        result <- list(results = results.table, vcov = mhess, standarderror = stderror,
+        result <- list(results = results.table, vcov = mhess, standarderror = stderror_final,
                        outputs = outputs)
         return(result)
 }
-
 #------------------------------------------------------------------------
 # Link function ---------------------------------------------------------
 #------------------------------------------------------------------------
-link_dist <- function(lower, upper, param_tf, param_name) {
+# Methodology taken from Nonlinear Parameter Optimization Using R Tools
+transform <- function(limits, estimate, stderror) {
 
 
-        # lower and upper limits
-        if (!is.null(lower) & !is.null(upper)) {
-                limits <- c(lower, upper)
-        } else if (!is.null(lower) & is.null(upper)) {
-                limits <- c(lower, Inf)
-        } else if (is.null(lower) & !is.null(upper)) {
-                limits <- c(-Inf, upper)
-        } else {
-                limits <- c(-Inf, Inf)
+        qinv <- function(x) {
+                qix <- x
+                if (c1 == TRUE) {
+                        qix <- lower + 0.5 * (upper - lower) * (1 + tanh(x))
+                        stderror_final <- NULL
+                } else if (c2 == TRUE) {
+                        qix <- param_tf
+                        stderror_final <- stderror
+                } else if (c3 == TRUE) {
+                        qix <- lower + exp(x)
+                        stderror_final <- NULL
+                } else if (c4 == TRUE) {
+                        qix <- upper - exp(x)
+                        stderror_final <- NULL
+                }
+                return(list(qix = qix, stderror_final = stderror_final))
         }
 
+        if (length(limits) == 1) {
+                estimate_final <- estimate
+                stderror_final <- stderror
+        } else {
+                if (any(is.na(limits))) {
+                        stop("Any NAs not allowed in bounds.")
+                } else if (any(is.null(limits))) {
+                        stop("Any NULLs not allowed in bounds.")
+                } else if (limits[1] == limits[2]) {
+                        stop("No component of bounds must be equal.")
+                } else if (limits[1] > limits[2]) {
+                        stop("Lower bound can not be greater than upper bound.")
+                } else {
+                        lower <- limits[1]
+                        upper <- limits[2]
 
-        if (limits[1] == 0 & limits[2] == Inf) {
-                param_final <- tensorflow::tf$exp(param_tf)
-        } else if (limits[1] == 0 & limits[2] == 1) {
-                param_final <- tensorflow::tf$exp(param_tf) / (1 + tensorflow::tf$exp(param_tf))
-        } else if (limits[1] == -Inf & limits[2] == Inf) {
+                        low.finite <- is.finite(lower)
+                        upp.finite <- is.finite(upper)
+                        c1 <- low.finite & upp.finite # both lower and upper bounds are finite
+                        c2 <- !(low.finite | upp.finite) # both lower and upper bounds infinite
+                        c3 <- !(c1 | c2) & low.finite # finite lower bound, infinite upper bound
+                        c4 <- !(c1 | c2) & upp.finite # finite upper bound, infinite lower bound
+
+                        results <- qinv(estimate)
+                        estimate_final <- results[["qix"]]
+                        stderror_final <- results[["stderror_final"]]
+                }
+        }
+        return(list(estimate_final = estimate_final, stderror_final = stderror_final))
+}
+
+link_dist <- function(limits, param_tf, param_name) {
+
+        # if (is.null(limits)) {
+        #         param_final <- param_tf
+        # } else if (limits[1] == -Inf & limits[2] == Inf) {
+        #         param_final <- param_tf
+        # } else if (limits[1] == 0 & limits[2] == Inf) {
+        #         param_final <- tensorflow::tf$exp(param_tf)
+        # } else if (limits[1] == 0 & limits[2] == 1) {
+        #         param_final <- tensorflow::tf$exp(param_tf) / (1 + tensorflow::tf$exp(param_tf))
+        # } else {
+        #         param_final <- param_tf
+        #         print(paste0("The limits provided for the parameter", param_name, "are not available in the package.\n",
+        #                      "Check the documentation to see the available limits."))
+        # }
+
+        qinv <- function(x) {
+                qix <- x
+                if (c1 == TRUE) {
+                        qix <- lower + 0.5 * (upper - lower) * (1 + tf$math$tanh(x))
+                } else if (c2 == TRUE) {
+                        qix <- param_tf
+                } else if (c3 == TRUE) {
+                        qix <- lower + tf$math$exp(x)
+                } else if (c4 == TRUE) {
+                        qix <- upper - tf$math$exp(x)
+                }
+                return(qix)
+        }
+
+        if (length(limits) == 1) {
                 param_final <- param_tf
         } else {
-                param_final <- tf$clip_by_value(param_tf,
-                                                clip_value_min = lower,
-                                                clip_value_max = upper)
+                if (any(is.na(limits))) {
+                        stop("Any NAs not allowed in bounds.")
+                } else if (any(is.null(limits))) {
+                        stop("Any NULLs not allowed in bounds.")
+                } else if (limits[1] == limits[2]) {
+                        stop("No component of bounds must be equal.")
+                } else if (limits[1] > limits[2]) {
+                        stop("Lower bound can not be greater than upper bound.")
+                } else {
+                        lower <- limits[1]
+                        upper <- limits[2]
+
+                        low.finite <- is.finite(lower)
+                        upp.finite <- is.finite(upper)
+                        c1 <- low.finite & upp.finite # both lower and upper bounds are finite
+                        c2 <- !(low.finite | upp.finite) # both lower and upper bounds infinite
+                        c3 <- !(c1 | c2) & low.finite # finite lower bound, infinite upper bound
+                        c4 <- !(c1 | c2) & upp.finite # finite upper bound, infinite lower bound
+
+                        param_final <- qinv(param_tf)
+                }
         }
-
-
         return(param_final)
 }
 
@@ -269,10 +350,12 @@ hessian_matrix_try <- function(mhess){
                                        'the matrix has linearly dependent columns which means that there are \n',
                                        'strongly correlated variables. This also happens when having more variables \n',
                                        'than observarions and in this case, the design matrix is not full rank.'))
+                        return(NULL)
                 },
                 warning = function(w){
                         message('Caught an warning!')
                         print(w)
+                        return(NULL)
                 }
         )
 }
