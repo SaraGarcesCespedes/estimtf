@@ -200,13 +200,13 @@ disableagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, 
 transform <- function(limits, estimate, stderror) {
 
 
-        qinv <- function(x) {
+        qinv_transform <- function(x) {
                 qix <- x
                 if (c1 == TRUE) {
                         qix <- lower + 0.5 * (upper - lower) * (1 + tanh(x))
                         stderror_final <- NULL
                 } else if (c2 == TRUE) {
-                        qix <- param_tf
+                        qix <- x
                         stderror_final <- stderror
                 } else if (c3 == TRUE) {
                         qix <- lower + exp(x)
@@ -241,7 +241,7 @@ transform <- function(limits, estimate, stderror) {
                         c3 <- !(c1 | c2) & low.finite # finite lower bound, infinite upper bound
                         c4 <- !(c1 | c2) & upp.finite # finite upper bound, infinite lower bound
 
-                        results <- qinv(estimate)
+                        results <- qinv_transform(estimate)
                         estimate_final <- results[["qix"]]
                         stderror_final <- results[["stderror_final"]]
                 }
@@ -252,12 +252,12 @@ transform <- function(limits, estimate, stderror) {
 link_dist <- function(limits, param_tf, param_name) {
 
 
-        qinv <- function(x) {
+        qinv_link_dist <- function(x) {
                 qix <- x
                 if (c1 == TRUE) {
                         qix <- lower + 0.5 * (upper - lower) * (1 + tf$math$tanh(x))
                 } else if (c2 == TRUE) {
-                        qix <- param_tf
+                        qix <- x
                 } else if (c3 == TRUE) {
                         qix <- lower + tf$math$exp(x)
                 } else if (c4 == TRUE) {
@@ -288,7 +288,7 @@ link_dist <- function(limits, param_tf, param_name) {
                         c3 <- !(c1 | c2) & low.finite # finite lower bound, infinite upper bound
                         c4 <- !(c1 | c2) & upp.finite # finite upper bound, infinite lower bound
 
-                        param_final <- qinv(param_tf)
+                        param_final <- qinv_link_dist(param_tf)
                 }
         }
         return(param_final)
