@@ -9,8 +9,7 @@ mle_tf(
   xdist = "Normal",
   fixparam = NULL,
   initparam,
-  lower = NULL,
-  upper = NULL,
+  bounds = NULL,
   optimizer = "AdamOptimizer",
   hyperparameters = NULL,
   maxiter = 10000,
@@ -30,9 +29,7 @@ other than those that enclose the function.}
 
 \item{initparam}{a list with initial values of the parameters to be estimated. The list must contain the parameters values and names.}
 
-\item{lower}{a list with lower bounds for each parameter to be estimated.The list must contain the parameters lower bounds and names. If NULL, all parameters are assumed to be unconstrained.}
-
-\item{upper}{a list with upper bounds for each parameter to be estimated.The list must contain the parameters upper bounds and names. If NULL, all parameters are assumed to be unconstrained.}
+\item{bounds}{a list with lower and upper bounds for each parameter to be estimated. The list must contain the parameters names and vectors with the bounds. The default value is NULL.}
 
 \item{optimizer}{a character indicating the name of the TensorFlow optimizer to be used in the estimation process The default value is \code{'AdamOptimizer'}. The available optimizers are:
 \code{"AdadeltaOptimizer"}, \code{"AdagradDAOptimizer"}, \code{"AdagradOptimizer"}, \code{"AdamOptimizer"}, \code{"GradientDescentOptimizer"},
@@ -96,6 +93,7 @@ x <-  c(3.4, 0.0, 0.0, 15.8, 232.8, 8.8, 123.2, 47, 154, 103.2, 89.8,  12.2)
 estimation_2 <- mle_tf(x = x,
                        xdist = pdf,
                        initparam = list(lambda = rnorm(1, 5, 1)),
+                       bounds = list(lambda = c(2, Inf)),
                        optimizer = "AdamOptimizer",
                        hyperparameters = list(learning_rate = 0.1),
                        maxiter = 10000)
