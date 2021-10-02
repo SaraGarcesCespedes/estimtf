@@ -275,20 +275,6 @@ transform <- function(limits, estimate, stderror) {
 
 link_dist <- function(limits, param_tf, param_name) {
 
-        # if (is.null(limits)) {
-        #         param_final <- param_tf
-        # } else if (limits[1] == -Inf & limits[2] == Inf) {
-        #         param_final <- param_tf
-        # } else if (limits[1] == 0 & limits[2] == Inf) {
-        #         param_final <- tensorflow::tf$exp(param_tf)
-        # } else if (limits[1] == 0 & limits[2] == 1) {
-        #         param_final <- tensorflow::tf$exp(param_tf) / (1 + tensorflow::tf$exp(param_tf))
-        # } else {
-        #         param_final <- param_tf
-        #         print(paste0("The limits provided for the parameter", param_name, "are not available in the package.\n",
-        #                      "Check the documentation to see the available limits."))
-        # }
-
 
         qinv <- function(x) {
                 qix <- x
