@@ -237,7 +237,6 @@ disableagerregpdf <- function(data, fdp, design_matrix, fixparam, initparam, arg
         mhess <- sess$run(hess, feed_dict = fd)
         diagvarcov <- hessian_matrix_try(mhess)
 
-        print(diagvarcov)
         if (!is.null(diagvarcov)) {
                 stderror <- lapply(1:length(regparam), FUN = function(i) stderror[[i]] <- diagvarcov[i])
                 names(stderror) <- names(regparam)
