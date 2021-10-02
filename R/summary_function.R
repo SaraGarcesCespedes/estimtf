@@ -40,6 +40,11 @@
 summary.MLEtf <- function(object, ...) {
 
         estimates <- as.numeric(object$outputs$estimates)
+        result_estim <- as.data.frame(object$tf)
+        loss <- result_estim[, "loss"]
+        loss_final <- loss[length(loss)]
+        loss_final <- round(loss_final, digits = 4)
+
         if (object$outputs$type != "MLEdistf_fdp" & object$outputs$type != "MLEreg_fdp") {
                 dist <- object$distribution
         }
@@ -55,16 +60,40 @@ summary.MLEtf <- function(object, ...) {
                         cov_matrix <- solve(t(X) %*% V %*% X)
                         stderror <- diag(sqrt(cov_matrix))
                 } else {
-                        stderror <- unlist(object$stderrt, use.names = FALSE)
+                        stderror <- object$stderrt
                 }
         } else {
-                stderror <- unlist(object$stderrt, use.names = FALSE)
+                stderror <- object$stderrt
         }
 
-        zvalue <- as.numeric(estimates / stderror)
-        pvalue <- as.numeric(2 * pnorm(abs(zvalue), lower.tail = FALSE))
+        p <- length(estimates)
+
+        zvalue <- numeric()
+        pvalue <- numeric()
+
+        for (i in 1:p) {
+                if (!is.null(stderror[[i]])) {
+                        zvalue[i] <- as.numeric(estimates[i] / stderror[[i]])
+                        pvalue[i] <- as.numeric(2 * pnorm(abs(zvalue[i]), lower.tail = FALSE))
+                } else {
+                        zvalue[i] <- NA
+                        pvalue[i] <- NA
+                        stderror[[i]] <- NA
+                }
+        }
+
+        stderror <- unlist(stderror, use.names = FALSE)
+
+        # if (!is.null(stderror)) {
+        #   zvalue <- as.numeric(estimates / stderror)
+        #   pvalue <- as.numeric(2 * pnorm(abs(zvalue), lower.tail = FALSE))
+        # } else {
+        #   zvalue <- rep(NA, p)
+        #   pvalue <- rep(NA, p)
+        #   stderror <- rep(NA, p)
+        # }
+
         n <- object$outputs$n
-        p <-length(estimates)
         df <- n - (p)
         #pvalue <- as.numeric(2 * pt(abs(zvalue), df, lower.tail = FALSE))
 
@@ -74,6 +103,7 @@ summary.MLEtf <- function(object, ...) {
                 }
                 cat(paste0('Number of observations: ', object$outputs$n),'\n')
                 cat(paste0('TensorFlow optimizer: ', object$optimizer),'\n')
+                cat(paste0('Negative log-likelihood: ', loss_final),'\n')
                 cat("---------------------------------------------------\n")
                 restable <- cbind(estimate = estimates, stderror = stderror, zvalue = zvalue,
                                   pvalue = pvalue)
@@ -114,6 +144,7 @@ summary.MLEtf <- function(object, ...) {
                 }
                 cat(paste0('Number of observations: ', object$outputs$n),'\n')
                 cat(paste0('TensorFlow optimizer: ', object$optimizer),'\n')
+                cat(paste0('Negative log-likelihood: ', loss_final),'\n')
                 cat("----------------------------------------------------------------\n")
                 restable <- cbind(estimate = estimates, stderror = stderror, zvalue = zvalue,
                                   pvalue = pvalue)
