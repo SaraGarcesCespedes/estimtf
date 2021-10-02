@@ -20,7 +20,7 @@
 #' If you want to use the same initial values for all regression coefficients associated with a specific parameter, you can specify the
 #' name of the parameter and the value. If NULL the default initial value is zero.
 #' @param link_function a list with names of parameters to be linked and the corresponding link function name. The available link functions are:
-#' \code{log}, \code{logit}, \code{inverse} and \code{identity}.
+#' \code{log}, \code{logit}, \code{squared} and \code{identity}.
 #' @param optimizer a character indicating the name of the TensorFlow optimizer to be used in the optimization process. The default value is \code{'AdamOptimizer'}. The available optimizers are:
 #' \code{"AdadeltaOptimizer"}, \code{"AdagradDAOptimizer"}, \code{"AdagradOptimizer"}, \code{"AdamOptimizer"}, \code{"GradientDescentOptimizer"},
 #' \code{"MomentumOptimizer"} and \code{"RMSPropOptimizer"}.
@@ -393,7 +393,7 @@ mlereg_tf <- function(ydist = y ~ Normal, formulas, data, available_distribution
 
 
         # Errors in link_function
-        lfunctions <- c("logit", "log", "inverse", "identity")
+        lfunctions <- c("logit", "log", "identity", "squared")
         if (!is.null(link_function)) {
 
                 verifylink <- lapply(1:length(link_function), FUN = function(x) {
