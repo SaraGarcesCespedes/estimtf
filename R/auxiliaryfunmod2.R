@@ -171,10 +171,10 @@ disableagerreg <- function(data, dist, design_matrix, fixparam, initparam, argum
                         } else if (step >= maxiter) {
                                 convergence <- paste("Maximum number of iterations reached.")
                                 break
-                        } else if (isTRUE(sapply(1:length(regparam), FUN= function(x) abs(parameters[[step]][[x]]) < tolerance$parameters))) {
+                        } else if (isTRUE(sapply(1:np, FUN= function(x) abs(parameters[[step]][[x]]-parameters[[step-1]][[x]]) < tolerance$parameters))) {
                                 convergence <- paste("Parameters convergence,", step, "iterations needed.")
                                 break
-                        } else if (isTRUE(sapply(1:length(regparam), FUN= function(x) abs(gradients[[step]][[x]]) < tolerance$gradients))) {
+                        } else if (isTRUE(sapply(1:np, FUN= function(x) abs(gradients[[step]][[x]]-gradients[[step-1]][[x]]) < tolerance$gradients))) {
                                 convergence <- paste("Gradients convergence,", step, "iterations needed.")
                                 break
                         }
@@ -188,8 +188,15 @@ disableagerreg <- function(data, dist, design_matrix, fixparam, initparam, argum
         hess <- tensorflow::tf$stack(values=hesslist, axis=0)
         mhess <- sess$run(hess, feed_dict = fd)
         diagvarcov <- hessian_matrix_try(mhess)
-        stderror <- lapply(1:length(regparam), FUN = function(i) stderror[[i]] <- diagvarcov[i])
-        names(stderror) <- names(regparam)
+
+        if (!is.null(diagvarcov)) {
+                stderror <- lapply(1:length(regparam), FUN = function(i) stderror[[i]] <- diagvarcov[i])
+                names(stderror) <- names(regparam)
+        } else {
+                stderror <- NULL
+        }
+
+
         # Close tf session
         sess$close()
 
@@ -268,8 +275,8 @@ link <- function(link_function, sum, parameter, ydist) {
                                 sum <- tensorflow::tf$exp(sum)
                         }else if (link_function[[parameter]] == "logit") {
                                 sum <- tensorflow::tf$exp(sum) / (1 + tensorflow::tf$exp(sum))
-                        }else if (link_function[[parameter]] == "inverse") {
-                                sum <- 1 / sum
+                        }else if (link_function[[parameter]] == "squared") {
+                                sum <- sum ^ 2
                         }else if (link_function[[parameter]] == "identity") {
                                 sum <- sum
                         }
@@ -297,10 +304,12 @@ hessian_matrix_try <- function(mhess){
                                        'the matrix has linearly dependent columns which means that there are \n',
                                        'strongly correlated variables. This also happens when having more variables \n',
                                        'than observarions and in this case, the design matrix is not full rank.'))
+                        return(NULL)
                 },
                 warning = function(w){
                         message('Caught an warning!')
                         print(w)
+                        return(NULL)
                 }
         )
 }
