@@ -93,6 +93,8 @@
 mle_tf <- function(x, xdist = "Normal", fixparam = NULL, initparam, bounds = NULL, optimizer = "AdamOptimizer", hyperparameters = NULL,
                    maxiter = 10000, tolerance = .Machine$double.eps) {
 
+
+        tfprobability::install_tfprobability()
         call <- match.call()
         limits <- bounds
 
