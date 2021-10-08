@@ -94,7 +94,7 @@ mle_tf <- function(x, xdist = "Normal", fixparam = NULL, initparam, bounds = NUL
                    maxiter = 10000, tolerance = .Machine$double.eps) {
 
 
-        tfprobability::install_tfprobability()
+        #tfprobability::install_tfprobability()
         call <- match.call()
         limits <- bounds
 
