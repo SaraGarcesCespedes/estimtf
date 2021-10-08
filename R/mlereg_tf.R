@@ -312,8 +312,14 @@ mlereg_tf <- function(ydist = y ~ Normal, formulas, data, available_distribution
                 # respone variable
                 response_var <- all.vars(ydist)[1]
 
-                if (function_loss %in% ls(envir = .GlobalEnv)) {
-                        fdp <- get(function_loss, envir = .GlobalEnv)
+                # if (function_loss %in% ls(envir = .GlobalEnv)) {
+                #         fdp <- get(function_loss, envir = .GlobalEnv)
+                # } else {
+                #         stop(paste0("Function '", function_loss, "' not found in Global Environment."))
+                # }
+
+                if (exists(function_loss)) {
+                        fdp <- get(function_loss)
                 } else {
                         stop(paste0("Function '", function_loss, "' not found in Global Environment."))
                 }
