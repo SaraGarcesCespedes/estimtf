@@ -28,7 +28,7 @@ install.packages("reticulate")
 library(reticulate)
 
 # Step 2: Install the tensorflow and the tfprobability packages
-install.packages(c("tensorflow", "tfprobability"))
+install.packages(c("tensorflow", "tfprobability", "keras"))
 library(tfprobability)
 
 # Step 3: Use the install_tfprobability() funcion to install TensorFlow and TensorFlow Probability modules
@@ -75,8 +75,8 @@ summary(estimation)
 #> TensorFlow optimizer: AdamOptimizer 
 #> ---------------------------------------------------
 #>      Estimate  Std. Error Z value Pr(>|z|)    
-#> mean  10.08091    0.09302  108.37   <2e-16 ***
-#> sd     2.94169    0.06444   45.65   <2e-16 ***
+#> mean  10.07206    0.09229  109.13   <2e-16 ***
+#> sd     2.91862    0.06355   45.92   <2e-16 ***
 #> ---
 #> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ```
