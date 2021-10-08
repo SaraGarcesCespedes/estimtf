@@ -321,7 +321,7 @@ mlereg_tf <- function(ydist = y ~ Normal, formulas, data, available_distribution
                 if (exists(function_loss)) {
                         fdp <- get(function_loss)
                 } else {
-                        stop(paste0("Function '", function_loss, "' not found in Global Environment."))
+                        stop(paste0("Function '", function_loss, "' not found."))
                 }
 
                 arguments <- formals(fdp)
