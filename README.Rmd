@@ -41,7 +41,7 @@ install.packages("reticulate")
 library(reticulate)
 
 # Step 2: Install the tensorflow and the tfprobability packages
-install.packages(c("tensorflow", "tfprobability"))
+install.packages(c("tensorflow", "tfprobability", "keras"))
 library(tfprobability)
 
 # Step 3: Use the install_tfprobability() funcion to install TensorFlow and TensorFlow Probability modules
