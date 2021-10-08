@@ -30,7 +30,7 @@ BugReports: https://github.com/SaraGarcesCespedes/estimtf/issues
 RoxygenNote: 7.1.1
 Depends: R (>= 3.5.0)
 Imports:
-    tensorflow (>= 2.6),
+    tensorflow,
     dplyr,
     reticulate,
     stringr,
