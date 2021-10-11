@@ -14,11 +14,11 @@ parameter_name_tf <- function(parameter, distribution) {
         } else {
                 listparam <- list(mean = "mean",
                                   sd = "sd",
-                                  shape = "concentration",
+                                  shape = "shape",
                                   rate = "rate",
                                   scale = "scale",
-                                  shape1 = "concentration1",
-                                  shape2 = "concentration0",
+                                  shape1 = "shape1",
+                                  shape2 = "shape2",
                                   size = "total_count",
                                   prob = "probs")
         }
@@ -43,11 +43,11 @@ parameter_name_R <- function(parameter, distribution) {
         } else {
                 listparam <- list(mean = "mean",
                                   sd = "sd",
-                                  concentration = "shape",
+                                  shape = "shape",
                                   rate = "rate",
                                   scale = "scale",
-                                  concentration1 = "shape1",
-                                  concentration0 = "shape2",
+                                  shape1 = "shape1",
+                                  shape2 = "shape2",
                                   total_count = "size",
                                   probs = "prob")
         }
