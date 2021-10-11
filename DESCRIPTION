@@ -28,14 +28,12 @@ LazyData: true
 URL: https://github.com/SaraGarcesCespedes/estimtf
 BugReports: https://github.com/SaraGarcesCespedes/estimtf/issues
 RoxygenNote: 7.1.1
-Depends: R (>= 3.5.0)
+Depends: R (>= 4.0.0)
 Imports:
     tensorflow,
     dplyr,
     reticulate,
     stringr,
-    tfprobability,
-    keras,
     purrr,
     stats
 Suggests: 
