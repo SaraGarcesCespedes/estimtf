@@ -74,11 +74,11 @@ summary(estimation)
 #> Distribution: Normal 
 #> Number of observations: 1000 
 #> TensorFlow optimizer: AdamOptimizer 
-#> Negative log-likelihood: 676.9948 
+#> Negative log-likelihood: 665.302 
 #> ---------------------------------------------------
 #>      Estimate  Std. Error Z value Pr(>|z|)    
-#> mean  10.09323    0.09402  107.35   <2e-16 ***
-#> sd     2.97315    0.06586   45.14   <2e-16 ***
+#> mean  10.13735    0.09285   109.2   <2e-16 ***
+#> sd     2.93608    0.06496    45.2   <2e-16 ***
 #> ---
 #> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ```
