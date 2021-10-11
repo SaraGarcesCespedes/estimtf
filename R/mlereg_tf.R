@@ -55,9 +55,7 @@
 #' @importFrom stats printCoefmat
 #' @importFrom stats pnorm
 #' @import tensorflow
-#' @import tfprobability
 #' @import reticulate
-#' @import keras
 #'
 #' @examples
 #' #----------------------------------------------------------------------------------
@@ -100,31 +98,6 @@
 #'
 #' # Get the summary of the estimates
 #' summary(estimation_2)
-#'
-#' #----------------------------------------------------------------------------------
-#' # Estimation of parameter lambda of the Instantaneous Failures distribution
-#'
-#' # Create an R function that contains the probability density function
-#' pdf <- function(y, lambda) { (1 / ((lambda ^ 2) * (lambda - 1))) *
-#'                              (lambda^2 + y - 2*lambda) * exp(-y/lambda) }
-#'
-#' # Data frame with response variable
-#' y <-  c(3.4, 0.0, 0.0, 15.8, 232.8, 8.8, 123.2, 47, 154, 103.2, 89.8,  12.2)
-#' data <- data.frame(y)
-#'
-#' # Use the mlereg_tf function
-#' estimation_3 <- mlereg_tf(ydist = y ~ pdf,
-#'                           formulas = list(lambda = ~1),
-#'                           data = data,
-#'                           initparam = list(lambda = rnorm(1, 5, 1)),
-#'                           available_distribution = FALSE,
-#'                           optimizer = "AdamOptimizer",
-#'                           hyperparameters = list(learning_rate = 0.1),
-#'                           maxiter = 10000)
-#'
-#' # Get the summary of the estimates
-#' summary(estimation_3)
-#'
 #'
 #' @export
 mlereg_tf <- function(ydist = y ~ Normal, formulas, data, available_distribution = TRUE, fixparam = NULL, initparam = NULL, link_function = NULL,
@@ -203,7 +176,7 @@ mlereg_tf <- function(ydist = y ~ Normal, formulas, data, available_distribution
                 }
 
                 if (!(all.vars(ydist)[2] %in% distnotf)) {
-                        dist <- eval(parse(text = paste("tfprobability::tfp$distributions$", all.vars(ydist)[2], sep = "")))
+                        #dist <- eval(parse(text = paste("tfprobability::tfp$distributions$", all.vars(ydist)[2], sep = "")))
                         #dist <- eval(parse(text = paste("tf_prob$distributions$", all.vars(ydist)[2], sep = "")))
                 } else {
                         dist <- all.vars(ydist)[2]

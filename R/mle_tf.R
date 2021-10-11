@@ -46,9 +46,7 @@
 #' @importFrom stats printCoefmat
 #' @importFrom stats pnorm
 #' @import tensorflow
-#' @import tfprobability
 #' @import reticulate
-#' @import keras
 #'
 #' @examples
 #' #-----------------------------------------------------------------------------
@@ -142,7 +140,7 @@ mle_tf <- function(x, xdist = "Normal", fixparam = NULL, initparam, bounds = NUL
                 }
 
                 if (!(xdist %in% distnotf)) {
-                        dist <- eval(parse(text = paste("tfprobability::tfp$distributions$", xdist, sep = "")))
+                        #dist <- eval(parse(text = paste("tfprobability::tfp$distributions$", xdist, sep = "")))
                         #dist <- eval(parse(text = paste("tf_prob$distributions$", xdist, sep = "")))
                 } else {
                         dist <- xdist
@@ -158,7 +156,6 @@ mle_tf <- function(x, xdist = "Normal", fixparam = NULL, initparam, bounds = NUL
                         argumdist <- argumdist$parameters$copy()
                 }
 
-                print(argumdist)
 
                 # Errors in list fixparam
                 # Update argumdist. Leaves all the arguments of the TF distribution except the ones that are fixed
@@ -195,7 +192,6 @@ mle_tf <- function(x, xdist = "Normal", fixparam = NULL, initparam, bounds = NUL
                         argumdist <- argumdist[arg]
                 }
 
-                print(argumdist)
 
                 # Errors in list initparam
                 if (!is.null(initparam)) {
@@ -208,7 +204,6 @@ mle_tf <- function(x, xdist = "Normal", fixparam = NULL, initparam, bounds = NUL
                                 names(initparam) <- names_new
                         }
 
-                        print(names(initparam))
                         if (all(names(initparam) %in% names(argumdist)) == FALSE) {
                                 stop(paste0("Some or all of the parameters included in the 'initparam' list do not match with the arguments of ",
                                             " the provided distribution."))
