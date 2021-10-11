@@ -104,6 +104,7 @@ summary.MLEtf <- function(object, ...) {
                 cat(paste0('Number of observations: ', object$outputs$n),'\n')
                 cat(paste0('TensorFlow optimizer: ', object$optimizer),'\n')
                 cat(paste0('Negative log-likelihood: ', loss_final),'\n')
+                cat(paste0(object$outputs$convergence),'\n')
                 cat("---------------------------------------------------\n")
                 restable <- cbind(estimate = estimates, stderror = stderror, zvalue = zvalue,
                                   pvalue = pvalue)
@@ -145,6 +146,7 @@ summary.MLEtf <- function(object, ...) {
                 cat(paste0('Number of observations: ', object$outputs$n),'\n')
                 cat(paste0('TensorFlow optimizer: ', object$optimizer),'\n')
                 cat(paste0('Negative log-likelihood: ', loss_final),'\n')
+                cat(paste0(object$outputs$convergence),'\n')
                 cat("----------------------------------------------------------------\n")
                 restable <- cbind(estimate = estimates, stderror = stderror, zvalue = zvalue,
                                   pvalue = pvalue)
@@ -217,8 +219,8 @@ print.MLEtf <- function(x, ...) {
                 colnames(restable) <- object$outputs$parnames
                 rownames(restable) <- ""
                 printCoefmat(restable, digits = 4)
-                cat("---------------------------------------------------\n")
-                cat(paste0(object$outputs$convergence),'\n')
+                #cat("---------------------------------------------------\n")
+                #cat(paste0(object$outputs$convergence),'\n')
 
         } else if (object$outputs$type == "MLEregtf" | object$outputs$type == "MLEregtf_fdp") {
                 t <- vector(mode = "list")
@@ -230,8 +232,8 @@ print.MLEtf <- function(x, ...) {
                 } else {
                         t[[1]] <- 0
                 }
-                cat(paste0(object$outputs$convergence),'\n')
-                cat("---------------------------------------------------\n")
+                #cat(paste0(object$outputs$convergence),'\n')
+                #cat("---------------------------------------------------\n")
                 restable <- data.frame(t(estimates))
                 names_param <- object$outputs$names_regparam
                 for (i in 1:object$outputs$np) {
@@ -279,8 +281,8 @@ print.MLEtf <- function(x, ...) {
                 colnames(restable) <- object$outputs$parnames
                 rownames(restable) <- ""
                 printCoefmat(restable, digits = 4)
-                cat("---------------------------------------------------\n")
-                cat(paste0(object$outputs$convergence),'\n')
+                #cat("---------------------------------------------------\n")
+                #cat(paste0(object$outputs$convergence),'\n')
         }
 
 
