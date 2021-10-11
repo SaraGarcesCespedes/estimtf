@@ -3,11 +3,12 @@
 
 <!-- badges: start -->
 
-[![R-CMD-check](https://github.com/SaraGarcesCespedes/estimtf/workflows/R-CMD-check/badge.svg)](https://github.com/SaraGarcesCespedes/estimtf/actions)
+<!-- [![R-CMD-check](https://github.com/SaraGarcesCespedes/estimtf/workflows/R-CMD-check/badge.svg)](https://github.com/SaraGarcesCespedes/estimtf/actions) -->
+
 [![Licence](https://img.shields.io/badge/licence-GPL--3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0.en.html)
 ![GitHub R package
 version](https://img.shields.io/github/r-package/v/SaraGarcesCespedes/estimtf)
-[![CRAN\_Status\_Badge](https://www.r-pkg.org/badges/version/estimtf)](https://cran.r-project.org/package=estimtf)
+<!-- [![CRAN_Status_Badge](https://www.r-pkg.org/badges/version/estimtf)](https://cran.r-project.org/package=estimtf) -->
 <!-- [![Travis build status](https://travis-ci.com/SaraGarcesCespedes/estimtf.svg?branch=master)](https://travis-ci.com/SaraGarcesCespedes/estimtf) -->
 <!-- badges: end -->
 
@@ -73,10 +74,11 @@ summary(estimation)
 #> Distribution: Normal 
 #> Number of observations: 1000 
 #> TensorFlow optimizer: AdamOptimizer 
+#> Negative log-likelihood: 676.9948 
 #> ---------------------------------------------------
 #>      Estimate  Std. Error Z value Pr(>|z|)    
-#> mean  10.07206    0.09229  109.13   <2e-16 ***
-#> sd     2.91862    0.06355   45.92   <2e-16 ***
+#> mean  10.09323    0.09402  107.35   <2e-16 ***
+#> sd     2.97315    0.06586   45.14   <2e-16 ***
 #> ---
 #> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ```

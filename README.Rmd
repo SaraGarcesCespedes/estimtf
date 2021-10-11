@@ -64,7 +64,6 @@ library(estimtf)
 This is a basic example that shows how to estimate the mean and standard deviation parameters from the normal distribution using the `mle_tf` function:
 
 
-
 ```{r example}
 # Load the estimtf package
 library(estimtf)
