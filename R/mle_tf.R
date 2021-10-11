@@ -6,7 +6,7 @@
 #'
 #' @param x a vector containing the data to be fitted.
 #' @param xdist a character indicating the name of the distribution of interest. The default value is \code{'Normal'}.
-#' The available distributions are: \code{Normal}, \code{Poisson}, \code{Binomial}, \code{Weibull}, \code{Exponential}, \code{LogNormal}, \code{Beta} and \code{Gamma}.
+#' The available distributions are: \code{Normal}, \code{Poisson}, \code{Weibull}, \code{Exponential}, \code{LogNormal}, \code{Beta} and \code{Gamma}.
 #' If you want to estimate parameters from a distribution different to the ones mentioned above, you must provide the
 #' name of an object of class function that contains its probability mass/density function. This \code{R} function must not contain curly brackets
 #' other than those that enclose the function.
@@ -131,7 +131,7 @@ mle_tf <- function(x, xdist = "Normal", fixparam = NULL, initparam, bounds = NUL
 
                 # Defining loss function depending on xdist
                 distdisponibles <- c("Normal", "Poisson", "Gamma", "LogNormal", "Weibull", "Exponential",
-                                     "Beta", "Binomial")
+                                     "Beta")
                 distnotf <- c("Normal", "Poisson", "Gamma", "LogNormal", "Weibull", "Exponential",
                               "Beta", "FWE", "InstantaneousFailures", "DoubleExponential")
 

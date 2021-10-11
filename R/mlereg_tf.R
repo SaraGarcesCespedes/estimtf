@@ -5,7 +5,7 @@
 #' @author Sara Garcés Céspedes \email{sgarcesc@unal.edu.co}
 #'
 #' @param ydist an object of class "formula" that specifies the distribution of the response variable. The default value is \code{y ~ Normal}.
-#' The available distributions are: \code{Normal}, \code{Poisson}, \code{Binomial}, \code{Weibull}, \code{Exponential}, \code{LogNormal},
+#' The available distributions are: \code{Normal}, \code{Poisson}, \code{Weibull}, \code{Exponential}, \code{LogNormal},
 #' \code{Beta} and \code{Gamma}. If you want to estimate parameters from a distribution different to the ones mentioned above, you must provide the
 #' name of an object of class function that contains its probability mass/density function. This \code{R} function must not contain curly brackets
 #' other than those that enclose the function.
@@ -167,7 +167,7 @@ mlereg_tf <- function(ydist = y ~ Normal, formulas, data, available_distribution
 
                 # Defining loss function depending on xdist
                 distdisponibles <- c("Normal", "Poisson", "Gamma", "LogNormal", "Weibull", "Exponential",
-                                     "Beta", "Binomial")
+                                     "Beta")
                 distnotf <- c("Normal", "Poisson", "Gamma", "LogNormal", "Weibull", "Exponential",
                               "Beta", "FWE", "InstantaneousFailures", "DoubleExponential")
 
