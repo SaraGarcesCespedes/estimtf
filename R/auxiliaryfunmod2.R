@@ -86,7 +86,6 @@ disableagerreg <- function(data, dist, design_matrix, fixparam, initparam, argum
         param <- lapply(1:np, FUN = function(i) param[[i]] <- assign(names(nbetas)[i], sumlink[[i]], envir = .GlobalEnv))
         names(param) <- names(design_matrix)[1:np]
 
-
         # Create a list with all parameters, fixed and not fixed
         vartotal <- append(fixparam, param)
 
@@ -97,7 +96,7 @@ disableagerreg <- function(data, dist, design_matrix, fixparam, initparam, argum
 
         # Define loss function depending on the distribution
         if (all.vars(ydist)[2] %in% distnotf) {
-                loss_value <- lossfun(dist, vartotal, X, n)
+                loss_value <- lossfun_mlereg(dist, vartotal, X, n)
         } else {
                 density <- do.call(what = dist, vartotal)
                 loss_value <- tensorflow::tf$negative(tensorflow::tf$reduce_sum(density$log_prob(value = X)))
@@ -230,7 +229,7 @@ disableagerreg <- function(data, dist, design_matrix, fixparam, initparam, argum
 #------------------------------------------------------------------------
 # Loss function for distributions not included in TF --------------------
 #------------------------------------------------------------------------
-lossfun <- function(dist, vartotal, X, n) {
+lossfun_mlereg <- function(dist, vartotal, X, n) {
         if (dist == "FWE") {
                 loss <- -tensorflow::tf$reduce_sum(tensorflow::tf$math$log(vartotal[["mu"]] + vartotal[["sigma"]] / (X ^ 2))) -
                         tensorflow::tf$reduce_sum(vartotal[["mu"]] * X - vartotal[["sigma"]] / X) +
@@ -254,6 +253,11 @@ lossfun <- function(dist, vartotal, X, n) {
                 entropy <- tf$nn$sigmoid_cross_entropy_with_logits(labels = X, logits = logits)
                 loss <- tf$reduce_mean(entropy)
                 #loss <- tensorflow::tf$reduce_sum(-X * vartotal[["logits"]] + tensorflow::tf$math$log(1 + tensorflow::tf$exp(vartotal[["logits"]])))
+        } else if (dist == "Normal") {
+                loss <- -(n/2) * tensorflow::tf$math$log(2 * pi) + (n/2) * tensorflow::tf$math$log(vartotal[["sd"]]^2) +
+                        (1/(2*vartotal[["sd"]]^2)) * tensorflow::tf$reduce_sum((X - vartotal[["mean"]])^2)
+        } else if (dist == "Poisson") {
+                loss <- tensorflow::tf$reduce_sum(-X * tensorflow::tf$math$log(vartotal[["lambda"]]) + vartotal[["lambda"]])
         }
 
         return(loss)

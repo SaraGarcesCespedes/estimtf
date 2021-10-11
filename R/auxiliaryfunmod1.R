@@ -40,7 +40,6 @@ disableagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, 
         # Create a list with all parameters, fixed and not fixed
         vartotal <- append(fixparam, var_list_new)
 
-
         # Create vectors to store parameters, gradientes and loss values of each iteration
         loss <- new_list <- parameters <- gradients <- itergrads <- objvariables <- vector(mode = "list")
 
@@ -51,11 +50,12 @@ disableagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, 
 
         # Define loss function depending on the distribution
         if (xdist %in% distnotf) {
-                loss_value <- lossfun(dist, vartotal, X)
+                loss_value <- lossfun_mle(dist, vartotal, X, n)
         } else {
                 density <- do.call(what = dist, vartotal)
                 loss_value <- tensorflow::tf$negative(tensorflow::tf$reduce_sum(density$log_prob(value = X)))
         }
+
 
         # Compute gradients
         grads <- tensorflow::tf$gradients(loss_value, new_list)
@@ -161,11 +161,12 @@ disableagerdist <- function(x, dist, fixparam, initparam, opt, hyperparameters, 
         namesgradients <- sapply(1:np, FUN = function(i) namesgradients <- cbind(namesgradients, paste0("Gradients ", names(var_list)[i])))
 
         # change name of parameters to match R parameters
-        names_param <- names(initparam)
-        names_new <- vector(mode = "numeric", length = length(names_param))
-        names_new <- sapply(1:length(names_param), FUN = function(i) names_new[i] <- parameter_name_R(names_param[i], xdist))
-        names(initparam) <- names_new
-
+        if (!xdist %in% distnotf) {
+                names_param <- names(initparam)
+                names_new <- vector(mode = "numeric", length = length(names_param))
+                names_new <- sapply(1:length(names_param), FUN = function(i) names_new[i] <- parameter_name_R(names_param[i], xdist))
+                names(initparam) <- names_new
+        }
         # Table of results
         results.table <- cbind(as.numeric(loss), parametersfinal, gradientsfinal)
         colnames(results.table) <- c("loss", names(var_list), namesgradients)
@@ -297,7 +298,8 @@ link_dist <- function(limits, param_tf, param_name) {
 #------------------------------------------------------------------------
 # Loss function for distributions not included in TF --------------------
 #------------------------------------------------------------------------
-lossfun <- function(dist, vartotal, X) {
+lossfun_mle <- function(dist, vartotal, X, n) {
+
         if (dist == "FWE") {
                 loss <- -tensorflow::tf$reduce_sum(tensorflow::tf$math$log(vartotal[["mu"]] + vartotal[["sigma"]] / (X ^ 2))) -
                         tensorflow::tf$reduce_sum(vartotal[["mu"]] * X - vartotal[["sigma"]] / X) +
@@ -314,6 +316,11 @@ lossfun <- function(dist, vartotal, X) {
         } else if (dist == "DoubleExponential") {
                 loss <- -n * tensorflow::tf$math$log(1 / (2 * vartotal[["scale"]])) +
                         (1 / vartotal[["scale"]]) * tensorflow::tf$reduce_sum(tensorflow::tf$abs(X - vartotal[["loc"]]))
+        } else if (dist == "Normal") {
+                loss <- -(n/2) * tensorflow::tf$math$log(2 * pi) + (n/2) * tensorflow::tf$math$log(vartotal[["sd"]]^2) +
+                        (1/(2*vartotal[["sd"]]^2)) * tensorflow::tf$reduce_sum((X - vartotal[["mean"]])^2)
+        } else if (dist == "Poisson") {
+                loss <- tensorflow::tf$reduce_sum(-X * tensorflow::tf$math$log(vartotal[["lambda"]]) + vartotal[["lambda"]])
         }
 
         return(loss)
