@@ -301,12 +301,10 @@ mlereg_tf <- function(ydist = y ~ Normal, formulas, data, available_distribution
                 } else {
                         stop(paste0("Function '", function_loss, "' not found."))
                 }
-                print(fdp)
 
                 arguments <- formals(fdp)
                 arguments <- as.list(arguments)
 
-                print(arguments)
 
                 # eliminar variable respuesta de lista vartotal
                 if (response_var %in% names(arguments)) {
