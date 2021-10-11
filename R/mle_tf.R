@@ -134,7 +134,7 @@ mle_tf <- function(x, xdist = "Normal", fixparam = NULL, initparam, bounds = NUL
                 # Defining loss function depending on xdist
                 distdisponibles <- c("Normal", "Poisson", "Gamma", "LogNormal", "Weibull", "Exponential",
                                      "Beta", "Binomial")
-                distnotf <- c("FWE", "InstantaneousFailures", "DoubleExponential")
+                distnotf <- c("Normal", "Poisson", "FWE", "InstantaneousFailures", "DoubleExponential")
 
                 if (!(xdist %in% distdisponibles)) {
                         stop(paste0("The distribution is not available. The following are the \n",
@@ -158,15 +158,19 @@ mle_tf <- function(x, xdist = "Normal", fixparam = NULL, initparam, bounds = NUL
                         argumdist <- argumdist$parameters$copy()
                 }
 
+                print(argumdist)
+
                 # Errors in list fixparam
                 # Update argumdist. Leaves all the arguments of the TF distribution except the ones that are fixed
                 if (!is.null(fixparam)) {
 
                         # change names of parameters to match TF parameters
-                        names_param <- names(fixparam)
-                        names_new <- vector(mode = "numeric", length = length(names_param))
-                        names_new <- sapply(1:length(names_param), FUN = function(i) names_new[i] <- parameter_name_tf(names_param[i], xdist))
-                        names(fixparam) <- names_new
+                        if (!xdist %in% distnotf) {
+                                names_param <- names(fixparam)
+                                names_new <- vector(mode = "numeric", length = length(names_param))
+                                names_new <- sapply(1:length(names_param), FUN = function(i) names_new[i] <- parameter_name_tf(names_param[i], xdist))
+                                names(fixparam) <- names_new
+                        }
 
                         if (length(na.omit(match(names(fixparam), names(argumdist)))) == 0) {
                                 stop(paste0("Names of parameters included in the 'fixparam' list do not match with the parameters of the \n",
@@ -176,6 +180,7 @@ mle_tf <- function(x, xdist = "Normal", fixparam = NULL, initparam, bounds = NUL
                                 argumdist <- argumdist[-fixed]
                         }
                 }
+
 
                 # Calculate number of parameters to be estimated. Remove from argumdist the arguments that are not related with parameters
                 if (xdist %in% distnotf){
@@ -190,17 +195,20 @@ mle_tf <- function(x, xdist = "Normal", fixparam = NULL, initparam, bounds = NUL
                         argumdist <- argumdist[arg]
                 }
 
+                print(argumdist)
 
                 # Errors in list initparam
                 if (!is.null(initparam)) {
 
-                        # change names of parameters to match TF parameters
-                        names_param <- names(initparam)
-                        names_new <- vector(mode = "numeric", length = length(names_param))
-                        names_new <- sapply(1:length(names_param), FUN = function(i) names_new[i] <- parameter_name_tf(names_param[i], xdist))
-                        names(initparam) <- names_new
+                        if (!xdist %in% distnotf) {
+                                # change names of parameters to match TF parameters
+                                names_param <- names(initparam)
+                                names_new <- vector(mode = "numeric", length = length(names_param))
+                                names_new <- sapply(1:length(names_param), FUN = function(i) names_new[i] <- parameter_name_tf(names_param[i], xdist))
+                                names(initparam) <- names_new
+                        }
 
-
+                        print(names(initparam))
                         if (all(names(initparam) %in% names(argumdist)) == FALSE) {
                                 stop(paste0("Some or all of the parameters included in the 'initparam' list do not match with the arguments of ",
                                             " the provided distribution."))
@@ -221,10 +229,12 @@ mle_tf <- function(x, xdist = "Normal", fixparam = NULL, initparam, bounds = NUL
                 if (!is.null(limits)) {
 
                         # change names of parameters to match TF parameters
-                        names_param_lim <- names(limits)
-                        names_new <- vector(mode = "numeric", length = length(names_param_lim))
-                        names_new <- sapply(1:length(names_param_lim), FUN = function(i) names_new[i] <- parameter_name_tf(names_param_lim[i], xdist))
-                        names(limits) <- names_new
+                        if (!xdist %in% distnotf) {
+                                names_param_lim <- names(limits)
+                                names_new <- vector(mode = "numeric", length = length(names_param_lim))
+                                names_new <- sapply(1:length(names_param_lim), FUN = function(i) names_new[i] <- parameter_name_tf(names_param_lim[i], xdist))
+                                names(limits) <- names_new
+                        }
 
                         if (all(names(limits) %in% names(argumdist)) == FALSE) {
                                 stop(paste0("Some or all of the parameters included in the 'limits' list do not match with the arguments of ",
@@ -432,7 +442,9 @@ arguments <- function(dist) {
 
         listarguments <- list(InstantaneousFailures = list(lambda = NULL),
                               Weibull = list(shape = NULL, scale = NULL),
-                              DoubleExponential = list(loc = NULL, scale = NULL))
+                              DoubleExponential = list(loc = NULL, scale = NULL),
+                              Normal = list(mean = NULL, sd = NULL),
+                              Poisson = list(lambda = NULL))
 
         return(listarguments[[dist]])
 

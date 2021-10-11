@@ -195,7 +195,7 @@ mlereg_tf <- function(ydist = y ~ Normal, formulas, data, available_distribution
                 # Defining loss function depending on xdist
                 distdisponibles <- c("Normal", "Poisson", "Gamma", "LogNormal", "Weibull", "Exponential",
                                      "Beta", "Binomial")
-                distnotf <- c("FWE", "InstantaneousFailures", "DoubleExponential")
+                distnotf <- c("Normal", "Poisson", "FWE", "InstantaneousFailures", "DoubleExponential")
 
                 if (!(all.vars(ydist)[2] %in% distdisponibles)) {
                         stop(paste0("The distribution is not available. The following are the \n",
@@ -234,10 +234,12 @@ mlereg_tf <- function(ydist = y ~ Normal, formulas, data, available_distribution
                 if (!is.null(fixparam)) {
 
                         # change names of parameters to match TF parameters
-                        names_param <- names(fixparam)
-                        names_new <- vector(mode = "numeric", length = length(names_param))
-                        names_new <- sapply(1:length(names_param), FUN = function(i) names_new[i] <- parameter_name_tf(names_param[i], all.vars(ydist)[2]))
-                        names(fixparam) <- names_new
+                        if (!(all.vars(ydist)[2] %in% distnotf)) {
+                                names_param <- names(fixparam)
+                                names_new <- vector(mode = "numeric", length = length(names_param))
+                                names_new <- sapply(1:length(names_param), FUN = function(i) names_new[i] <- parameter_name_tf(names_param[i], all.vars(ydist)[2]))
+                                names(fixparam) <- names_new
+                        }
 
                         if (length(na.omit(match(names(argumdist), names(fixparam)))) == 0) {
                                 stop(paste0("Names of fixed parameters do not match with the arguments of \n",
@@ -270,10 +272,12 @@ mlereg_tf <- function(ydist = y ~ Normal, formulas, data, available_distribution
                         }
 
                         # change names of parameters to match TF parameters
-                        names_param <- names(initparam)
-                        names_new <- vector(mode = "numeric", length = length(names_param))
-                        names_new <- sapply(1:length(names_param), FUN = function(i) names_new[i] <- parameter_name_tf(names_param[i], all.vars(ydist)[2]))
-                        names(initparam) <- names_new
+                        if (!(all.vars(ydist)[2] %in% distnotf)) {
+                                names_param <- names(initparam)
+                                names_new <- vector(mode = "numeric", length = length(names_param))
+                                names_new <- sapply(1:length(names_param), FUN = function(i) names_new[i] <- parameter_name_tf(names_param[i], all.vars(ydist)[2]))
+                                names(initparam) <- names_new
+                        }
 
                         if (all(names(initparam) %in% names(argumdist)) == FALSE) {
                                 stop(paste0("Some or all of the parameters included in the 'initparam' list do not match with the arguments of ",
@@ -323,9 +327,12 @@ mlereg_tf <- function(ydist = y ~ Normal, formulas, data, available_distribution
                 } else {
                         stop(paste0("Function '", function_loss, "' not found."))
                 }
+                print(fdp)
 
                 arguments <- formals(fdp)
                 arguments <- as.list(arguments)
+
+                print(arguments)
 
                 # eliminar variable respuesta de lista vartotal
                 if (response_var %in% names(arguments)) {
@@ -413,10 +420,12 @@ mlereg_tf <- function(ydist = y ~ Normal, formulas, data, available_distribution
 
                 # change names of parameters to match TF parameters
                 if (available_distribution == TRUE) {
-                        names_param <- names(link_function)
-                        names_new <- vector(mode = "numeric", length = length(names_param))
-                        names_new <- sapply(1:length(names_param), FUN = function(i) names_new[i] <- parameter_name_tf(names_param[i], all.vars(ydist)[2]))
-                        names(link_function) <- names_new
+                        if (!(all.vars(ydist)[2] %in% distnotf)) {
+                                names_param <- names(link_function)
+                                names_new <- vector(mode = "numeric", length = length(names_param))
+                                names_new <- sapply(1:length(names_param), FUN = function(i) names_new[i] <- parameter_name_tf(names_param[i], all.vars(ydist)[2]))
+                                names(link_function) <- names_new
+                        }
                 }
 
                 if (all(names(link_function) %in% names(argumdist)) == FALSE) {
@@ -552,8 +561,12 @@ arguments <- function(dist) {
         listarguments <- list(InstantaneousFailures = list(lambda = NULL),
                               #Weibull = list(shape = NULL, scale = NULL),
                               DoubleExponential = list(loc = NULL, scale = NULL),
-                              Binomial = list(logits = NULL))
+                              Binomial = list(logits = NULL),
+                              Normal = list(mean = NULL, sd = NULL),
+                              Poisson = list(lambda = NULL))
 
         return(listarguments[[dist]])
 
 }
+
+
