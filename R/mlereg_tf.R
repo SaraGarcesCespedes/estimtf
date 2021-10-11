@@ -168,7 +168,8 @@ mlereg_tf <- function(ydist = y ~ Normal, formulas, data, available_distribution
                 # Defining loss function depending on xdist
                 distdisponibles <- c("Normal", "Poisson", "Gamma", "LogNormal", "Weibull", "Exponential",
                                      "Beta", "Binomial")
-                distnotf <- c("Normal", "Poisson", "FWE", "InstantaneousFailures", "DoubleExponential")
+                distnotf <- c("Normal", "Poisson", "Gamma", "LogNormal", "Weibull", "Exponential",
+                              "Beta", "FWE", "InstantaneousFailures", "DoubleExponential")
 
                 if (!(all.vars(ydist)[2] %in% distdisponibles)) {
                         stop(paste0("The distribution is not available. The following are the \n",
@@ -457,7 +458,7 @@ mlereg_tf <- function(ydist = y ~ Normal, formulas, data, available_distribution
         if (available_distribution == TRUE) {
                 res <- disableagerreg(data, dist, design_matrix, fixparam, initparam, argumdist, opt, hyperparameters, maxiter, tolerance, np, link_function, ydist, distnotf, optimizer)
         } else {
-                res <- disableagerregpdf(data, fdp, design_matrix, fixparam, initparam, argumdist, opt, hyperparameters, maxiter, tolerance, np, link_function, ydist, distnotf, optimizer, arguments, response_var)
+                res <- disableagerregpdf(data, fdp, design_matrix, fixparam, initparam, argumdist, opt, hyperparameters, maxiter, tolerance, np, link_function, ydist, optimizer, arguments, response_var)
         }
 
         result <- list(tf = res$results, vvoc = res$vcov, stderrtf = res$standarderror, dsgmatrix = design_matrix,
@@ -532,11 +533,15 @@ model_matrix_MLreg <- function(formulas, data, ydist, np, par_names, n_formulas)
 arguments <- function(dist) {
 
         listarguments <- list(InstantaneousFailures = list(lambda = NULL),
-                              #Weibull = list(shape = NULL, scale = NULL),
                               DoubleExponential = list(loc = NULL, scale = NULL),
-                              Binomial = list(logits = NULL),
                               Normal = list(mean = NULL, sd = NULL),
-                              Poisson = list(lambda = NULL))
+                              Poisson = list(lambda = NULL),
+                              Gamma = list(shape = NULL, rate = NULL),
+                              Exponential = list(rate = NULL),
+                              Lognormal = list(meanlog = NULL, sdlog = NULL),
+                              Weibull = list(shape = NULL, scale = NULL),
+                              Beta = list(shape1= NULL, shape2 = NULL),
+                              Binomial = list(logits = NULL))
 
         return(listarguments[[dist]])
 

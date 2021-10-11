@@ -321,6 +321,20 @@ lossfun_mle <- function(dist, vartotal, X, n) {
                         (1/(2*vartotal[["sd"]]^2)) * tensorflow::tf$reduce_sum((X - vartotal[["mean"]])^2)
         } else if (dist == "Poisson") {
                 loss <- tensorflow::tf$reduce_sum(-X * tensorflow::tf$math$log(vartotal[["lambda"]]) + vartotal[["lambda"]])
+        } else if (dist == "Gamma") {
+                loss <- -tensorflow::tf$reduce_sum(tensorflow::tf$math$log(((X^(vartotal[["shape"]] - 1)) * tensorflow::tf$math$exp(-vartotal[["rate"]] * X)) /
+                                                                            (tensorflow::tf$math$exp(tensorflow::tf$math$lgamma(vartotal[["shape"]])) * vartotal[["rate"]] ^ {-vartotal[["shape"]]})))
+        } else if (dist == "Exponential") {
+                loss <- -tensorflow::tf$reduce_sum(tensorflow::tf$math$log(vartotal[["rate"]] * tensorflow::tf$math$exp(-vartotal[["rate"]] * X)))
+        } else if (dist == "LogNormal") {
+                loss <- -tensorflow::tf$reduce_sum(tensorflow::tf$math$log((tensorflow::tf$math$exp(-((tensorflow::tf$math$log(X) - vartotal[["meanlog"]])^2) / (2*vartotal[["sdlog"]]^2)))/
+                                                                                   (tensorflow::tf$math$sqrt(2*pi)*vartotal[["sdlog"]]*X)))
+
+        } else if (dist == "Beta") {
+                loss <- -tensorflow::tf$reduce_sum(tensorflow::tf$math$log(((X^{vartotal[["shape1"]]-1})*((1-X)^{vartotal[["shape2"]]-1})) /
+                                                                                   (tensorflow::tf$math$exp(tensorflow::tf$math$lgamma(vartotal[["shape1"]]))*
+                                                                                            (tensorflow::tf$math$exp(tensorflow::tf$math$lgamma(vartotal[["shape2"]]))/
+                                                                                                     tensorflow::tf$math$exp(tensorflow::tf$math$lgamma(vartotal[["shape2"]]+ vartotal[["shape1"]]))))))
         }
 
         return(loss)

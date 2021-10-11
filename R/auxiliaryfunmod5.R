@@ -1,7 +1,7 @@
 #------------------------------------------------------------------------
 # Estimation of regression parameters (disable eager execution) ---------
 #------------------------------------------------------------------------
-disableagerregpdf <- function(data, fdp, design_matrix, fixparam, initparam, argumdist, opt, hyperparameters, maxiter, tolerance, np, link_function, ydist, distnotf, optimizer, arguments, response_var) {
+disableagerregpdf <- function(data, fdp, design_matrix, fixparam, initparam, argumdist, opt, hyperparameters, maxiter, tolerance, np, link_function, ydist, optimizer, arguments, response_var) {
 
         # Disable eager execution
         tensorflow::tf$compat$v1$disable_eager_execution()
@@ -96,14 +96,6 @@ disableagerregpdf <- function(data, fdp, design_matrix, fixparam, initparam, arg
         #X <- Y
         assign(response_var, Y)
 
-
-        # Define loss function depending on the distribution
-        # if (all.vars(ydist)[2] %in% distnotf) {
-        #         loss_value <- lossfun(dist, vartotal, X, n)
-        # } else {
-        #         density <- do.call(what = dist, vartotal)
-        #         loss_value <- tensorflow::tf$negative(tensorflow::tf$reduce_sum(density$log_prob(value = X)))
-        # }
 
 
         # Define loss function depending on the fdp
@@ -270,38 +262,6 @@ disableagerregpdf <- function(data, fdp, design_matrix, fixparam, initparam, arg
 
 }
 
-
-#------------------------------------------------------------------------
-# Loss function for distributions not included in TF --------------------
-#------------------------------------------------------------------------
-lossfun <- function(dist, vartotal, X, n) {
-        if (dist == "FWE") {
-                loss <- -tensorflow::tf$reduce_sum(tensorflow::tf$math$log(vartotal[["mu"]] + vartotal[["sigma"]] / (X ^ 2))) -
-                        tensorflow::tf$reduce_sum(vartotal[["mu"]] * X - vartotal[["sigma"]] / X) +
-                        tensorflow::tf$reduce_sum(tf$math$exp(vartotal[["mu"]] * X - vartotal[["sigma"]] / X))
-        } else if (dist == "InstantaneousFailures") {
-                loss <- -tensorflow::tf$reduce_sum(tensorflow::tf$math$log((((vartotal[["lambda"]] ^ 2) +
-                                                                                     X - 2 * vartotal[["lambda"]]) *
-                                                                                    tensorflow::tf$math$exp(-X / vartotal[["lambda"]])) /
-                                                                                   ((vartotal[["lambda"]] ^ 2) * (vartotal[["lambda"]] - 1))))
-        } else if (dist == "Weibull") {
-                loss <- -n * tensorflow::tf$math$log(vartotal[["shape"]]) + vartotal[["shape"]] * n * tensorflow::tf$math$log(vartotal[["scale"]]) -
-                        (vartotal[["shape"]] - 1) * tensorflow::tf$reduce_sum(tensorflow::tf$math$log(X)) +
-                        tensorflow::tf$reduce_sum((X / vartotal[["scale"]]) ^ vartotal[["shape"]])
-        } else if (dist == "DoubleExponential") {
-                loss <- -n * tensorflow::tf$math$log(1 / (2 * vartotal[["scale"]])) +
-                        (1 / vartotal[["scale"]]) * tensorflow::tf$reduce_sum(tf$abs(X - vartotal[["loc"]]))
-        } else if (dist == "Logistic") {
-
-                logits <- vartotal[["logits"]]
-                logits <- tf$reshape(logits, shape(n, 1))
-                entropy <- tf$nn$sigmoid_cross_entropy_with_logits(labels = X, logits = logits)
-                loss <- tf$reduce_mean(entropy)
-                #loss <- tensorflow::tf$reduce_sum(-X * vartotal[["logits"]] + tensorflow::tf$math$log(1 + tensorflow::tf$exp(vartotal[["logits"]])))
-        }
-
-        return(loss)
-}
 
 
 #------------------------------------------------------------------------

@@ -320,31 +320,6 @@ link_dist <- function(limits, param_tf, param_name) {
 
 
 #------------------------------------------------------------------------
-# Loss function for distributions not included in TF --------------------
-#------------------------------------------------------------------------
-lossfun <- function(dist, vartotal, X) {
-        if (dist == "FWE") {
-                loss <- -tensorflow::tf$reduce_sum(tensorflow::tf$math$log(vartotal[["mu"]] + vartotal[["sigma"]] / (X ^ 2))) -
-                        tensorflow::tf$reduce_sum(vartotal[["mu"]] * X - vartotal[["sigma"]] / X) +
-                        tensorflow::tf$reduce_sum(tensorflow::tf$math$exp(vartotal[["mu"]] * X - vartotal[["sigma"]] / X))
-        } else if (dist == "InstantaneousFailures") {
-                loss <- -tensorflow::tf$reduce_sum(tensorflow::tf$math$log((((vartotal[["lambda"]] ^ 2) +
-                                                                                     X - 2 * vartotal[["lambda"]]) *
-                                                                                    tensorflow::tf$math$exp(-X / vartotal[["lambda"]])) /
-                                                                                   ((vartotal[["lambda"]] ^ 2) * (vartotal[["lambda"]] - 1))))
-        } else if (dist == "Weibull") {
-                loss <- -n * tensorflow::tf$math$log(vartotal[["shape"]]) + vartotal[["shape"]] * n * tensorflow::tf$math$log(vartotal[["scale"]]) -
-                        (vartotal[["shape"]] - 1) * tensorflow::tf$reduce_sum(tensorflow::tf$math$log(X)) +
-                        tensorflow::tf$reduce_sum((X / vartotal[["scale"]]) ^ vartotal[["shape"]])
-        } else if (dist == "DoubleExponential") {
-                loss <- -n * tensorflow::tf$math$log(1 / (2 * vartotal[["scale"]])) +
-                        (1 / vartotal[["scale"]]) * tensorflow::tf$reduce_sum(tensorflow::tf$abs(X - vartotal[["loc"]]))
-        }
-
-        return(loss)
-}
-
-#------------------------------------------------------------------------
 # Hessian Matrix Error --------------------------------------------------
 #------------------------------------------------------------------------
 

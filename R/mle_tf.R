@@ -132,7 +132,8 @@ mle_tf <- function(x, xdist = "Normal", fixparam = NULL, initparam, bounds = NUL
                 # Defining loss function depending on xdist
                 distdisponibles <- c("Normal", "Poisson", "Gamma", "LogNormal", "Weibull", "Exponential",
                                      "Beta", "Binomial")
-                distnotf <- c("Normal", "Poisson", "FWE", "InstantaneousFailures", "DoubleExponential")
+                distnotf <- c("Normal", "Poisson", "Gamma", "LogNormal", "Weibull", "Exponential",
+                              "Beta", "FWE", "InstantaneousFailures", "DoubleExponential")
 
                 if (!(xdist %in% distdisponibles)) {
                         stop(paste0("The distribution is not available. The following are the \n",
@@ -436,10 +437,15 @@ mle_tf <- function(x, xdist = "Normal", fixparam = NULL, initparam, bounds = NUL
 arguments <- function(dist) {
 
         listarguments <- list(InstantaneousFailures = list(lambda = NULL),
-                              Weibull = list(shape = NULL, scale = NULL),
                               DoubleExponential = list(loc = NULL, scale = NULL),
                               Normal = list(mean = NULL, sd = NULL),
-                              Poisson = list(lambda = NULL))
+                              Poisson = list(lambda = NULL),
+                              Gamma = list(shape = NULL, rate = NULL),
+                              Exponential = list(rate = NULL),
+                              Lognormal = list(meanlog = NULL, sdlog = NULL),
+                              Weibull = list(shape = NULL, scale = NULL),
+                              Beta = list(shape1= NULL, shape2 = NULL),
+                              Binomial = list(logits = NULL))
 
         return(listarguments[[dist]])
 
