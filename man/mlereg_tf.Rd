@@ -20,7 +20,7 @@ mlereg_tf(
 }
 \arguments{
 \item{ydist}{an object of class "formula" that specifies the distribution of the response variable. The default value is \code{y ~ Normal}.
-The available distributions are: \code{Normal}, \code{Poisson}, \code{Binomial}, \code{Weibull}, \code{Exponential}, \code{LogNormal},
+The available distributions are: \code{Normal}, \code{Poisson}, \code{Weibull}, \code{Exponential}, \code{LogNormal},
 \code{Beta} and \code{Gamma}. If you want to estimate parameters from a distribution different to the ones mentioned above, you must provide the
 name of an object of class function that contains its probability mass/density function. This \code{R} function must not contain curly brackets
 other than those that enclose the function.}
