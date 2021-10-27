@@ -168,11 +168,12 @@ disableagerestim <- function(x, fdp, arguments, fixparam, initparam, opt, hyperp
         hesslist <- lapply(1:np, FUN = function(i) hesslist[[i]] <- tensorflow::tf$gradients(grads[[i]], new_list))
         hess <- tensorflow::tf$stack(values=hesslist, axis=0)
         mhess <- sess$run(hess, feed_dict = fd)
-        diagvarcov <- hessian_matrix_try(mhess)
+        varcov <- hessian_matrix_try(mhess)
         #diagvarcov <- sqrt(diag(solve(mhess)))
 
-        if (!is.null(diagvarcov)) {
-                stderror <- lapply(1:np, FUN = function(i) stderror[[i]] <- diagvarcov[i])
+        if (!is.null(varcov)) {
+                std_error_vector <- sqrt(diag(varcov))
+                stderror <- lapply(1:np, FUN = function(i) stderror[[i]] <- std_error_vector[i])
                 names(stderror) <- names(var_list)
         } else {
                 stderror <- lapply(1:np, FUN = function(i) stderror[[i]] <- NULL)
@@ -212,7 +213,7 @@ disableagerestim <- function(x, fdp, arguments, fixparam, initparam, opt, hyperp
         outputs <- list(n = n, type = "MLEdistf_fdp", parnames = names(initparam),
                         estimates = estimates_final,
                         convergence = convergence)
-        result <- list(results = results.table, vcov = mhess, standarderror = stderror_final,
+        result <- list(results = results.table, vcov = varcov, standarderror = stderror_final,
                        outputs = outputs)
         return(result)
 }
@@ -326,7 +327,7 @@ link_dist <- function(limits, param_tf, param_name) {
 hessian_matrix_try <- function(mhess){
         tryCatch(
                 expr = {
-                        diagvarcov <- sqrt(diag(solve(mhess)))
+                        diagvarcov <- solve(mhess)
                         return(diagvarcov)
                 },
                 error = function(e){

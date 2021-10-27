@@ -227,10 +227,11 @@ disableagerregpdf <- function(data, fdp, design_matrix, fixparam, initparam, arg
         hesslist <- lapply(1:length(regparam), FUN = function(i) hesslist[[i]] <- tensorflow::tf$gradients(grads[[i]], new_list))
         hess <- tensorflow::tf$stack(values=hesslist, axis=0)
         mhess <- sess$run(hess, feed_dict = fd)
-        diagvarcov <- hessian_matrix_try(mhess)
+        varcov <- hessian_matrix_try(mhess)
 
-        if (!is.null(diagvarcov)) {
-                stderror <- lapply(1:length(regparam), FUN = function(i) stderror[[i]] <- diagvarcov[i])
+        if (!is.null(varcov)) {
+                std_error_vector <- sqrt(diag(varcov))
+                stderror <- lapply(1:length(regparam), FUN = function(i) stderror[[i]] <- std_error_vector[i])
                 names(stderror) <- names(regparam)
         } else {
                 stderror <- NULL
@@ -255,7 +256,7 @@ disableagerregpdf <- function(data, fdp, design_matrix, fixparam, initparam, arg
                         type = "MLEreg_fdp", np = np, names = namesparamvector,
                         estimates = tail(results.table[, 2:(totalbetas + 1)], 1),
                         convergence = convergence, names_regparam = names(design_matrix)[1:np])
-        result <- list(results = results.table, vcov = mhess, standarderror = stderror,
+        result <- list(results = results.table, vcov = varcov, standarderror = stderror,
                        outputs = outputs)
         return(result)
 
@@ -298,7 +299,7 @@ link <- function(link_function, sum, parameter, ydist) {
 hessian_matrix_try <- function(mhess){
         tryCatch(
                 expr = {
-                        diagvarcov <- sqrt(diag(solve(mhess)))
+                        diagvarcov <- solve(mhess)
                         return(diagvarcov)
                 },
                 error = function(e){
