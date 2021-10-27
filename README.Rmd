@@ -85,3 +85,5 @@ summary(estimation)
 
 ```
 
+
+You can visit the [package website](https://saragarcescespedes.github.io/estimtf/) to explore the function reference. 

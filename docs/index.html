@@ -72,9 +72,10 @@
   <div class="contents col-md-9">
 
 
-<div id="estimtf" class="section level1">
+<div id="estimtf-" class="section level1">
 <div class="page-header"><h1 class="hasAnchor">
-<a href="#estimtf" class="anchor"></a>estimtf</h1></div>
+<a href="#estimtf-" class="anchor"></a>estimtf <img src="reference/figures/logo_sinfondo.png" align="right" height="180">
+</h1></div>
 <p>The <code>estimtf</code> package provides functions to find the Maximum Likelihood Estimates of parameters from probability distributions and linear regression models using the TensorFlow optimizers.</p>
 <div id="installation" class="section level2">
 <h2 class="hasAnchor">
@@ -87,10 +88,10 @@
 
 <span class="co"># Step 2: Install the tensorflow and the tfprobability packages</span>
 <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html">install.packages</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"tensorflow"</span>, <span class="st">"tfprobability"</span>, <span class="st">"keras"</span><span class="op">)</span><span class="op">)</span>
-<span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/rstudio/tfprobability">tfprobability</a></span><span class="op">)</span>
+<span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va">tfprobability</span><span class="op">)</span>
 
 <span class="co"># Step 3: Use the install_tfprobability() funcion to install TensorFlow and TensorFlow Probability modules</span>
-<span class="fu"><a href="https://rdrr.io/pkg/tfprobability/man/install_tfprobability.html">install_tfprobability</a></span><span class="op">(</span><span class="op">)</span>
+<span class="fu">install_tfprobability</span><span class="op">(</span><span class="op">)</span>
 
 <span class="co"># Step 4: Confirm that the TensorFlow installation succeded</span>
 <span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/rstudio/tensorflow">tensorflow</a></span><span class="op">)</span>
@@ -128,13 +129,15 @@
 <span class="co">#&gt; Distribution: Normal </span>
 <span class="co">#&gt; Number of observations: 1000 </span>
 <span class="co">#&gt; TensorFlow optimizer: AdamOptimizer </span>
-<span class="co">#&gt; Negative log-likelihood: 676.9948 </span>
+<span class="co">#&gt; Negative log-likelihood: 684.599 </span>
+<span class="co">#&gt; Loss function convergence, 2183 iterations needed. </span>
 <span class="co">#&gt; ---------------------------------------------------</span>
 <span class="co">#&gt;      Estimate  Std. Error Z value Pr(&gt;|z|)    </span>
-<span class="co">#&gt; mean  10.09323    0.09402  107.35   &lt;2e-16 ***</span>
-<span class="co">#&gt; sd     2.97315    0.06586   45.14   &lt;2e-16 ***</span>
+<span class="co">#&gt; mean  10.05312    0.09463  106.23   &lt;2e-16 ***</span>
+<span class="co">#&gt; sd     2.99259    0.06619   45.22   &lt;2e-16 ***</span>
 <span class="co">#&gt; ---</span>
 <span class="co">#&gt; Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</span></code></pre></div>
+<p>You can visit the <a href="https://saragarcescespedes.github.io/estimtf/">package website</a> to explore the function reference.</p>
 </div>
 </div>
 
@@ -168,6 +171,7 @@
 <h2>Dev status</h2>
 <ul class="list-unstyled">
 <li><a href="https://www.gnu.org/licenses/gpl-3.0.en.html"><img src="https://img.shields.io/badge/licence-GPL--3-blue.svg" alt="Licence"></a></li>
+<li><a href="https://cran.r-project.org/package=estimtf"><img src="https://www.r-pkg.org/badges/version/estimtf" alt="CRAN_Status_Badge"></a></li>
 </ul>
 </div>
 </div>

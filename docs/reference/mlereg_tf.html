@@ -137,7 +137,7 @@
     <tr>
       <th>ydist</th>
       <td><p>an object of class "formula" that specifies the distribution of the response variable. The default value is <code>y ~ Normal</code>.
-The available distributions are: <code>Normal</code>, <code>Poisson</code>, <code>Binomial</code>, <code>Weibull</code>, <code>Exponential</code>, <code>LogNormal</code>,
+The available distributions are: <code>Normal</code>, <code>Poisson</code>, <code>Weibull</code>, <code>Exponential</code>, <code>LogNormal</code>,
 <code>Beta</code> and <code>Gamma</code>. If you want to estimate parameters from a distribution different to the ones mentioned above, you must provide the
 name of an object of class function that contains its probability mass/density function. This <code>R</code> function must not contain curly brackets
 other than those that enclose the function.</p></td>
@@ -155,7 +155,7 @@ the name of the parameter and it must contain an <code><a href='https://rdrr.io/
     <tr>
       <th>available_distribution</th>
       <td><p>logical. If <code>TRUE</code>, the distribution of the response variable is one of the following distributions: <code>Normal</code>,
-<code>Poisson</code>, <code>Binomial</code>, <code>Weibull</code>, <code>Exponential</code>, <code>LogNormal</code>, <code>Beta</code> and <code>Gamma</code>.</p></td>
+<code>Poisson</code>, <code>Weibull</code>, <code>Exponential</code>, <code>LogNormal</code>, <code>Beta</code> and <code>Gamma</code>.</p></td>
     </tr>
     <tr>
       <th>fixparam</th>
@@ -174,9 +174,9 @@ name of the parameter and the value. If NULL the default initial value is zero.<
     </tr>
     <tr>
       <th>optimizer</th>
-      <td><p>a character indicating the name of the TensorFlow optimizer to be used in the optimization process. The default value is <code>'AdamOptimizer'</code>. The available optimizers are:
-<code>"AdadeltaOptimizer"</code>, <code>"AdagradDAOptimizer"</code>, <code>"AdagradOptimizer"</code>, <code>"AdamOptimizer"</code>, <code>"GradientDescentOptimizer"</code>,
-<code>"MomentumOptimizer"</code> and <code>"RMSPropOptimizer"</code>.</p></td>
+      <td><p>a character indicating the name of the TensorFlow optimizer to be used in the optimization process. The default value is <code>AdamOptimizer</code>. The available optimizers are:
+<code>AdadeltaOptimizer</code>, <code>AdagradDAOptimizer</code>, <code>AdagradOptimizer</code>, <code>AdamOptimizer</code>, <code>GradientDescentOptimizer</code>,
+<code>MomentumOptimizer</code> and <code>RMSPropOptimizer</code>.</p></td>
     </tr>
     <tr>
       <th>hyperparameters</th>
