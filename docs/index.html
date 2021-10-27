@@ -86,12 +86,12 @@
 <span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html">install.packages</a></span><span class="op">(</span><span class="st">"reticulate"</span><span class="op">)</span>
 <span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/rstudio/reticulate">reticulate</a></span><span class="op">)</span>
 
-<span class="co"># Step 2: Install the tensorflow and the tfprobability packages</span>
-<span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html">install.packages</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html">c</a></span><span class="op">(</span><span class="st">"tensorflow"</span>, <span class="st">"tfprobability"</span>, <span class="st">"keras"</span><span class="op">)</span><span class="op">)</span>
-<span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va">tfprobability</span><span class="op">)</span>
+<span class="co"># Step 2: Install the tensorflow package</span>
+<span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html">install.packages</a></span><span class="op">(</span><span class="st">"tensorflow"</span><span class="op">)</span>
+<span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/rstudio/tensorflow">tensorflow</a></span><span class="op">)</span>
 
-<span class="co"># Step 3: Use the install_tfprobability() funcion to install TensorFlow and TensorFlow Probability modules</span>
-<span class="fu">install_tfprobability</span><span class="op">(</span><span class="op">)</span>
+<span class="co"># Step 3: Use the install_tensorflow() funcion to install the TensorFlow module</span>
+<span class="fu"><a href="https://rdrr.io/pkg/tensorflow/man/install_tensorflow.html">install_tensorflow</a></span><span class="op">(</span><span class="op">)</span>
 
 <span class="co"># Step 4: Confirm that the TensorFlow installation succeded</span>
 <span class="kw"><a href="https://rdrr.io/r/base/library.html">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/rstudio/tensorflow">tensorflow</a></span><span class="op">)</span>
@@ -129,12 +129,12 @@
 <span class="co">#&gt; Distribution: Normal </span>
 <span class="co">#&gt; Number of observations: 1000 </span>
 <span class="co">#&gt; TensorFlow optimizer: AdamOptimizer </span>
-<span class="co">#&gt; Negative log-likelihood: 684.599 </span>
-<span class="co">#&gt; Loss function convergence, 2183 iterations needed. </span>
+<span class="co">#&gt; Negative log-likelihood: 728.1349 </span>
+<span class="co">#&gt; Loss function convergence, 2510 iterations needed. </span>
 <span class="co">#&gt; ---------------------------------------------------</span>
 <span class="co">#&gt;      Estimate  Std. Error Z value Pr(&gt;|z|)    </span>
-<span class="co">#&gt; mean  10.05312    0.09463  106.23   &lt;2e-16 ***</span>
-<span class="co">#&gt; sd     2.99259    0.06619   45.22   &lt;2e-16 ***</span>
+<span class="co">#&gt; mean  10.20496    0.09890  103.18   &lt;2e-16 ***</span>
+<span class="co">#&gt; sd     3.12757    0.06923   45.18   &lt;2e-16 ***</span>
 <span class="co">#&gt; ---</span>
 <span class="co">#&gt; Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1</span></code></pre></div>
 <p>You can visit the <a href="https://saragarcescespedes.github.io/estimtf/">package website</a> to explore the function reference.</p>
