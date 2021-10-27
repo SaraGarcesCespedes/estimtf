@@ -28,12 +28,12 @@ steps to avoid problems when using the package:
 install.packages("reticulate")
 library(reticulate)
 
-# Step 2: Install the tensorflow and the tfprobability packages
-install.packages(c("tensorflow", "tfprobability", "keras"))
-library(tfprobability)
+# Step 2: Install the tensorflow package
+install.packages("tensorflow")
+library(tensorflow)
 
-# Step 3: Use the install_tfprobability() funcion to install TensorFlow and TensorFlow Probability modules
-install_tfprobability()
+# Step 3: Use the install_tensorflow() funcion to install the TensorFlow module
+install_tensorflow()
 
 # Step 4: Confirm that the TensorFlow installation succeded
 library(tensorflow)
@@ -74,12 +74,12 @@ summary(estimation)
 #> Distribution: Normal 
 #> Number of observations: 1000 
 #> TensorFlow optimizer: AdamOptimizer 
-#> Negative log-likelihood: 684.599 
-#> Loss function convergence, 2183 iterations needed. 
+#> Negative log-likelihood: 728.1349 
+#> Loss function convergence, 2510 iterations needed. 
 #> ---------------------------------------------------
 #>      Estimate  Std. Error Z value Pr(>|z|)    
-#> mean  10.05312    0.09463  106.23   <2e-16 ***
-#> sd     2.99259    0.06619   45.22   <2e-16 ***
+#> mean  10.20496    0.09890  103.18   <2e-16 ***
+#> sd     3.12757    0.06923   45.18   <2e-16 ***
 #> ---
 #> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ```
