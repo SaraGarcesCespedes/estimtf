@@ -19,7 +19,7 @@ mle_tf(
 \arguments{
 \item{x}{a vector containing the data to be fitted.}
 
-\item{xdist}{a character indicating the name of the distribution of interest. The default value is \code{'Normal'}.
+\item{xdist}{a character indicating the name of the distribution of interest. The default value is \code{Normal}.
 The available distributions are: \code{Normal}, \code{Poisson}, \code{Weibull}, \code{Exponential}, \code{LogNormal}, \code{Beta} and \code{Gamma}.
 If you want to estimate parameters from a distribution different to the ones mentioned above, you must provide the
 name of an object of class function that contains its probability mass/density function. This \code{R} function must not contain curly brackets
@@ -31,9 +31,9 @@ other than those that enclose the function.}
 
 \item{bounds}{a list with lower and upper bounds for each parameter to be estimated. The list must contain the parameters names and vectors with the bounds. The default value is NULL.}
 
-\item{optimizer}{a character indicating the name of the TensorFlow optimizer to be used in the estimation process The default value is \code{'AdamOptimizer'}. The available optimizers are:
-\code{"AdadeltaOptimizer"}, \code{"AdagradDAOptimizer"}, \code{"AdagradOptimizer"}, \code{"AdamOptimizer"}, \code{"GradientDescentOptimizer"},
-\code{"MomentumOptimizer"} and \code{"RMSPropOptimizer"}.}
+\item{optimizer}{a character indicating the name of the TensorFlow optimizer to be used in the estimation process The default value is \code{AdamOptimizer}. The available optimizers are:
+\code{AdadeltaOptimizer}, \code{AdagradDAOptimizer}, \code{AdagradOptimizer}, \code{AdamOptimizer}, \code{GradientDescentOptimizer},
+\code{MomentumOptimizer} and \code{RMSPropOptimizer}.}
 
 \item{hyperparameters}{a list with the hyperparameters values of the selected TensorFlow optimizer. If the hyperparameters are not specified, their default values
 will be used in the oprimization process. For more details of the hyperparameters go to this URL:

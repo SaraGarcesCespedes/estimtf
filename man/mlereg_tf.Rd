@@ -32,7 +32,7 @@ the name of the parameter and it must contain an \code{~}. The terms on the righ
 \item{data}{a data frame containing the response variable and the covariates.}
 
 \item{available_distribution}{logical. If \code{TRUE}, the distribution of the response variable is one of the following distributions: \code{Normal},
-\code{Poisson}, \code{Binomial}, \code{Weibull}, \code{Exponential}, \code{LogNormal}, \code{Beta} and \code{Gamma}.}
+\code{Poisson}, \code{Weibull}, \code{Exponential}, \code{LogNormal}, \code{Beta} and \code{Gamma}.}
 
 \item{fixparam}{a list containing the fixed parameters of the model only if they exist. The parameters values and names must be specified in the list.}
 
@@ -43,9 +43,9 @@ name of the parameter and the value. If NULL the default initial value is zero.}
 \item{link_function}{a list with names of parameters to be linked and the corresponding link function name. The available link functions are:
 \code{log}, \code{logit}, \code{squared} and \code{identity}.}
 
-\item{optimizer}{a character indicating the name of the TensorFlow optimizer to be used in the optimization process. The default value is \code{'AdamOptimizer'}. The available optimizers are:
-\code{"AdadeltaOptimizer"}, \code{"AdagradDAOptimizer"}, \code{"AdagradOptimizer"}, \code{"AdamOptimizer"}, \code{"GradientDescentOptimizer"},
-\code{"MomentumOptimizer"} and \code{"RMSPropOptimizer"}.}
+\item{optimizer}{a character indicating the name of the TensorFlow optimizer to be used in the optimization process. The default value is \code{AdamOptimizer}. The available optimizers are:
+\code{AdadeltaOptimizer}, \code{AdagradDAOptimizer}, \code{AdagradOptimizer}, \code{AdamOptimizer}, \code{GradientDescentOptimizer},
+\code{MomentumOptimizer} and \code{RMSPropOptimizer}.}
 
 \item{hyperparameters}{a list with the hyperparameters values of the selected TensorFlow optimizer. If the hyperparameters are not specified, their default values
 will be used in the oprimization process. For more details of the hyperparameters go to this URL:

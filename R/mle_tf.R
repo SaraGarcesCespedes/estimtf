@@ -5,7 +5,7 @@
 #' @author Sara Garcés Céspedes \email{sgarcesc@unal.edu.co}
 #'
 #' @param x a vector containing the data to be fitted.
-#' @param xdist a character indicating the name of the distribution of interest. The default value is \code{'Normal'}.
+#' @param xdist a character indicating the name of the distribution of interest. The default value is \code{Normal}.
 #' The available distributions are: \code{Normal}, \code{Poisson}, \code{Weibull}, \code{Exponential}, \code{LogNormal}, \code{Beta} and \code{Gamma}.
 #' If you want to estimate parameters from a distribution different to the ones mentioned above, you must provide the
 #' name of an object of class function that contains its probability mass/density function. This \code{R} function must not contain curly brackets
@@ -13,9 +13,9 @@
 #' @param fixparam a list containing the fixed parameters of the distribution of interest only if they exist. The parameters values and names must be specified in the list.
 #' @param initparam a list with initial values of the parameters to be estimated. The list must contain the parameters values and names.
 #' @param bounds a list with lower and upper bounds for each parameter to be estimated. The list must contain the parameters names and vectors with the bounds. The default value is NULL.
-#' @param optimizer a character indicating the name of the TensorFlow optimizer to be used in the estimation process The default value is \code{'AdamOptimizer'}. The available optimizers are:
-#' \code{"AdadeltaOptimizer"}, \code{"AdagradDAOptimizer"}, \code{"AdagradOptimizer"}, \code{"AdamOptimizer"}, \code{"GradientDescentOptimizer"},
-#' \code{"MomentumOptimizer"} and \code{"RMSPropOptimizer"}.
+#' @param optimizer a character indicating the name of the TensorFlow optimizer to be used in the estimation process The default value is \code{AdamOptimizer}. The available optimizers are:
+#' \code{AdadeltaOptimizer}, \code{AdagradDAOptimizer}, \code{AdagradOptimizer}, \code{AdamOptimizer}, \code{GradientDescentOptimizer},
+#' \code{MomentumOptimizer} and \code{RMSPropOptimizer}.
 #' @param hyperparameters a list with the hyperparameters values of the selected TensorFlow optimizer. If the hyperparameters are not specified, their default values
 #' will be used in the oprimization process. For more details of the hyperparameters go to this URL:
 #' \href{https://www.tensorflow.org/api_docs/python/tf/compat/v1/train}{https://www.tensorflow.org/api_docs/python/tf/compat/v1/train}

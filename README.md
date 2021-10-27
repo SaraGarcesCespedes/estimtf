@@ -8,11 +8,11 @@
 [![Licence](https://img.shields.io/badge/licence-GPL--3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0.en.html)
 ![GitHub R package
 version](https://img.shields.io/github/r-package/v/SaraGarcesCespedes/estimtf)
-<!-- [![CRAN_Status_Badge](https://www.r-pkg.org/badges/version/estimtf)](https://cran.r-project.org/package=estimtf) -->
+[![CRAN\_Status\_Badge](https://www.r-pkg.org/badges/version/estimtf)](https://cran.r-project.org/package=estimtf)
 <!-- [![Travis build status](https://travis-ci.com/SaraGarcesCespedes/estimtf.svg?branch=master)](https://travis-ci.com/SaraGarcesCespedes/estimtf) -->
 <!-- badges: end -->
 
-# estimtf
+# estimtf <img src="man/figures/logo_sinfondo.png" align="right" height="180" align="right"/>
 
 The `estimtf` package provides functions to find the Maximum Likelihood
 Estimates of parameters from probability distributions and linear
@@ -74,11 +74,12 @@ summary(estimation)
 #> Distribution: Normal 
 #> Number of observations: 1000 
 #> TensorFlow optimizer: AdamOptimizer 
-#> Negative log-likelihood: 665.302 
+#> Negative log-likelihood: 656.3456 
+#> Loss function convergence, 1925 iterations needed. 
 #> ---------------------------------------------------
 #>      Estimate  Std. Error Z value Pr(>|z|)    
-#> mean  10.13735    0.09285   109.2   <2e-16 ***
-#> sd     2.93608    0.06496    45.2   <2e-16 ***
+#> mean   9.93384    0.09197  108.01   <2e-16 ***
+#> sd     2.90836    0.06429   45.23   <2e-16 ***
 #> ---
 #> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ```

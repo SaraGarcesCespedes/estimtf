@@ -23,11 +23,11 @@ library(badgecreatr)
 <!-- [![R-CMD-check](https://github.com/SaraGarcesCespedes/estimtf/workflows/R-CMD-check/badge.svg)](https://github.com/SaraGarcesCespedes/estimtf/actions) -->
 [![Licence](https://img.shields.io/badge/licence-GPL--3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0.en.html)
 ![GitHub R package version](https://img.shields.io/github/r-package/v/SaraGarcesCespedes/estimtf)
-<!-- [![CRAN_Status_Badge](https://www.r-pkg.org/badges/version/estimtf)](https://cran.r-project.org/package=estimtf) -->
+[![CRAN_Status_Badge](https://www.r-pkg.org/badges/version/estimtf)](https://cran.r-project.org/package=estimtf)
 <!-- [![Travis build status](https://travis-ci.com/SaraGarcesCespedes/estimtf.svg?branch=master)](https://travis-ci.com/SaraGarcesCespedes/estimtf) -->
 <!-- badges: end -->
 
-# estimtf
+# estimtf <img src="man/figures/logo_sinfondo.png" align="right" height="180" align="right"/>
 
 The `estimtf` package provides functions to find the Maximum Likelihood Estimates of parameters from probability distributions and linear regression models using the TensorFlow optimizers.
 
