@@ -12,7 +12,8 @@
 #'
 #' @details \code{summary.MLEtf} function displays estimates and standard errors of parameters from statistical
 #' distributions and regression models. Also, this function computes and displays the Z-score and p-values of significance
-#' tests for these parameters.
+#' tests for these parameters. If limits were defined for the parameters, the standard error and other statistics are not
+#' reported due to the transformation applied to the parameters.
 #'
 #' @importFrom stats printCoefmat
 #' @importFrom stats pnorm
@@ -112,9 +113,9 @@ summary.MLEtf <- function(object, ...) {
                 colnames(restable) <- c('Estimate ', 'Std. Error', 'Z value', 'Pr(>|z|)')
                 rownames(restable) <- object$outputs$parnames
                 printCoefmat(restable, digits = 4, P.values = TRUE, has.Pvalue = TRUE)
-                cat("---------------------------------------------------\n")
-                cat(paste0("If limits were defined for the parameters, the standard error and other ", '\n',
-                           "statistics are not reported due to the transformation applied to the parameters."))
+                #cat("---------------------------------------------------\n")
+                #cat(paste0("If limits were defined for the parameters, the standard error and other ", '\n',
+                 #          "statistics are not reported due to the transformation applied to the parameters."))
         } else if (object$outputs$type == "MLEglmtf") {
                 t <- vector(mode = "list")
                 t[[1]] <- 0
