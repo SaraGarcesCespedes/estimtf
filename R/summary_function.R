@@ -76,9 +76,9 @@ summary.MLEtf <- function(object, ...) {
                         zvalue[i] <- as.numeric(estimates[i] / stderror[[i]])
                         pvalue[i] <- as.numeric(2 * pnorm(abs(zvalue[i]), lower.tail = FALSE))
                 } else {
-                        zvalue[i] <- NA
-                        pvalue[i] <- NA
-                        stderror[[i]] <- NA
+                        zvalue[i] <- "-"
+                        pvalue[i] <- "-"
+                        stderror[[i]] <- "-"
                 }
         }
 
@@ -112,6 +112,9 @@ summary.MLEtf <- function(object, ...) {
                 colnames(restable) <- c('Estimate ', 'Std. Error', 'Z value', 'Pr(>|z|)')
                 rownames(restable) <- object$outputs$parnames
                 printCoefmat(restable, digits = 4, P.values = TRUE, has.Pvalue = TRUE)
+                cat("---------------------------------------------------\n")
+                cat(paste0("If limits were defined for the parameters, the standard error and other ", '\n',
+                           "statistics are not reported due to the transformation applied to the parameters."))
         } else if (object$outputs$type == "MLEglmtf") {
                 t <- vector(mode = "list")
                 t[[1]] <- 0
