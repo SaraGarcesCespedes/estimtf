@@ -77,11 +77,12 @@ summary.MLEtf <- function(object, ...) {
                         zvalue[i] <- as.numeric(estimates[i] / stderror[[i]])
                         pvalue[i] <- as.numeric(2 * pnorm(abs(zvalue[i]), lower.tail = FALSE))
                 } else {
-                        zvalue[i] <- "-"
-                        pvalue[i] <- "-"
-                        stderror[[i]] <- "-"
+                        zvalue[i] <- NA
+                        pvalue[i] <- NA
+                        stderror[[i]] <- NA
                 }
         }
+
 
         stderror <- unlist(stderror, use.names = FALSE)
 
@@ -107,8 +108,10 @@ summary.MLEtf <- function(object, ...) {
                 cat(paste0('Negative log-likelihood: ', loss_final),'\n')
                 cat(paste0(object$outputs$convergence),'\n')
                 cat("---------------------------------------------------\n")
+
                 restable <- cbind(estimate = estimates, stderror = stderror, zvalue = zvalue,
                                   pvalue = pvalue)
+
                 restable <- data.frame(restable)
                 colnames(restable) <- c('Estimate ', 'Std. Error', 'Z value', 'Pr(>|z|)')
                 rownames(restable) <- object$outputs$parnames
