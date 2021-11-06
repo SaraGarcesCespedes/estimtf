@@ -35,8 +35,8 @@ parameter_name_R <- function(parameter, distribution) {
         list_dist <- c("Poisson", "LogNormal")
         if (distribution %in% list_dist) {
                 listparam <- list(lambda = "lambda",
-                                  log = "meanlog",
-                                  scale = "sdlog")
+                                  meanlog = "meanlog",
+                                  sdlog = "sdlog")
         } else if (distribution == "FWE") {
                 listparam <- list(mu = "mu",
                                   sigma = "sigma")
@@ -48,8 +48,8 @@ parameter_name_R <- function(parameter, distribution) {
                                   scale = "scale",
                                   shape1 = "shape1",
                                   shape2 = "shape2",
-                                  total_count = "size",
-                                  probs = "prob")
+                                  total_count = "total_count",
+                                  probs = "probs")
         }
 
         return(listparam[[parameter]])
