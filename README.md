@@ -74,16 +74,20 @@ summary(estimation)
 #> Distribution: Normal 
 #> Number of observations: 1000 
 #> TensorFlow optimizer: AdamOptimizer 
-#> Negative log-likelihood: 728.1349 
-#> Loss function convergence, 2510 iterations needed. 
+#> Negative log-likelihood: 668.5151 
+#> Loss function convergence, 2071 iterations needed. 
 #> ---------------------------------------------------
 #>      Estimate  Std. Error Z value Pr(>|z|)    
-#> mean  10.20496    0.09890  103.18   <2e-16 ***
-#> sd     3.12757    0.06923   45.18   <2e-16 ***
+#> mean  10.03652    0.09315   107.7   <2e-16 ***
+#> sd     2.94563    0.06517    45.2   <2e-16 ***
 #> ---
 #> Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 ```
 
 You can visit the [package
 website](https://saragarcescespedes.github.io/estimtf/) to explore the
-function reference.
+function reference. Also, to learn more about how to use the functions
+of the `estimtf` package, visit this [Colab
+notebook](https://colab.research.google.com/drive/1FtMjcwYEF_KqajDwjOqtC2Qh1qzj_zPn?usp=sharing)
+that includes examples with multiple distributions and linear regression
+models.

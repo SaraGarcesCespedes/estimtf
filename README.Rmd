@@ -86,4 +86,4 @@ summary(estimation)
 ```
 
 
-You can visit the [package website](https://saragarcescespedes.github.io/estimtf/) to explore the function reference. 
+You can visit the [package website](https://saragarcescespedes.github.io/estimtf/) to explore the function reference. Also, to learn more about how to use the functions of the `estimtf` package, visit this [Colab notebook](https://colab.research.google.com/drive/1FtMjcwYEF_KqajDwjOqtC2Qh1qzj_zPn?usp=sharing) that includes examples with multiple distributions and linear regression models.
