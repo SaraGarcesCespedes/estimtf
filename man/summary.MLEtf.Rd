@@ -19,7 +19,8 @@ the \code{\link{mlereg_tf}} function.
 \details{
 \code{summary.MLEtf} function displays estimates and standard errors of parameters from statistical
 distributions and regression models. Also, this function computes and displays the Z-score and p-values of significance
-tests for these parameters.
+tests for these parameters. If limits were defined for the parameters, the standard error and other statistics are not
+reported due to the transformation applied to the parameters.
 }
 \examples{
 #---------------------------------------------------------------
